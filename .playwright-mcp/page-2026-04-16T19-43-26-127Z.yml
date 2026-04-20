@@ -1,0 +1,201 @@
+- generic [ref=e50]:
+  - generic [ref=e51]:
+    - generic [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - img [ref=e62]
+              - generic [ref=e64]: Good evening
+            - generic [ref=e65]: Hi, Sarah!
+          - img [ref=e68] [cursor=pointer]
+        - generic [ref=e248]:
+          - generic [ref=e249]:
+            - img [ref=e250]
+            - generic [ref=e253]: AI GREETING
+          - generic [ref=e254]: Good evening, Sarah — after balancing work and family all day, you deserve a calm, restorative evening; take a moment to breathe, be proud of what you accomplished, and let yourself relax.
+      - generic [ref=e72]:
+        - generic [ref=e74] [cursor=pointer]:
+          - generic [ref=e75]:
+            - img [ref=e76]
+            - generic [ref=e78]: TODAY'S MANTRA
+          - generic [ref=e79]: "\"I am strong, capable, and worthy of all good things.\""
+          - generic [ref=e80]: Tap for a new mantra
+        - generic [ref=e81]: Quick Actions
+        - generic [ref=e82]:
+          - generic [ref=e83] [cursor=pointer]:
+            - img [ref=e85]
+            - generic [ref=e87]: AI Chat
+          - generic [ref=e88] [cursor=pointer]:
+            - img [ref=e90]
+            - generic [ref=e93]: Tasks
+          - generic [ref=e94] [cursor=pointer]:
+            - img [ref=e96]
+            - generic [ref=e100]: Sounds
+          - generic [ref=e101] [cursor=pointer]:
+            - img [ref=e103]
+            - generic [ref=e108]: Meals
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - generic [ref=e111]: Today's Tasks
+            - generic [ref=e112] [cursor=pointer]:
+              - generic [ref=e113]: See All
+              - img [ref=e114]
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: "0"
+              - generic [ref=e119]: Done
+            - generic [ref=e120]:
+              - generic [ref=e121]: "6"
+              - generic [ref=e122]: Remaining
+          - generic [ref=e125]:
+            - generic [ref=e126]: Prepare school lunches
+            - generic [ref=e127]: family
+          - generic [ref=e130]:
+            - generic [ref=e131]: Team standup presentation
+            - generic [ref=e132]: work
+          - generic [ref=e133]:
+            - generic [ref=e135]:
+              - generic [ref=e136]: 15-min meditation
+              - generic [ref=e137]: self-care
+            - img [ref=e138]
+        - generic [ref=e141]: Recommended for You
+        - generic [ref=e143]:
+          - generic [ref=e148] [cursor=pointer]:
+            - generic [ref=e149]: Morning Calm
+            - generic [ref=e150]: 5 min
+          - generic [ref=e155] [cursor=pointer]:
+            - generic [ref=e156]: Stress Release
+            - generic [ref=e157]: 10 min
+          - generic [ref=e162] [cursor=pointer]:
+            - generic [ref=e163]: Deep Sleep Journey
+            - generic [ref=e164]: 20 min
+        - generic [ref=e167] [cursor=pointer]:
+          - img [ref=e169]
+          - generic [ref=e174]:
+            - generic [ref=e175]: Join the Community
+            - generic [ref=e176]: Connect with 2,400+ moms who get it
+          - img [ref=e177]
+    - generic [ref=e258]:
+      - generic [ref=e259]:
+        - generic [ref=e260]:
+          - generic [ref=e261]:
+            - generic [ref=e262]: My Tasks
+            - generic [ref=e263]: 6 tasks remaining
+          - img [ref=e266] [cursor=pointer]
+        - generic [ref=e268]:
+          - generic [ref=e270] [cursor=pointer]: All
+          - generic [ref=e272] [cursor=pointer]: work
+          - generic [ref=e274] [cursor=pointer]: family
+          - generic [ref=e276] [cursor=pointer]: self care
+          - generic [ref=e278] [cursor=pointer]: household
+          - generic [ref=e280] [cursor=pointer]: health
+      - generic [ref=e282]:
+        - generic [ref=e283]:
+          - img [ref=e285] [cursor=pointer]
+          - generic [ref=e287]:
+            - generic [ref=e288]: Prepare school lunches
+            - generic [ref=e289]:
+              - generic [ref=e290]:
+                - img [ref=e291]
+                - generic [ref=e294]: family
+              - generic [ref=e296]: high
+          - img [ref=e298] [cursor=pointer]
+        - generic [ref=e301]:
+          - img [ref=e303] [cursor=pointer]
+          - generic [ref=e305]:
+            - generic [ref=e306]: Team standup presentation
+            - generic [ref=e307]:
+              - generic [ref=e308]:
+                - img [ref=e309]
+                - generic [ref=e312]: work
+              - generic [ref=e314]: urgent
+          - img [ref=e316] [cursor=pointer]
+        - generic [ref=e319]:
+          - img [ref=e321] [cursor=pointer]
+          - generic [ref=e323]:
+            - generic [ref=e324]: 15-min meditation
+            - generic [ref=e325]:
+              - generic [ref=e326]:
+                - img [ref=e327]
+                - generic [ref=e329]: self-care
+              - generic [ref=e331]: medium
+              - img [ref=e332]
+          - img [ref=e336] [cursor=pointer]
+        - generic [ref=e339]:
+          - img [ref=e341] [cursor=pointer]
+          - generic [ref=e343]:
+            - generic [ref=e344]: Grocery shopping
+            - generic [ref=e345]:
+              - generic [ref=e346]:
+                - img [ref=e347]
+                - generic [ref=e350]: household
+              - generic [ref=e352]: medium
+          - img [ref=e354] [cursor=pointer]
+        - generic [ref=e357]:
+          - img [ref=e359] [cursor=pointer]
+          - generic [ref=e361]:
+            - generic [ref=e362]: Schedule pediatrician visit
+            - generic [ref=e363]:
+              - generic [ref=e364]:
+                - img [ref=e365]
+                - generic [ref=e369]: health
+              - generic [ref=e371]: high
+          - img [ref=e373] [cursor=pointer]
+        - generic [ref=e376]:
+          - img [ref=e378] [cursor=pointer]
+          - generic [ref=e380]:
+            - generic [ref=e381]: Yoga class at 6pm
+            - generic [ref=e382]:
+              - generic [ref=e383]:
+                - img [ref=e384]
+                - generic [ref=e386]: self-care
+              - generic [ref=e388]: low
+              - img [ref=e389]
+          - img [ref=e393] [cursor=pointer]
+    - generic [ref=e400]:
+      - generic [ref=e402]:
+        - generic [ref=e406]:
+          - generic [ref=e407]: AI Companion
+          - generic [ref=e410]: Always here for you
+        - img [ref=e412] [cursor=pointer]
+      - generic [ref=e415]:
+        - generic [ref=e417]:
+          - generic [ref=e418]:
+            - generic [ref=e419]:
+              - img [ref=e420]
+              - generic [ref=e422]: MomEase AI
+            - generic [ref=e424]: Hi there! I'm your MomEase wellness companion. I'm here to listen, support, and help you navigate the beautiful chaos of being a working mom. What's on your mind today?
+            - generic [ref=e425]: 08:40 PM
+          - generic [ref=e443]:
+            - generic [ref=e445]: I'm feeling overwhelmed today
+            - generic [ref=e446]: 08:43 PM
+        - generic [ref=e437]:
+          - textbox "Type your message..." [ref=e438]
+          - img [ref=e440]
+  - tablist [ref=e180]:
+    - tab "Home" [ref=e182] [cursor=pointer]:
+      - generic [ref=e183]:
+        - img [ref=e185]
+        - img [ref=e189]
+      - generic [ref=e192]: Home
+    - tab "Tasks" [ref=e194] [cursor=pointer]:
+      - generic [ref=e195]:
+        - img [ref=e197]
+        - img [ref=e201]
+      - generic [ref=e204]: Tasks
+    - tab "Chat" [selected] [ref=e206] [cursor=pointer]:
+      - generic [ref=e207]:
+        - img [ref=e210]
+        - img [ref=e215]
+      - generic [ref=e218]: Chat
+    - tab "Sounds" [ref=e220] [cursor=pointer]:
+      - generic [ref=e221]:
+        - img [ref=e223]
+        - img [ref=e228]
+      - generic [ref=e232]: Sounds
+    - tab "Profile" [ref=e234] [cursor=pointer]:
+      - generic [ref=e235]:
+        - img [ref=e237]
+        - img [ref=e242]
+      - generic [ref=e246]: Profile

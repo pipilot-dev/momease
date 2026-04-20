@@ -7,27 +7,32 @@ import {
   Image,
   Animated,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import {
   Sun,
   Moon,
   Sunrise,
   ChevronRight,
   Sparkles,
-  ListTodo,
   Heart,
   MessageCircle,
   UtensilsCrossed,
   Music,
   Users,
   Bell,
+  Baby,
+  Smile,
+  BookOpen,
 } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
 import { getRandomMantra, getTimeOfDay, mockMeditations } from "../../lib/mock-data";
 import { getAIGreeting } from "../../lib/mock-ai";
+import { colors, gradients, animation } from "../../lib/theme";
 
 const { width } = Dimensions.get("window");
 
@@ -37,7 +42,14 @@ export default function HomeScreen() {
   const { tasks, getPendingCount, getCompletedCount } = useTaskStore();
   const [greeting, setGreeting] = useState("");
   const [mantra, setMantra] = useState(getRandomMantra());
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Staggered animations
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const greetingAnim = useRef(new Animated.Value(0)).current;
+  const mantraAnim = useRef(new Animated.Value(0)).current;
+  const actionsAnim = useRef(new Animated.Value(0)).current;
+  const tasksAnim = useRef(new Animated.Value(0)).current;
 
   const firstName = user?.name?.split(" ")[0] || "Mama";
   const timeOfDay = getTimeOfDay();
@@ -45,146 +57,200 @@ export default function HomeScreen() {
 
   useEffect(() => {
     getAIGreeting(firstName).then(setGreeting);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
+    // Staggered entrance animations
+    Animated.sequence([
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: animation.duration.slow,
+        delay: 0,
+        useNativeDriver: true,
+      }),
+      Animated.timing(greetingAnim, {
+        toValue: 1,
+        duration: animation.duration.slow,
+        delay: animation.stagger.medium,
+        useNativeDriver: true,
+      }),
+      Animated.timing(mantraAnim, {
+        toValue: 1,
+        duration: animation.duration.slow,
+        delay: animation.stagger.large,
+        useNativeDriver: true,
+      }),
+      Animated.timing(actionsAnim, {
+        toValue: 1,
+        duration: animation.duration.slow,
+        delay: animation.stagger.large * 2,
+        useNativeDriver: true,
+      }),
+      Animated.timing(tasksAnim, {
+        toValue: 1,
+        duration: animation.duration.slow,
+        delay: animation.stagger.large * 3,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTimeout(() => setRefreshing(false), 800);
+  };
+
   const quickActions = [
-    { icon: MessageCircle, label: "AI Chat", color: "#C4B5FD", route: "/(tabs)/chat" },
-    { icon: ListTodo, label: "Tasks", color: "#A7F3D0", route: "/(tabs)/tasks" },
-    { icon: Music, label: "Sounds", color: "#F9A8D4", route: "/(tabs)/sounds" },
-    { icon: UtensilsCrossed, label: "Meals", color: "#FDE68A", route: "/meals" },
+    { icon: MessageCircle, label: "AI Chat", color: colors.accent[400], route: "/(tabs)/chat" },
+    { icon: Smile, label: "Mood", color: colors.primary[400], route: "/mood" },
+    { icon: Music, label: "Sounds", color: colors.secondary[400], route: "/(tabs)/sounds" },
+    { icon: BookOpen, label: "Journal", color: "#8B5CF6", route: "/journal" },
   ];
 
   const todayTasks = tasks.filter((t) => t.status !== "completed").slice(0, 3);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FDFCFB" }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <LinearGradient
-          colors={["#FDE5EC", "#FDF2F8", "#FDFCFB"]}
-          style={{ paddingTop: 60, paddingBottom: 24, paddingHorizontal: 24 }}
-        >
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <TimeIcon size={20} color="#F472B6" />
-                <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#F472B6" }}>
-                  Good {timeOfDay}
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary[500]}
+            colors={[colors.primary[500]]}
+          />
+        }
+      >
+        {/* Header with animated entrance */}
+        <Animated.View style={{ opacity: headerAnim }}>
+          <LinearGradient
+            colors={[gradients.warmMorning[0], gradients.warmMorning[1], colors.bg]}
+            style={{ paddingTop: 60, paddingBottom: 24, paddingHorizontal: 24 }}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <TimeIcon size={20} color={colors.primary[500]} />
+                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: colors.primary[500] }}>
+                    Good {timeOfDay}
+                  </Text>
+                </View>
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: colors.text.primary }}>
+                  Hi, {firstName}!
                 </Text>
               </View>
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: "#1F2937" }}>
-                Hi, {firstName}!
-              </Text>
+              <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+                <View style={{ position: "relative" }}>
+                  <Bell size={24} color={colors.text.secondary} />
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: -2,
+                      right: -2,
+                      width: 10,
+                      height: 10,
+                      borderRadius: 5,
+                      backgroundColor: colors.error,
+                      borderWidth: 2,
+                      borderColor: colors.primary[50],
+                    }}
+                  />
+                </View>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity>
-              <View style={{ position: "relative" }}>
-                <Bell size={24} color="#6B7280" />
+
+            {/* AI Greeting */}
+            {greeting ? (
+              <Animated.View style={{ opacity: greetingAnim, marginTop: 16 }}>
                 <View
                   style={{
-                    position: "absolute",
-                    top: -2,
-                    right: -2,
-                    width: 10,
-                    height: 10,
-                    borderRadius: 5,
-                    backgroundColor: "#EF4444",
-                    borderWidth: 2,
-                    borderColor: "#FDE5EC",
+                    backgroundColor: colors.surface,
+                    borderRadius: 16,
+                    padding: 16,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.06,
+                    shadowRadius: 8,
+                    elevation: 2,
                   }}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <Sparkles size={16} color={colors.primary[500]} />
+                    <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: colors.primary[500] }}>
+                      AI GREETING
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: "Quicksand-Medium",
+                      fontSize: 15,
+                      color: colors.text.primary,
+                      lineHeight: 22,
+                    }}
+                  >
+                    {greeting}
+                  </Text>
+                </View>
+              </Animated.View>
+            ) : null}
+          </LinearGradient>
+        </Animated.View>
 
-          {/* AI Greeting */}
-          {greeting ? (
-            <Animated.View style={{ opacity: fadeAnim, marginTop: 16 }}>
-              <View
+        <View style={{ paddingHorizontal: 24 }}>
+          {/* Daily Mantra with animation */}
+          <Animated.View style={{ opacity: mantraAnim, marginBottom: 24 }}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => {
+                setMantra(getRandomMantra());
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }}
+            >
+              <LinearGradient
+                colors={[gradients.violetDream[0], gradients.violetDream[1]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  backgroundColor: "#FFFFFF",
                   borderRadius: 16,
-                  padding: 16,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 8,
-                  elevation: 2,
+                  padding: 20,
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <Sparkles size={16} color="#F472B6" />
-                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: "#F472B6" }}>
-                    AI GREETING
+                  <Heart size={16} color={colors.accent[500]} fill={colors.accent[500]} />
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 12, color: colors.accent[500], letterSpacing: 1 }}>
+                    TODAY'S MANTRA
                   </Text>
                 </View>
                 <Text
                   style={{
-                    fontFamily: "Quicksand-Medium",
-                    fontSize: 15,
-                    color: "#1F2937",
-                    lineHeight: 22,
+                    fontFamily: "Quicksand-SemiBold",
+                    fontSize: 18,
+                    color: colors.text.primary,
+                    lineHeight: 26,
+                    fontStyle: "italic",
                   }}
                 >
-                  {greeting}
+                  "{mantra.text}"
                 </Text>
-              </View>
-            </Animated.View>
-          ) : null}
-        </LinearGradient>
-
-        <View style={{ paddingHorizontal: 24 }}>
-          {/* Daily Mantra */}
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() => setMantra(getRandomMantra())}
-          >
-            <LinearGradient
-              colors={["#E0E7FF", "#F5F3FF"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                borderRadius: 16,
-                padding: 20,
-                marginBottom: 24,
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <Heart size={16} color="#8B5CF6" fill="#8B5CF6" />
-                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 12, color: "#8B5CF6", letterSpacing: 1 }}>
-                  TODAY'S MANTRA
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: colors.text.secondary, marginTop: 8 }}>
+                  Tap for a new mantra
                 </Text>
-              </View>
-              <Text
-                style={{
-                  fontFamily: "Quicksand-SemiBold",
-                  fontSize: 18,
-                  color: "#1F2937",
-                  lineHeight: 26,
-                  fontStyle: "italic",
-                }}
-              >
-                "{mantra.text}"
-              </Text>
-              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#6B7280", marginTop: 8 }}>
-                Tap for a new mantra
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
 
-          {/* Quick Actions */}
-          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: "#1F2937", marginBottom: 16 }}>
-            Quick Actions
-          </Text>
+          {/* Quick Actions with animation */}
+          <Animated.View style={{ opacity: actionsAnim }}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: colors.text.primary, marginBottom: 16 }}>
+              Quick Actions
+            </Text>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 24 }}>
             {quickActions.map((action, i) => (
               <TouchableOpacity
                 key={i}
-                onPress={() => router.push(action.route as any)}
+                onPress={() => {
+                  router.push(action.route as any);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
                 activeOpacity={0.85}
                 style={{ alignItems: "center", width: (width - 72) / 4 }}
               >
@@ -193,28 +259,67 @@ export default function HomeScreen() {
                     width: 56,
                     height: 56,
                     borderRadius: 16,
-                    backgroundColor: action.color + "30",
+                    backgroundColor: action.color + "20",
                     alignItems: "center",
                     justifyContent: "center",
                     marginBottom: 8,
                   }}
                 >
-                  <action.icon size={24} color={action.color.replace("30", "")} />
+                  <action.icon size={24} color={action.color} />
                 </View>
-                <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: "#4B5563" }}>
+                <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: colors.text.secondary }}>
                   {action.label}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
+          </Animated.View>
+
+          {/* Second row quick actions */}
+          <Animated.View style={{ opacity: actionsAnim, marginBottom: 24 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              {[
+                { icon: Baby, label: "Milestones", color: colors.primary[400], route: "/milestones" },
+                { icon: Moon, label: "Sleep", color: colors.accent[400], route: "/sleep" },
+                { icon: UtensilsCrossed, label: "Meals", color: "#FBBF24", route: "/meals" },
+                { icon: Users, label: "Community", color: colors.secondary[500], route: "/community" },
+              ].map((action, i) => (
+                <TouchableOpacity
+                  key={i}
+                  onPress={() => {
+                    router.push(action.route as any);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  activeOpacity={0.85}
+                  style={{ alignItems: "center", width: (width - 72) / 4 }}
+                >
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 16,
+                      backgroundColor: action.color + "20",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <action.icon size={24} color={action.color} />
+                  </View>
+                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: colors.text.secondary }}>
+                    {action.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
 
           {/* Task Summary */}
           <View
             style={{
-              backgroundColor: "#FFFFFF",
+              backgroundColor: colors.surface,
               borderRadius: 16,
               padding: 20,
-              marginBottom: 24,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.06,
@@ -223,17 +328,20 @@ export default function HomeScreen() {
             }}
           >
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: "#1F2937" }}>
+              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: colors.text.primary }}>
                 Today's Tasks
               </Text>
               <TouchableOpacity
-                onPress={() => router.push("/(tabs)/tasks")}
+                onPress={() => {
+                  router.push("/(tabs)/tasks");
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
               >
-                <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#F472B6" }}>
+                <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: colors.primary[500] }}>
                   See All
                 </Text>
-                <ChevronRight size={16} color="#F472B6" />
+                <ChevronRight size={16} color={colors.primary[500]} />
               </TouchableOpacity>
             </View>
 
@@ -242,32 +350,32 @@ export default function HomeScreen() {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "#F0FDF4",
+                  backgroundColor: colors.secondary[50],
                   borderRadius: 12,
                   padding: 12,
                   alignItems: "center",
                 }}
               >
-                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: "#10B981" }}>
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: colors.success }}>
                   {getCompletedCount()}
                 </Text>
-                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#6B7280" }}>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: colors.text.secondary }}>
                   Done
                 </Text>
               </View>
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "#FFF5F9",
+                  backgroundColor: colors.primary[50],
                   borderRadius: 12,
                   padding: 12,
                   alignItems: "center",
                 }}
               >
-                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: "#F472B6" }}>
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: colors.primary[500] }}>
                   {getPendingCount()}
                 </Text>
-                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#6B7280" }}>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: colors.text.secondary }}>
                   Remaining
                 </Text>
               </View>
@@ -282,7 +390,7 @@ export default function HomeScreen() {
                   alignItems: "center",
                   paddingVertical: 12,
                   borderTopWidth: i > 0 ? 1 : 0,
-                  borderTopColor: "#F3F4F6",
+                  borderTopColor: colors.primary[100],
                   gap: 12,
                 }}
               >
@@ -293,27 +401,27 @@ export default function HomeScreen() {
                     borderRadius: 5,
                     backgroundColor:
                       task.priority === "urgent"
-                        ? "#EF4444"
+                        ? colors.error
                         : task.priority === "high"
-                        ? "#F59E0B"
-                        : "#10B981",
+                        ? colors.warning
+                        : colors.success,
                   }}
                 />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 15, color: "#1F2937" }}>
+                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 15, color: colors.text.primary }}>
                     {task.title}
                   </Text>
-                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#9CA3AF" }}>
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: colors.text.muted }}>
                     {task.category}
                   </Text>
                 </View>
-                {task.aiSuggested && <Sparkles size={14} color="#C4B5FD" />}
+                {task.aiSuggested && <Sparkles size={14} color={colors.accent[400]} />}
               </View>
             ))}
           </View>
 
           {/* Meditation Suggestion */}
-          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: "#1F2937", marginBottom: 16 }}>
+          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: colors.text.primary, marginBottom: 16 }}>
             Recommended for You
           </Text>
           <ScrollView
@@ -356,14 +464,17 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
 
-          {/* Community Peek */}
+          {/* Baby Milestones Card */}
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => router.push("/community" as any)}
-            style={{ marginBottom: 40 }}
+            onPress={() => {
+              router.push("/milestones" as any);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
+            style={{ marginBottom: 24 }}
           >
             <LinearGradient
-              colors={["#D1FAE5", "#ECFDF5"]}
+              colors={[gradients.roseGlow[0], gradients.roseGlow[1]]}
               style={{ borderRadius: 16, padding: 20 }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -372,22 +483,61 @@ export default function HomeScreen() {
                     width: 48,
                     height: 48,
                     borderRadius: 24,
-                    backgroundColor: "#10B981" + "30",
+                    backgroundColor: colors.primary[400] + "25",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <Users size={24} color="#10B981" />
+                  <Baby size={24} color={colors.primary[500]} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#1F2937" }}>
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: colors.text.primary }}>
+                    Baby Milestones
+                  </Text>
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: colors.text.secondary }}>
+                    Track Lily's special moments and firsts
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={colors.primary[500]} />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Community Peek */}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => {
+              router.push("/community" as any);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
+            style={{ marginBottom: 40 }}
+          >
+            <LinearGradient
+              colors={[gradients.mintGlow[0], gradients.mintGlow[1]]}
+              style={{ borderRadius: 16, padding: 20 }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: colors.secondary[500] + "25",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Users size={24} color={colors.secondary[500]} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: colors.text.primary }}>
                     Join the Community
                   </Text>
-                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: "#6B7280" }}>
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: colors.text.secondary }}>
                     Connect with 2,400+ moms who get it
                   </Text>
                 </View>
-                <ChevronRight size={20} color="#10B981" />
+                <ChevronRight size={20} color={colors.secondary[500]} />
               </View>
             </LinearGradient>
           </TouchableOpacity>

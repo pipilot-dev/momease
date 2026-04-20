@@ -88,4 +88,34 @@ export interface MeditationSession {
   level: "beginner" | "intermediate" | "advanced";
 }
 
+export interface BabyProfile {
+  id: string;
+  name: string;
+  birthDate: string;
+  avatarUrl?: ImageSource;
+  gender: "boy" | "girl" | "other";
+}
+
+export interface Milestone {
+  id: string;
+  babyId: string;
+  title: string;
+  description?: string;
+  category: "motor" | "language" | "social" | "cognitive" | "health" | "first";
+  date: string;
+  ageAtMilestone?: string;
+  imageUrl?: ImageSource;
+  isCustom: boolean;
+  completed: boolean;
+}
+
+export interface MilestoneTemplate {
+  id: string;
+  title: string;
+  description: string;
+  category: Milestone["category"];
+  typicalAgeMonths: number;
+  icon: string;
+}
+
 export type TabRoute = "home" | "tasks" | "chat" | "sounds" | "profile";

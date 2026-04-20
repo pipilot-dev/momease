@@ -1,0 +1,97 @@
+- generic [ref=e50]:
+  - generic [ref=e57]:
+    - generic [ref=e59]:
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - img [ref=e62]
+          - generic [ref=e64]: Good evening
+        - generic [ref=e65]: Hi, Sarah!
+      - img [ref=e68] [cursor=pointer]
+    - generic [ref=e72]:
+      - generic [ref=e74] [cursor=pointer]:
+        - generic [ref=e75]:
+          - img [ref=e76]
+          - generic [ref=e78]: TODAY'S MANTRA
+        - generic [ref=e79]: "\"I am strong, capable, and worthy of all good things.\""
+        - generic [ref=e80]: Tap for a new mantra
+      - generic [ref=e81]: Quick Actions
+      - generic [ref=e82]:
+        - generic [ref=e83] [cursor=pointer]:
+          - img [ref=e85]
+          - generic [ref=e87]: AI Chat
+        - generic [ref=e88] [cursor=pointer]:
+          - img [ref=e90]
+          - generic [ref=e93]: Tasks
+        - generic [ref=e94] [cursor=pointer]:
+          - img [ref=e96]
+          - generic [ref=e100]: Sounds
+        - generic [ref=e101] [cursor=pointer]:
+          - img [ref=e103]
+          - generic [ref=e108]: Meals
+      - generic [ref=e109]:
+        - generic [ref=e110]:
+          - generic [ref=e111]: Today's Tasks
+          - generic [ref=e112] [cursor=pointer]:
+            - generic [ref=e113]: See All
+            - img [ref=e114]
+        - generic [ref=e116]:
+          - generic [ref=e117]:
+            - generic [ref=e118]: "0"
+            - generic [ref=e119]: Done
+          - generic [ref=e120]:
+            - generic [ref=e121]: "6"
+            - generic [ref=e122]: Remaining
+        - generic [ref=e125]:
+          - generic [ref=e126]: Prepare school lunches
+          - generic [ref=e127]: family
+        - generic [ref=e130]:
+          - generic [ref=e131]: Team standup presentation
+          - generic [ref=e132]: work
+        - generic [ref=e133]:
+          - generic [ref=e135]:
+            - generic [ref=e136]: 15-min meditation
+            - generic [ref=e137]: self-care
+          - img [ref=e138]
+      - generic [ref=e141]: Recommended for You
+      - generic [ref=e143]:
+        - generic [ref=e148] [cursor=pointer]:
+          - generic [ref=e149]: Morning Calm
+          - generic [ref=e150]: 5 min
+        - generic [ref=e155] [cursor=pointer]:
+          - generic [ref=e156]: Stress Release
+          - generic [ref=e157]: 10 min
+        - generic [ref=e162] [cursor=pointer]:
+          - generic [ref=e163]: Deep Sleep Journey
+          - generic [ref=e164]: 20 min
+      - generic [ref=e167] [cursor=pointer]:
+        - img [ref=e169]
+        - generic [ref=e174]:
+          - generic [ref=e175]: Join the Community
+          - generic [ref=e176]: Connect with 2,400+ moms who get it
+        - img [ref=e177]
+  - tablist [ref=e180]:
+    - tab "Home" [selected] [ref=e182] [cursor=pointer]:
+      - generic [ref=e183]:
+        - img [ref=e185]
+        - img [ref=e189]
+      - generic [ref=e192]: Home
+    - tab "Tasks" [ref=e194] [cursor=pointer]:
+      - generic [ref=e195]:
+        - img [ref=e197]
+        - img [ref=e201]
+      - generic [ref=e204]: Tasks
+    - tab "Chat" [ref=e206] [cursor=pointer]:
+      - generic [ref=e207]:
+        - img [ref=e210]
+        - img [ref=e215]
+      - generic [ref=e218]: Chat
+    - tab "Sounds" [ref=e220] [cursor=pointer]:
+      - generic [ref=e221]:
+        - img [ref=e223]
+        - img [ref=e228]
+      - generic [ref=e232]: Sounds
+    - tab "Profile" [ref=e234] [cursor=pointer]:
+      - generic [ref=e235]:
+        - img [ref=e237]
+        - img [ref=e242]
+      - generic [ref=e246]: Profile

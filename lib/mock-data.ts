@@ -39,6 +39,8 @@ export const mockTasks: Task[] = [
     dueDate: "2026-04-16T07:00:00Z",
     createdAt: "2026-04-15T20:00:00Z",
   },
+  
+
   {
     id: "t2",
     title: "Team standup presentation",
@@ -90,7 +92,8 @@ export const mockTasks: Task[] = [
     aiSuggested: true,
     createdAt: "2026-04-16T06:00:00Z",
   },
-];
+  
+]
 
 export const mockMantras: Mantra[] = [
   { id: "m1", text: "I am enough, exactly as I am today.", category: "confidence" },
@@ -101,6 +104,8 @@ export const mockMantras: Mantra[] = [
   { id: "m6", text: "I am strong, capable, and worthy of all good things.", category: "strength" },
   { id: "m7", text: "Today I choose grace over guilt.", category: "confidence" },
   { id: "m8", text: "I trust my instincts as a mother and a professional.", category: "strength" },
+
+  
 ];
 
 export const mockMealPlans: MealPlan[] = [
@@ -152,6 +157,7 @@ export const mockMealPlans: MealPlan[] = [
     imageUrl: images.blissBalls,
     kidFriendly: true,
   },
+  
 ];
 
 export const mockForumPosts: ForumPost[] = [
@@ -256,6 +262,7 @@ export const mockSounds: Sound[] = [
     imageUrl: images.bodyScan,
     audioUrl: "mock://bodyscan.mp3",
   },
+  
 ];
 
 export const mockMeditations: MeditationSession[] = [

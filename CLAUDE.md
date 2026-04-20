@@ -78,11 +78,31 @@ When you need to run a dev server (npm run dev, node server.js, etc.):
 ## Additional Context
 Project: CSS + JavaScript + Tailwind CSS
 File tree:
+├── .expo/
+│   ├── web/
+│   │   └── cache/
+│   │       └── production/
+│   │           └── images/
+│   │               └── favicon/
+│   │                   └── favicon-6c866ee11796310e006f2e171d85161dfae789f2da50ffc564798f7d79509cfe-contain-transparent/
+│   ├── devices.json (4 lines)
+│   └── README.md (14 lines)
 ├── .git/
 ├── .pipilot/
-│   ├── _pipilot_history.json (42 lines)
+│   ├── _pipilot_history.json (102 lines)
 │   ├── design.md (62 lines)
+│   ├── mcp.json (10 lines)
 │   └── project.md (74 lines)
+├── .playwright-mcp/
+│   ├── console-2026-04-16T19-35-15-902Z.log (331 lines)
+│   ├── console-2026-04-16T19-40-46-146Z.log (20 lines)
+│   ├── page-2026-04-16T19-35-17-960Z.yml
+│   ├── page-2026-04-16T19-40-48-633Z.yml
+│   ├── page-2026-04-16T19-41-30-139Z.yml (97 lines)
+│   ├── page-2026-04-16T19-42-17-253Z.yml (181 lines)
+│   ├── page-2026-04-16T19-42-37-702Z.yml (204 lines)
+│   ├── page-2026-04-16T19-43-26-127Z.yml (201 lines)
+│   └── page-2026-04-16T19-44-30-175Z.yml (270 lines)
 ├── app/
 │   ├── (auth)/
 │   │   ├── _layout.tsx (14 lines)
@@ -102,10 +122,11 @@ File tree:
 │   └── onboarding.tsx (247 lines)
 ├── assets/
 │   ├── fonts/
-│   │   ├── Quicksand-Bold.ttf (1462 lines)
-│   │   ├── Quicksand-Medium.ttf (1462 lines)
-│   │   ├── Quicksand-Regular.ttf (1462 lines)
-│   │   └── Quicksand-SemiBold.ttf (1462 lines)
+│   │   ├── Quicksand-Bold.ttf (1202 lines)
+│   │   ├── Quicksand-Medium.ttf (1202 lines)
+│   │   ├── Quicksand-Regular.ttf (1202 lines)
+│   │   ├── Quicksand-SemiBold.ttf (1202 lines)
+│   │   └── Quicksand-Variable.ttf (1202 lines)
 │   ├── adaptive-icon.png (7 lines)
 │   ├── ai-assistant.png (21 lines)
 │   ├── avatar-aisha.png (63 lines)
@@ -143,26 +164,31 @@ File tree:
 │   ├── mock-ai.ts (135 lines)
 │   ├── mock-analytics.ts (25 lines)
 │   ├── mock-auth.ts (84 lines)
-│   ├── mock-data.ts (343 lines)
+│   ├── mock-data.ts (350 lines)
 │   ├── mock-notifications.ts (61 lines)
 │   ├── theme.ts (101 lines)
 │   └── types.ts (92 lines)
 ├── node_modules/
+├── patches/
+│   └── metro-config@0.83.3.patch (26 lines)
 ├── .gitignore (55 lines)
 ├── app.json (38 lines)
 ├── global.css (4 lines)
 ├── metro.config.js (7 lines)
+├── momease-chat-response.png (227 lines)
+├── momease-chat.png (78 lines)
+├── momease-home-test.png (3 lines)
+├── momease-home.png (226 lines)
+├── momease-splash.png (145 lines)
+├── momease-tasks.png (131 lines)
+├── momease-web-test.png (222 lines)
+├── momease-web-test2.png (105 lines)
 ├── nativewind-env.d.ts (2 lines)
-├── package.json (50 lines)
-├── pnpm-lock.yaml (8325 lines)
+├── package.json (62 lines)
+├── pnpm-lock.yaml (8356 lines)
 ├── tailwind.config.js (62 lines)
+├── test-browser.mjs (66 lines)
 └── tsconfig.json (18 lines)
-
-Open editor tabs (4):
-  Active: C:/Users/big/PiPilot/workspaces/momease-care-hub/app/(tabs)/home.tsx
-  - C:/Users/big/PiPilot/workspaces/momease-care-hub/app.json
-  - C:/Users/big/PiPilot/workspaces/momease-care-hub/lib/mock-data.ts
-  - C:/Users/big/PiPilot/workspaces/momease-care-hub/app/(tabs)/sounds.tsx
 
 ## DESIGN GUIDE
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,27 +6,28 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
+  RefreshControl,
   Animated,
-  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import {
   Plus,
-  CheckCircle2,
-  Circle,
-  Trash2,
-  Sparkles,
+  X,
+  ListTodo,
   Briefcase,
   Baby,
   Heart,
   Home as HomeIcon,
   Stethoscope,
-  X,
-  Filter,
 } from "lucide-react-native";
 import { useTaskStore } from "../../lib/stores/task-store";
 import type { Task } from "../../lib/types";
+import { colors, gradients } from "../../lib/theme";
+import { useFadeIn } from "../../lib/useAnimations";
+import { TaskItem } from "../../components/tasks/TaskItem";
 
+// Local constants for modal (needed for icon rendering in modal)
 const categoryIcons: Record<Task["category"], any> = {
   work: Briefcase,
   family: Baby,
@@ -36,18 +37,18 @@ const categoryIcons: Record<Task["category"], any> = {
 };
 
 const categoryColors: Record<Task["category"], string> = {
-  work: "#8B5CF6",
-  family: "#F472B6",
-  "self-care": "#10B981",
-  household: "#F59E0B",
-  health: "#EF4444",
+  work: colors.accent[500],
+  family: colors.primary[500],
+  "self-care": colors.secondary[500],
+  household: colors.warning,
+  health: colors.error,
 };
 
 const priorityColors: Record<Task["priority"], string> = {
-  low: "#10B981",
-  medium: "#F59E0B",
+  low: colors.success,
+  medium: colors.warning,
   high: "#F97316",
-  urgent: "#EF4444",
+  urgent: colors.error,
 };
 
 export default function TasksScreen() {
@@ -57,6 +58,10 @@ export default function TasksScreen() {
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState<Task["category"]>("work");
   const [newPriority, setNewPriority] = useState<Task["priority"]>("medium");
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Animation using existing hook
+  const fadeAnim = useFadeIn(100);
 
   const filteredTasks = getFilteredTasks();
   const categories: Array<"all" | Task["category"]> = [
@@ -68,7 +73,7 @@ export default function TasksScreen() {
     "health",
   ];
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     if (!newTitle.trim()) return;
     addTask({
       title: newTitle.trim(),
@@ -78,37 +83,55 @@ export default function TasksScreen() {
     });
     setNewTitle("");
     setShowAddModal(false);
-  };
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [newTitle, newCategory, newPriority, addTask]);
+
+  const handleToggleComplete = useCallback((id: string) => {
+    toggleComplete(id);
+  }, [toggleComplete]);
+
+  const handleDeleteTask = useCallback((id: string) => {
+    deleteTask(id);
+  }, [deleteTask]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTimeout(() => setRefreshing(false), 800);
+  }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FDFCFB" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header */}
       <LinearGradient
-        colors={["#D1FAE5", "#ECFDF5", "#FDFCFB"]}
+        colors={[gradients.mintGlow[0], gradients.mintGlow[1], colors.bg]}
         style={{ paddingTop: 60, paddingBottom: 16, paddingHorizontal: 24 }}
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <View>
-            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: "#1F2937" }}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: colors.text.primary }}>
               My Tasks
             </Text>
-            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginTop: 2 }}>
+            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: colors.text.secondary, marginTop: 2 }}>
               {filteredTasks.filter((t) => t.status !== "completed").length} tasks remaining
             </Text>
           </View>
           <TouchableOpacity
-            onPress={() => setShowAddModal(true)}
+            onPress={() => {
+              setShowAddModal(true);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }}
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={["#A7F3D0", "#34D399"]}
+              colors={[colors.secondary[400], colors.secondary[500]]}
               style={{
                 width: 48,
                 height: 48,
                 borderRadius: 24,
                 alignItems: "center",
                 justifyContent: "center",
-                shadowColor: "#34D399",
+                shadowColor: colors.secondary[500],
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
@@ -129,22 +152,25 @@ export default function TasksScreen() {
           {categories.map((cat) => (
             <TouchableOpacity
               key={cat}
-              onPress={() => setFilter(cat)}
+              onPress={() => {
+                setFilter(cat);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
               style={{
                 paddingHorizontal: 16,
                 paddingVertical: 8,
                 borderRadius: 999,
-                backgroundColor: filter === cat ? "#10B981" : "#FFFFFF",
+                backgroundColor: filter === cat ? colors.secondary[500] : colors.surface,
                 marginRight: 8,
                 borderWidth: 1,
-                borderColor: filter === cat ? "#10B981" : "#E5E7EB",
+                borderColor: filter === cat ? colors.secondary[500] : colors.primary[200],
               }}
             >
               <Text
                 style={{
                   fontFamily: "Quicksand-SemiBold",
                   fontSize: 13,
-                  color: filter === cat ? "#FFFFFF" : "#6B7280",
+                  color: filter === cat ? "#FFFFFF" : colors.text.secondary,
                   textTransform: "capitalize",
                 }}
               >
@@ -155,92 +181,54 @@ export default function TasksScreen() {
         </ScrollView>
       </LinearGradient>
 
-      {/* Task List */}
-      <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false}>
-        {filteredTasks.map((task) => {
-          const CatIcon = categoryIcons[task.category];
-          const catColor = categoryColors[task.category];
-          const isCompleted = task.status === "completed";
-
-          return (
+      {/* Task List or Empty State */}
+      <Animated.ScrollView
+        style={{ flex: 1, paddingHorizontal: 24 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.secondary[500]}
+            colors={[colors.secondary[500]]}
+          />
+        }
+      >
+        {/* Empty State */}
+        {filteredTasks.length === 0 && (
+          <Animated.View style={{ alignItems: "center", paddingTop: 80, opacity: fadeAnim }}>
             <View
-              key={task.id}
               style={{
-                backgroundColor: "#FFFFFF",
-                borderRadius: 16,
-                padding: 16,
-                marginBottom: 12,
-                flexDirection: "row",
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: colors.secondary[50],
                 alignItems: "center",
-                gap: 12,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.04,
-                shadowRadius: 4,
-                elevation: 1,
-                opacity: isCompleted ? 0.6 : 1,
+                justifyContent: "center",
+                marginBottom: 16,
               }}
             >
-              {/* Checkbox */}
-              <TouchableOpacity onPress={() => toggleComplete(task.id)}>
-                {isCompleted ? (
-                  <CheckCircle2 size={24} color="#10B981" fill="#10B981" />
-                ) : (
-                  <Circle size={24} color="#D1D5DB" />
-                )}
-              </TouchableOpacity>
-
-              {/* Content */}
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: "Quicksand-SemiBold",
-                    fontSize: 16,
-                    color: isCompleted ? "#9CA3AF" : "#1F2937",
-                    textDecorationLine: isCompleted ? "line-through" : "none",
-                  }}
-                >
-                  {task.title}
-                </Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <CatIcon size={12} color={catColor} />
-                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: catColor }}>
-                      {task.category}
-                    </Text>
-                  </View>
-                  <View
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 999,
-                      backgroundColor: priorityColors[task.priority] + "20",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "Quicksand-SemiBold",
-                        fontSize: 10,
-                        color: priorityColors[task.priority],
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {task.priority}
-                    </Text>
-                  </View>
-                  {task.aiSuggested && <Sparkles size={12} color="#C4B5FD" />}
-                </View>
-              </View>
-
-              {/* Delete */}
-              <TouchableOpacity onPress={() => deleteTask(task.id)}>
-                <Trash2 size={18} color="#D1D5DB" />
-              </TouchableOpacity>
+              <ListTodo size={36} color={colors.secondary[500]} />
             </View>
-          );
-        })}
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: colors.text.primary, marginBottom: 8 }}>
+              All Clear!
+            </Text>
+            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 15, color: colors.text.secondary, textAlign: "center", paddingHorizontal: 32 }}>
+              You have no tasks in this category. Tap + to add a new task
+            </Text>
+          </Animated.View>
+        )}
+
+        {filteredTasks.map((task) => (
+          <TaskItem
+            key={task.id}
+            task={task}
+            onToggle={handleToggleComplete}
+            onDelete={handleDeleteTask}
+          />
+        ))}
         <View style={{ height: 24 }} />
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Add Task Modal */}
       <Modal visible={showAddModal} transparent animationType="slide">
@@ -253,7 +241,7 @@ export default function TasksScreen() {
         >
           <View
             style={{
-              backgroundColor: "#FFFFFF",
+              backgroundColor: colors.surface,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               padding: 24,
@@ -268,11 +256,14 @@ export default function TasksScreen() {
                 marginBottom: 24,
               }}
             >
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: "#1F2937" }}>
+              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: colors.text.primary }}>
                 New Task
               </Text>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <X size={24} color="#6B7280" />
+              <TouchableOpacity onPress={() => {
+                setShowAddModal(false);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}>
+                <X size={24} color={colors.text.secondary} />
               </TouchableOpacity>
             </View>
 
@@ -281,22 +272,22 @@ export default function TasksScreen() {
               style={{
                 fontFamily: "Quicksand-Medium",
                 fontSize: 16,
-                color: "#1F2937",
-                backgroundColor: "#F9FAFB",
+                color: colors.text.primary,
+                backgroundColor: colors.primary[50],
                 borderRadius: 12,
                 padding: 16,
                 borderWidth: 1,
-                borderColor: "#E5E7EB",
+                borderColor: colors.primary[200],
                 marginBottom: 16,
               }}
               placeholder="What do you need to do?"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.text.muted}
               value={newTitle}
               onChangeText={setNewTitle}
             />
 
             {/* Category */}
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#6B7280", marginBottom: 8 }}>
+            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: colors.text.secondary, marginBottom: 8 }}>
               Category
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
@@ -313,9 +304,9 @@ export default function TasksScreen() {
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                       borderRadius: 999,
-                      backgroundColor: newCategory === cat ? categoryColors[cat] + "20" : "#F9FAFB",
+                      backgroundColor: newCategory === cat ? categoryColors[cat] + "20" : colors.primary[50],
                       borderWidth: 1,
-                      borderColor: newCategory === cat ? categoryColors[cat] : "#E5E7EB",
+                      borderColor: newCategory === cat ? categoryColors[cat] : colors.primary[200],
                     }}
                   >
                     <CatIcon size={14} color={categoryColors[cat]} />
@@ -335,7 +326,7 @@ export default function TasksScreen() {
             </View>
 
             {/* Priority */}
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#6B7280", marginBottom: 8 }}>
+            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: colors.text.secondary, marginBottom: 8 }}>
               Priority
             </Text>
             <View style={{ flexDirection: "row", gap: 8, marginBottom: 24 }}>
@@ -347,9 +338,9 @@ export default function TasksScreen() {
                     flex: 1,
                     paddingVertical: 10,
                     borderRadius: 12,
-                    backgroundColor: newPriority === p ? priorityColors[p] + "20" : "#F9FAFB",
+                    backgroundColor: newPriority === p ? priorityColors[p] + "20" : colors.primary[50],
                     borderWidth: 1,
-                    borderColor: newPriority === p ? priorityColors[p] : "#E5E7EB",
+                    borderColor: newPriority === p ? priorityColors[p] : colors.primary[200],
                     alignItems: "center",
                   }}
                 >
@@ -370,7 +361,7 @@ export default function TasksScreen() {
             {/* Add Button */}
             <TouchableOpacity onPress={handleAdd} activeOpacity={0.85}>
               <LinearGradient
-                colors={["#A7F3D0", "#34D399"]}
+                colors={[colors.secondary[400], colors.secondary[500]]}
                 style={{
                   borderRadius: 16,
                   paddingVertical: 16,
