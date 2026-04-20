@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "MomEase",
+    "slug": "momease-care-hub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "momease",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FDE5EC"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.momease.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FDE5EC"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.momease.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ]
+  }
+}
