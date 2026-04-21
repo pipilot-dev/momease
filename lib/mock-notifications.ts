@@ -9,7 +9,6 @@ export interface Notification {
   read: boolean;
   createdAt: string;
 }
-
 const mockNotifications: Notification[] = [
   {
     id: "n1",

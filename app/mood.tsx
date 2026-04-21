@@ -271,6 +271,7 @@ export default function MoodScreen() {
             transform: [{ translateY: slideAnim }],
           }}
         >
+        
           {/* Check-in Form Card */}
           <View
             style={{
@@ -299,9 +300,9 @@ export default function MoodScreen() {
                 marginBottom: spacing.lg,
               }}
             >
-              {(Object.keys(moodLabels) as Array<keyof typeof moodLabels>).map(
+              {(Object.keys(moodLabels) as string[]).map(
                 (moodKey) => {
-                  const mood = parseInt(moodKey) as MoodLevel;
+                  const mood = Number(moodKey) as MoodLevel;
                   const moodData = moodLabels[mood];
                   const isSelected = selectedMood === mood;
 
@@ -362,9 +363,9 @@ export default function MoodScreen() {
               }}
             >
               {(
-                Object.keys(energyLabels) as Array<keyof typeof energyLabels>
+                Object.keys(energyLabels) as string[]
               ).map((energyKey) => {
-                const energy = parseInt(energyKey) as EnergyLevel;
+                const energy = Number(energyKey) as EnergyLevel;
                 const energyData = energyLabels[energy];
                 const isSelected = selectedEnergy === energy;
 

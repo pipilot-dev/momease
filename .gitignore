@@ -52,3 +52,11 @@ coverage/
 .pipilot-data
 .pipilot-checkpoints
 .pipilot-tsconfig.json
+.pipilot-tsconfig.tsbuildinfo
+.pipilot-data/
+.pipilot-tsconfig.json
+.pipilot-tsconfig.tsbuildinfo
+.pipilot-checkpoints/
+.pipilot-data/
+.pipilot-tsconfig.json
+.pipilot-tsconfig.tsbuildinfo
