@@ -41,6 +41,7 @@ export default function RootLayout() {
         <Stack.Screen name="mood" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="journal" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="sleep" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="breathe" options={{ animation: "slide_from_bottom" }} />
       </Stack>
     </>
   );

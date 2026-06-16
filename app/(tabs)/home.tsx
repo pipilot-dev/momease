@@ -28,6 +28,7 @@ import {
   Smile,
   BookOpen,
   BarChart3,
+  Wind,
 } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
@@ -58,36 +59,38 @@ export default function HomeScreen() {
 
   useEffect(() => {
     getAIGreeting(firstName).then(setGreeting);
-    // Staggered entrance animations
-    Animated.sequence([
+    // Staggered entrance animations — run in parallel with increasing
+    // delays so every section becomes visible quickly (~700ms total),
+    // rather than chaining serially (which left the nav grids hidden).
+    Animated.parallel([
       Animated.timing(headerAnim, {
         toValue: 1,
-        duration: animation.duration.slow,
+        duration: animation.duration.normal,
         delay: 0,
         useNativeDriver: true,
       }),
       Animated.timing(greetingAnim, {
         toValue: 1,
-        duration: animation.duration.slow,
-        delay: animation.stagger.medium,
+        duration: animation.duration.normal,
+        delay: animation.stagger.small,
         useNativeDriver: true,
       }),
       Animated.timing(mantraAnim, {
         toValue: 1,
-        duration: animation.duration.slow,
-        delay: animation.stagger.large,
+        duration: animation.duration.normal,
+        delay: animation.stagger.small * 2,
         useNativeDriver: true,
       }),
       Animated.timing(actionsAnim, {
         toValue: 1,
-        duration: animation.duration.slow,
-        delay: animation.stagger.large * 2,
+        duration: animation.duration.normal,
+        delay: animation.stagger.small * 3,
         useNativeDriver: true,
       }),
       Animated.timing(tasksAnim, {
         toValue: 1,
-        duration: animation.duration.slow,
-        delay: animation.stagger.large * 3,
+        duration: animation.duration.normal,
+        delay: animation.stagger.small * 4,
         useNativeDriver: true,
       }),
     ]).start();
@@ -102,6 +105,7 @@ export default function HomeScreen() {
   const quickActions = [
     { icon: MessageCircle, label: "AI Chat", color: colors.accent[400], route: "/(tabs)/chat" },
     { icon: Smile, label: "Mood", color: colors.primary[400], route: "/mood" },
+    { icon: Wind, label: "Breathe", color: colors.secondary[500], route: "/breathe" },
     { icon: Music, label: "Sounds", color: colors.secondary[400], route: "/(tabs)/sounds" },
     { icon: BookOpen, label: "Journal", color: "#8B5CF6", route: "/journal" },
   ];

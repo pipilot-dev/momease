@@ -62,3 +62,7 @@ coverage/
 .pipilot-tsconfig.tsbuildinfo
 .pipilot/checkpoints/
 .pipilot/search-index.json
+
+# Playwright test screenshots
+screens/
+videos/
