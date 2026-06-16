@@ -1,6 +1,15 @@
 import { create } from "zustand";
 import type { ChatMessage } from "../types";
 import { sendAIMessage } from "../mock-ai";
+import { attachPersistence } from "../persist";
+
+const WELCOME: ChatMessage = {
+  id: "welcome",
+  role: "assistant",
+  content:
+    "Hi there! I'm your MomEase wellness companion. I'm here to listen, support, and help you navigate the beautiful chaos of being a working mom. What's on your mind today?",
+  timestamp: new Date().toISOString(),
+};
 
 interface ChatState {
   messages: ChatMessage[];
@@ -11,15 +20,7 @@ interface ChatState {
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
-  messages: [
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "Hi there! I'm your MomEase wellness companion. I'm here to listen, support, and help you navigate the beautiful chaos of being a working mom. What's on your mind today?",
-      timestamp: new Date().toISOString(),
-    },
-  ],
+  messages: [WELCOME],
   isTyping: false,
 
   sendMessage: async (content) => {
@@ -62,3 +63,5 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ],
     }),
 }));
+
+attachPersistence(useChatStore, "momease-chat", (s) => ({ messages: s.messages }));

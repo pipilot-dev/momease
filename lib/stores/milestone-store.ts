@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Milestone, BabyProfile } from "../types";
 import { mockMilestones, mockBaby } from "../mock-milestones";
+import { attachPersistence } from "../persist";
 
 interface MilestoneState {
   baby: BabyProfile;
@@ -59,4 +60,9 @@ export const useMilestoneStore = create<MilestoneState>((set, get) => ({
 
   getMilestonesByCategory: (category) =>
     get().milestones.filter((m) => m.category === category),
+}));
+
+attachPersistence(useMilestoneStore, "momease-milestones", (s) => ({
+  baby: s.baby,
+  milestones: s.milestones,
 }));

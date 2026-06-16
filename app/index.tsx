@@ -3,6 +3,8 @@ import { View, Text, Animated, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart } from "lucide-react-native";
+import { useAuthStore } from "../lib/stores/auth-store";
+import { authService } from "../lib/auth-service";
 
 const { width } = Dimensions.get("window");
 
@@ -34,9 +36,24 @@ export default function SplashEntry() {
       }),
     ]).start();
 
-    const timer = setTimeout(() => {
+    // Decide the landing route once the splash has played: restore any
+    // persisted/OAuth session, otherwise send the user to sign-in.
+    const timer = setTimeout(async () => {
+      try {
+        const sessionUser = await authService.getCurrentUser();
+        const { user, isAuthenticated, setUser } = useAuthStore.getState();
+        const activeUser = sessionUser || (isAuthenticated ? user : null);
+        if (activeUser) {
+          if (sessionUser) setUser(sessionUser);
+          if (activeUser.onboardingCompleted) router.replace("/(tabs)/home");
+          else router.replace("/onboarding");
+          return;
+        }
+      } catch {
+        // fall through to sign-in
+      }
       router.replace("/(auth)/sign-in");
-    }, 2200);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, []);

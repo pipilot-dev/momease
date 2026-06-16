@@ -29,9 +29,12 @@ import {
   BookOpen,
   BarChart3,
   Wind,
+  Flame,
+  CheckCircle2,
 } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
+import { useCheckinStore } from "../../lib/stores/checkin-store";
 import { getRandomMantra, getTimeOfDay, mockMeditations } from "../../lib/mock-data";
 import { getAIGreeting } from "../../lib/mock-ai";
 import { colors, gradients, animation } from "../../lib/theme";
@@ -42,6 +45,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { tasks, getPendingCount, getCompletedCount } = useTaskStore();
+  const { currentStreak, hasCheckedInToday } = useCheckinStore();
   const [greeting, setGreeting] = useState("");
   const [mantra, setMantra] = useState(getRandomMantra());
   const [refreshing, setRefreshing] = useState(false);
@@ -239,6 +243,50 @@ export default function HomeScreen() {
                 <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: colors.text.secondary, marginTop: 8 }}>
                   Tap for a new mantra
                 </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Daily Check-in CTA */}
+          <Animated.View style={{ opacity: mantraAnim, marginBottom: 24 }}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => {
+                router.push("/checkin" as any);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <LinearGradient
+                colors={["#FB923C", "#F472B6"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: 16, padding: 18, flexDirection: "row", alignItems: "center", gap: 14 }}
+              >
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: "rgba(255,255,255,0.25)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {hasCheckedInToday() ? (
+                    <CheckCircle2 size={24} color="#FFFFFF" />
+                  ) : (
+                    <Flame size={24} color="#FFFFFF" fill="#FFFFFF" />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#FFFFFF" }}>
+                    {hasCheckedInToday() ? "Checked in today!" : "Daily Check-in"}
+                  </Text>
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: "rgba(255,255,255,0.9)" }}>
+                    {currentStreak > 0 ? `${currentStreak} day streak · keep it going` : "Take a mindful moment for you"}
+                  </Text>
+                </View>
+                <ChevronRight size={20} color="#FFFFFF" />
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>

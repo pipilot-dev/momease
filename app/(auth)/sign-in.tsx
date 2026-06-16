@@ -17,10 +17,16 @@ import { useAuthStore } from "../../lib/stores/auth-store";
 
 export default function SignIn() {
   const router = useRouter();
-  const { signIn, isLoading, error, clearError } = useAuthStore();
+  const { signIn, signInWithGoogle, isLoading, error, clearError } = useAuthStore();
   const [email, setEmail] = useState("sarah@momease.app");
   const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleGoogle = async () => {
+    clearError();
+    const ok = await signInWithGoogle();
+    if (ok) router.replace("/(tabs)/home");
+  };
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -245,6 +251,55 @@ export default function SignIn() {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
+
+            {/* Divider */}
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 24, gap: 12 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: "#F3D6E2" }} />
+              <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: "#9CA3AF" }}>or</Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: "#F3D6E2" }} />
+            </View>
+
+            {/* Google Sign In */}
+            <TouchableOpacity
+              onPress={handleGoogle}
+              disabled={isLoading}
+              activeOpacity={0.85}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                backgroundColor: "#FFFFFF",
+                borderRadius: 16,
+                paddingVertical: 15,
+                marginTop: 16,
+                borderWidth: 1.5,
+                borderColor: "#E5E7EB",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 2,
+              }}
+            >
+              {/* Multi-color Google "G" mark */}
+              <View
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  borderWidth: 2.5,
+                  borderColor: "#4285F4",
+                  borderRightColor: "#34A853",
+                  borderBottomColor: "#FBBC05",
+                  borderLeftColor: "#EA4335",
+                  transform: [{ rotate: "45deg" }],
+                }}
+              />
+              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#374151" }}>
+                Continue with Google
+              </Text>
+            </TouchableOpacity>
 
             {/* Sign Up link */}
             <View

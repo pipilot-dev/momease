@@ -32,6 +32,11 @@
     "plugins": [
       "expo-router",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "supabaseUrl": "https://xvpoklpwdepwnawfekfu.supabase.co",
+      "supabaseAnonKey": "sb_publishable_rkaEb4CTxTd3bxkOnvdlAA_uNekn2fL",
+      "oauthRedirect": "https://oauth.lovable.app/callback"
+    }
   }
 }

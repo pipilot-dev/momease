@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Task } from "../types";
 import { mockTasks } from "../mock-data";
+import { attachPersistence } from "../persist";
 
 interface TaskState {
   tasks: Task[];
@@ -76,3 +77,5 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   getCompletedCount: () => get().tasks.filter((t) => t.status === "completed").length,
   getPendingCount: () => get().tasks.filter((t) => t.status !== "completed").length,
 }));
+
+attachPersistence(useTaskStore, "momease-tasks", (s) => ({ tasks: s.tasks }));

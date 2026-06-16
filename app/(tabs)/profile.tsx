@@ -12,22 +12,21 @@ import {
   LogOut,
   ChevronRight,
   Crown,
-  Heart,
   Settings,
   MessageSquare,
   Star,
 } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
+import { useTheme } from "../../lib/theme-context";
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { theme, isDark, toggle } = useTheme();
   const { user, signOut } = useAuthStore();
   const { getCompletedCount } = useTaskStore();
-  const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
 
-  // Base demo numbers + the user's real completed tasks so the screen feels live.
   const tasksDone = 142 + getCompletedCount();
 
   const handleSignOut = () => {
@@ -91,10 +90,10 @@ export default function ProfileScreen() {
           label: "Dark Mode",
           color: "#6366F1",
           toggle: true,
-          value: darkMode,
-          onToggle: (v: boolean) => {
+          value: isDark,
+          onToggle: () => {
             Haptics.selectionAsync();
-            setDarkMode(v);
+            toggle();
           },
         },
         {
@@ -109,22 +108,23 @@ export default function ProfileScreen() {
       title: "Support",
       items: [
         { icon: HelpCircle, label: "Help Center", color: "#10B981", onPress: () => info("Help Center", "Browse FAQs and guides for getting the most out of MomEase.") },
-        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => info("Send Feedback", "We'd love to hear from you at hello@momease.app 💛") },
+        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => info("Send Feedback", "We'd love to hear from you at hello@momease.app") },
         { icon: Star, label: "Rate MomEase", color: "#F59E0B", onPress: () => info("Rate MomEase", "Enjoying the app? A 5-star review helps other moms find us!") },
         { icon: Shield, label: "Privacy Policy", color: "#6B7280", onPress: () => info("Privacy", "Your data stays yours. We never sell personal information.") },
       ],
     },
   ];
 
+  const premium = user?.role === "premium";
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#FDFCFB" }}>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
-          colors={["#FDE5EC", "#FDF2F8", "#FDFCFB"]}
+          colors={isDark ? [theme.surfaceAlt, theme.bgElevated, theme.bg] : ["#FDE5EC", "#FDF2F8", theme.bg]}
           style={{ paddingTop: 60, paddingBottom: 32, alignItems: "center" }}
         >
-          {/* Avatar */}
           <View
             style={{
               width: 96,
@@ -149,32 +149,31 @@ export default function ProfileScreen() {
             />
           </View>
 
-          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: "#1F2937" }}>
+          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: theme.text.primary }}>
             {user?.name || "Sarah Mitchell"}
           </Text>
-          <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginTop: 2 }}>
+          <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginTop: 2 }}>
             {user?.email || "sarah@momease.app"}
           </Text>
 
-          {/* Role Badge */}
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               gap: 4,
-              backgroundColor: user?.role === "premium" ? "#FEF3C7" : "#F3F4F6",
+              backgroundColor: premium ? "#FEF3C7" : theme.surfaceAlt,
               paddingHorizontal: 12,
               paddingVertical: 6,
               borderRadius: 999,
               marginTop: 12,
             }}
           >
-            {user?.role === "premium" && <Crown size={14} color="#F59E0B" />}
+            {premium && <Crown size={14} color="#F59E0B" />}
             <Text
               style={{
                 fontFamily: "Quicksand-Bold",
                 fontSize: 12,
-                color: user?.role === "premium" ? "#B45309" : "#6B7280",
+                color: premium ? "#B45309" : theme.text.secondary,
                 textTransform: "uppercase",
                 letterSpacing: 0.5,
               }}
@@ -183,52 +182,36 @@ export default function ProfileScreen() {
             </Text>
           </View>
 
-          {/* Stats */}
-          <View
-            style={{
-              flexDirection: "row",
-              marginTop: 24,
-              gap: 32,
-            }}
-          >
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: "#1F2937" }}>
-                28
-              </Text>
-              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#6B7280" }}>
-                Day Streak
-              </Text>
-            </View>
-            <View style={{ width: 1, backgroundColor: "#E5E7EB" }} />
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: "#1F2937" }}>
-                {tasksDone}
-              </Text>
-              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#6B7280" }}>
-                Tasks Done
-              </Text>
-            </View>
-            <View style={{ width: 1, backgroundColor: "#E5E7EB" }} />
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: "#1F2937" }}>
-                4.5h
-              </Text>
-              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#6B7280" }}>
-                Self-Care
-              </Text>
-            </View>
+          <View style={{ flexDirection: "row", marginTop: 24, gap: 32 }}>
+            {[
+              { value: "28", label: "Day Streak" },
+              { value: String(tasksDone), label: "Tasks Done" },
+              { value: "4.5h", label: "Self-Care" },
+            ].map((stat, i) => (
+              <View key={stat.label} style={{ flexDirection: "row", alignItems: "center", gap: 32 }}>
+                {i > 0 && <View style={{ width: 1, height: 32, backgroundColor: theme.border, marginLeft: -32 }} />}
+                <View style={{ alignItems: "center" }}>
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: theme.text.primary }}>
+                    {stat.value}
+                  </Text>
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.secondary }}>
+                    {stat.label}
+                  </Text>
+                </View>
+              </View>
+            ))}
           </View>
         </LinearGradient>
 
         {/* Menu Sections */}
-        <View style={{ paddingHorizontal: 24 }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 8 }}>
           {menuSections.map((section) => (
             <View key={section.title} style={{ marginBottom: 24 }}>
               <Text
                 style={{
                   fontFamily: "Quicksand-Bold",
                   fontSize: 14,
-                  color: "#9CA3AF",
+                  color: theme.text.muted,
                   textTransform: "uppercase",
                   letterSpacing: 1,
                   marginBottom: 12,
@@ -238,12 +221,14 @@ export default function ProfileScreen() {
               </Text>
               <View
                 style={{
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: theme.surface,
                   borderRadius: 16,
                   overflow: "hidden",
+                  borderWidth: isDark ? 1 : 0,
+                  borderColor: theme.border,
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.04,
+                  shadowOpacity: isDark ? 0 : 0.04,
                   shadowRadius: 4,
                   elevation: 1,
                 }}
@@ -258,7 +243,7 @@ export default function ProfileScreen() {
                       alignItems: "center",
                       padding: 16,
                       borderTopWidth: i > 0 ? 1 : 0,
-                      borderTopColor: "#F3F4F6",
+                      borderTopColor: theme.border,
                       gap: 12,
                     }}
                   >
@@ -267,7 +252,7 @@ export default function ProfileScreen() {
                         width: 36,
                         height: 36,
                         borderRadius: 10,
-                        backgroundColor: item.color + "15",
+                        backgroundColor: item.color + (isDark ? "28" : "15"),
                         alignItems: "center",
                         justifyContent: "center",
                       }}
@@ -279,7 +264,7 @@ export default function ProfileScreen() {
                         flex: 1,
                         fontFamily: "Quicksand-SemiBold",
                         fontSize: 16,
-                        color: "#1F2937",
+                        color: theme.text.primary,
                       }}
                     >
                       {item.label}
@@ -293,13 +278,7 @@ export default function ProfileScreen() {
                           borderRadius: 999,
                         }}
                       >
-                        <Text
-                          style={{
-                            fontFamily: "Quicksand-Bold",
-                            fontSize: 10,
-                            color: "#B45309",
-                          }}
-                        >
+                        <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 10, color: "#B45309" }}>
                           {item.badge}
                         </Text>
                       </View>
@@ -308,11 +287,11 @@ export default function ProfileScreen() {
                       <Switch
                         value={item.value}
                         onValueChange={item.onToggle}
-                        trackColor={{ false: "#E5E7EB", true: "#F9A8D4" }}
+                        trackColor={{ false: theme.border, true: "#F9A8D4" }}
                         thumbColor="#FFFFFF"
                       />
                     ) : (
-                      <ChevronRight size={18} color="#D1D5DB" />
+                      <ChevronRight size={18} color={theme.text.muted} />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -320,7 +299,6 @@ export default function ProfileScreen() {
             </View>
           ))}
 
-          {/* Sign Out */}
           <TouchableOpacity
             onPress={handleSignOut}
             activeOpacity={0.85}
@@ -331,12 +309,12 @@ export default function ProfileScreen() {
               gap: 8,
               paddingVertical: 16,
               marginBottom: 48,
-              backgroundColor: "#FEF2F2",
+              backgroundColor: isDark ? "#3A2424" : "#FEF2F2",
               borderRadius: 16,
             }}
           >
-            <LogOut size={18} color="#EF4444" />
-            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#EF4444" }}>
+            <LogOut size={18} color={theme.error} />
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: theme.error }}>
               Sign Out
             </Text>
           </TouchableOpacity>
