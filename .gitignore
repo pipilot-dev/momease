@@ -66,3 +66,6 @@ coverage/
 # Playwright test screenshots
 screens/
 videos/
+
+# Playwright test artifacts
+frames/
