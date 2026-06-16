@@ -23,7 +23,8 @@ import {
 } from "lucide-react-native";
 import { useTaskStore } from "../../lib/stores/task-store";
 import type { Task } from "../../lib/types";
-import { colors, gradients } from "../../lib/theme";
+import { colors } from "../../lib/theme";
+import { useTheme } from "../../lib/theme-context";
 import { useFadeIn } from "../../lib/useAnimations";
 import { TaskItem } from "../../components/tasks/TaskItem";
 
@@ -52,6 +53,9 @@ const priorityColors: Record<Task["priority"], string> = {
 };
 
 export default function TasksScreen() {
+  const { theme, isDark } = useTheme();
+  const colors = theme;
+  const gradients = theme.gradients;
   const { tasks, filter, setFilter, toggleComplete, deleteTask, addTask, getFilteredTasks } =
     useTaskStore();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -163,7 +167,7 @@ export default function TasksScreen() {
                 backgroundColor: filter === cat ? colors.secondary[500] : colors.surface,
                 marginRight: 8,
                 borderWidth: 1,
-                borderColor: filter === cat ? colors.secondary[500] : colors.primary[200],
+                borderColor: filter === cat ? colors.secondary[500] : colors.border,
               }}
             >
               <Text
@@ -202,7 +206,7 @@ export default function TasksScreen() {
                 width: 80,
                 height: 80,
                 borderRadius: 40,
-                backgroundColor: colors.secondary[50],
+                backgroundColor: isDark ? colors.surfaceAlt : colors.secondary[50],
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: 16,
@@ -273,11 +277,11 @@ export default function TasksScreen() {
                 fontFamily: "Quicksand-Medium",
                 fontSize: 16,
                 color: colors.text.primary,
-                backgroundColor: colors.primary[50],
+                backgroundColor: isDark ? colors.surfaceAlt : colors.primary[50],
                 borderRadius: 12,
                 padding: 16,
                 borderWidth: 1,
-                borderColor: colors.primary[200],
+                borderColor: colors.border,
                 marginBottom: 16,
               }}
               placeholder="What do you need to do?"
@@ -304,9 +308,9 @@ export default function TasksScreen() {
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                       borderRadius: 999,
-                      backgroundColor: newCategory === cat ? categoryColors[cat] + "20" : colors.primary[50],
+                      backgroundColor: newCategory === cat ? categoryColors[cat] + "20" : (isDark ? colors.surfaceAlt : colors.primary[50]),
                       borderWidth: 1,
-                      borderColor: newCategory === cat ? categoryColors[cat] : colors.primary[200],
+                      borderColor: newCategory === cat ? categoryColors[cat] : colors.border,
                     }}
                   >
                     <CatIcon size={14} color={categoryColors[cat]} />
@@ -338,9 +342,9 @@ export default function TasksScreen() {
                     flex: 1,
                     paddingVertical: 10,
                     borderRadius: 12,
-                    backgroundColor: newPriority === p ? priorityColors[p] + "20" : colors.primary[50],
+                    backgroundColor: newPriority === p ? priorityColors[p] + "20" : (isDark ? colors.surfaceAlt : colors.primary[50]),
                     borderWidth: 1,
-                    borderColor: newPriority === p ? priorityColors[p] : colors.primary[200],
+                    borderColor: newPriority === p ? priorityColors[p] : colors.border,
                     alignItems: "center",
                   }}
                 >

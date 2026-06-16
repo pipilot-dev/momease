@@ -15,6 +15,7 @@ import {
 } from "lucide-react-native";
 import type { Task } from "../../lib/types";
 import { colors, spacing } from "../../lib/theme";
+import { useTheme } from "../../lib/theme-context";
 
 interface TaskItemProps {
   task: Task;
@@ -49,6 +50,7 @@ export const TaskItem = memo(function TaskItem({
   onToggle,
   onDelete,
 }: TaskItemProps) {
+  const { theme } = useTheme();
   const CatIcon = categoryIcons[task.category];
   const catColor = categoryColors[task.category];
   const isCompleted = task.status === "completed";
@@ -71,14 +73,15 @@ export const TaskItem = memo(function TaskItem({
     <View
       style={[
         styles.container,
+        { backgroundColor: theme.surface },
         isCompleted && styles.completed,
       ]}
     >
       <TouchableOpacity onPress={handleToggle} style={styles.checkbox}>
         {isCompleted ? (
-          <CheckCircle2 size={24} color={colors.success} fill={colors.success} />
+          <CheckCircle2 size={24} color={theme.success} fill={theme.success} />
         ) : (
-          <Circle size={24} color={colors.text.muted} />
+          <Circle size={24} color={theme.text.muted} />
         )}
       </TouchableOpacity>
 
@@ -86,6 +89,7 @@ export const TaskItem = memo(function TaskItem({
         <Text
           style={[
             styles.title,
+            { color: theme.text.primary },
             isCompleted && styles.titleCompleted,
           ]}
           numberOfLines={2}
@@ -119,7 +123,7 @@ export const TaskItem = memo(function TaskItem({
       </View>
 
       <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-        <Trash2 size={18} color={colors.text.muted} />
+        <Trash2 size={18} color={theme.text.muted} />
       </TouchableOpacity>
     </View>
   );

@@ -27,6 +27,7 @@ import { mockSounds, mockMeditations } from "../../lib/mock-data";
 import { useAudioStore } from "../../lib/stores/audio-store";
 import { MeditationPlayer } from "../../components/meditation/MeditationPlayer";
 import type { MeditationSession } from "../../lib/types";
+import { useTheme } from "../../lib/theme-context";
 
 const categoryIcons: Record<string, any> = {
   nature: TreePine,
@@ -76,6 +77,7 @@ function Equalizer({ active }: { active: boolean }) {
 }
 
 export default function SoundsScreen() {
+  const { theme, isDark } = useTheme();
   const params = useLocalSearchParams<{ tab?: string }>();
   const [activeTab, setActiveTab] = useState<"sounds" | "meditate">(
     params.tab === "meditate" ? "meditate" : "sounds"
@@ -93,16 +95,20 @@ export default function SoundsScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FDFCFB" }}>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
       {/* Header */}
       <LinearGradient
-        colors={["#FDE5EC", "#FDF2F8", "#FDFCFB"]}
+        colors={
+          isDark
+            ? [theme.gradients.roseGlow[0], theme.gradients.roseGlow[1], theme.bg]
+            : ["#FDE5EC", "#FDF2F8", theme.bg]
+        }
         style={{ paddingTop: 60, paddingBottom: 16, paddingHorizontal: 24 }}
       >
-        <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: "#1F2937" }}>
+        <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: theme.text.primary }}>
           Calm Space
         </Text>
-        <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginTop: 2 }}>
+        <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginTop: 2 }}>
           Sounds & meditations to help you unwind
         </Text>
 
@@ -111,7 +117,7 @@ export default function SoundsScreen() {
           style={{
             flexDirection: "row",
             marginTop: 20,
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.surface,
             borderRadius: 12,
             padding: 4,
           }}
@@ -132,7 +138,7 @@ export default function SoundsScreen() {
                 style={{
                   fontFamily: "Quicksand-Bold",
                   fontSize: 14,
-                  color: activeTab === tab ? "#FFFFFF" : "#6B7280",
+                  color: activeTab === tab ? "#FFFFFF" : theme.text.secondary,
                 }}
               >
                 {tab === "sounds" ? "Calming Sounds" : "Meditate"}
@@ -242,7 +248,7 @@ export default function SoundsScreen() {
                   onPress={() => handleTap(sound.id, sound.audioSource)}
                   activeOpacity={0.9}
                   style={{
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: theme.surface,
                     borderRadius: 16,
                     marginBottom: 12,
                     flexDirection: "row",
@@ -258,12 +264,12 @@ export default function SoundsScreen() {
                 >
                   <Image source={sound.imageUrl} style={{ width: 80, height: 80 }} />
                   <View style={{ flex: 1, padding: 14, justifyContent: "center" }}>
-                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: "#1F2937" }}>
+                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: theme.text.primary }}>
                       {sound.title}
                     </Text>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
-                      <CatIcon size={12} color="#9CA3AF" />
-                      <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#9CA3AF" }}>
+                      <CatIcon size={12} color={theme.text.muted} />
+                      <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.muted }}>
                         {sound.category}
                       </Text>
                     </View>
@@ -272,16 +278,16 @@ export default function SoundsScreen() {
                     <View
                       style={{
                         width: 40, height: 40, borderRadius: 20,
-                        backgroundColor: cardPlaying ? "#F472B6" : "#F3F4F6",
+                        backgroundColor: cardPlaying ? "#F472B6" : (isDark ? theme.surfaceAlt : "#F3F4F6"),
                         alignItems: "center", justifyContent: "center",
                       }}
                     >
                       {cardLoading ? (
-                        <Loader size={18} color="#6B7280" />
+                        <Loader size={18} color={theme.text.secondary} />
                       ) : cardPlaying ? (
                         <Pause size={18} color="#fff" fill="#fff" />
                       ) : (
-                        <Play size={18} color="#6B7280" fill="#6B7280" />
+                        <Play size={18} color={theme.text.secondary} fill={theme.text.secondary} />
                       )}
                     </View>
                   </View>
@@ -289,7 +295,7 @@ export default function SoundsScreen() {
               );
             })}
 
-            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#B0AAA2", textAlign: "center", marginTop: 8 }}>
+            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.muted, textAlign: "center", marginTop: 8 }}>
               Sounds loop seamlessly — set a timer and drift off.
             </Text>
           </View>
@@ -347,7 +353,7 @@ export default function SoundsScreen() {
                 </View>
                 <Text
                   style={{
-                    fontFamily: "Quicksand-Medium", fontSize: 13, color: "#6B7280",
+                    fontFamily: "Quicksand-Medium", fontSize: 13, color: theme.text.secondary,
                     marginTop: 8, lineHeight: 20,
                   }}
                 >

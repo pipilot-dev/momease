@@ -69,3 +69,5 @@ videos/
 
 # Playwright test artifacts
 frames/
+videos-dark/
+frames-dark/

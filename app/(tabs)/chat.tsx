@@ -14,12 +14,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Send, Sparkles, Trash2, Heart, MessageCircle } from "lucide-react-native";
 import { useChatStore } from "../../lib/stores/chat-store";
-import { colors, gradients, animation } from "../../lib/theme";
+import { animation } from "../../lib/theme";
+import { useTheme } from "../../lib/theme-context";
 
 const aiAvatar = require("../../assets/ai-assistant.png");
 
 export default function ChatScreen() {
   const { messages, isTyping, sendMessage, clearChat } = useChatStore();
+  const { theme, isDark } = useTheme();
+  const colors = theme;
+  const gradients = theme.gradients;
   const [input, setInput] = useState("");
   const scrollRef = useRef<ScrollView>(null);
   const dotAnim = useRef(new Animated.Value(0)).current;
@@ -128,7 +132,7 @@ export default function ChatScreen() {
                   width: 80,
                   height: 80,
                   borderRadius: 40,
-                  backgroundColor: colors.accent[50],
+                  backgroundColor: isDark ? colors.surfaceAlt : colors.accent[50],
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 16,
@@ -249,7 +253,7 @@ export default function ChatScreen() {
                     padding: 14,
                     marginBottom: 8,
                     borderWidth: 1,
-                    borderColor: colors.primary[100],
+                    borderColor: colors.border,
                   }}
                 >
                   <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: colors.text.secondary }}>
@@ -273,7 +277,7 @@ export default function ChatScreen() {
             paddingBottom: Platform.OS === "ios" ? 32 : 12,
             backgroundColor: colors.surface,
             borderTopWidth: 1,
-            borderTopColor: colors.primary[100],
+            borderTopColor: colors.border,
             gap: 12,
           }}
         >
@@ -283,7 +287,7 @@ export default function ChatScreen() {
               fontFamily: "Quicksand-Medium",
               fontSize: 16,
               color: colors.text.primary,
-              backgroundColor: colors.primary[50],
+              backgroundColor: isDark ? colors.surfaceAlt : colors.primary[50],
               borderRadius: 24,
               paddingHorizontal: 20,
               paddingVertical: 12,
