@@ -1,5 +1,4 @@
 import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert } from "react-native";
-import { useState } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -18,6 +17,7 @@ import {
 } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
+import { useSettingsStore } from "../../lib/stores/settings-store";
 import { useTheme } from "../../lib/theme-context";
 
 export default function ProfileScreen() {
@@ -25,7 +25,7 @@ export default function ProfileScreen() {
   const { theme, isDark, toggle } = useTheme();
   const { user, signOut } = useAuthStore();
   const { getCompletedCount } = useTaskStore();
-  const [notifications, setNotifications] = useState(true);
+  const { notificationsEnabled, setNotificationsEnabled } = useSettingsStore();
 
   const tasksDone = 142 + getCompletedCount();
 
@@ -48,7 +48,18 @@ export default function ProfileScreen() {
     Alert.alert(title, message);
   };
 
-  const menuSections = [
+  type MenuItem = {
+    icon: any;
+    label: string;
+    color: string;
+    badge?: string;
+    toggle?: boolean;
+    value?: boolean;
+    onToggle?: (v: boolean) => void;
+    onPress?: () => void;
+  };
+
+  const menuSections: { title: string; items: MenuItem[] }[] = [
     {
       title: "Account",
       items: [
@@ -74,10 +85,16 @@ export default function ProfileScreen() {
           label: "Notifications",
           color: "#8B5CF6",
           toggle: true,
-          value: notifications,
-          onToggle: (v: boolean) => {
+          value: notificationsEnabled,
+          onToggle: async (v: boolean) => {
             Haptics.selectionAsync();
-            setNotifications(v);
+            const result = await setNotificationsEnabled(v);
+            if (v && !result) {
+              Alert.alert(
+                "Notifications blocked",
+                "Enable notifications for MomEase in your device settings to get daily check-in reminders."
+              );
+            }
           },
         },
       ],

@@ -4,6 +4,9 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ThemeProvider, useTheme } from "../lib/theme-context";
+// Side-effect import: instantiating the settings store hydrates saved
+// preferences and re-arms the daily check-in reminder on app launch.
+import "../lib/stores/settings-store";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
