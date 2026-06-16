@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { Task } from "../types";
-import { mockTasks } from "../mock-data";
 import { attachPersistence } from "../persist";
 
 interface TaskState {
@@ -21,7 +20,8 @@ interface TaskState {
 }
 
 export const useTaskStore = create<TaskState>((set, get) => ({
-  tasks: [...mockTasks],
+  // New users start with an empty task list — no demo data.
+  tasks: [],
   filter: "all",
   statusFilter: "all",
 

@@ -276,12 +276,11 @@ export async function loadJournalEntries(): Promise<JournalEntry[]> {
         new Date(b.date).getTime() - new Date(a.date).getTime()
       );
     }
-    // First time load — save mock data
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockJournalEntries));
-    return [...mockJournalEntries];
+    // No entries yet — start empty (no demo seeding).
+    return [];
   } catch (error) {
     console.error("Failed to load journal entries:", error);
-    return [...mockJournalEntries];
+    return [];
   }
 }
 

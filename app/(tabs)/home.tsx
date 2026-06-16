@@ -559,7 +559,7 @@ export default function HomeScreen() {
                     Baby Milestones
                   </Text>
                   <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: colors.text.secondary }}>
-                    Track Lily's special moments and firsts
+                    Track your baby's special moments and firsts
                   </Text>
                 </View>
                 <ChevronRight size={20} color={colors.primary[500]} />

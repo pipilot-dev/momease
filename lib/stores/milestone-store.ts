@@ -1,7 +1,15 @@
 import { create } from "zustand";
 import type { Milestone, BabyProfile } from "../types";
-import { mockMilestones, mockBaby } from "../mock-milestones";
 import { attachPersistence } from "../persist";
+
+// A neutral default baby profile so the tracker renders before the parent
+// personalizes it — no demo persona, just an editable placeholder.
+const defaultBaby: BabyProfile = {
+  id: "baby_1",
+  name: "Baby",
+  birthDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 180).toISOString().slice(0, 10),
+  gender: "girl",
+};
 
 interface MilestoneState {
   baby: BabyProfile;
@@ -19,8 +27,9 @@ interface MilestoneState {
 }
 
 export const useMilestoneStore = create<MilestoneState>((set, get) => ({
-  baby: { ...mockBaby },
-  milestones: [...mockMilestones],
+  baby: { ...defaultBaby },
+  // New users start with no logged milestones — they add their own.
+  milestones: [],
   filter: "all",
 
   addMilestone: (data) => {

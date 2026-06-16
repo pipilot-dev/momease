@@ -235,12 +235,11 @@ export const loadMoodEntries = async (): Promise<MoodEntry[]> => {
       // Sort by date (newest first)
       return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
-    // If no data exists, return mock data and save it
-    await AsyncStorage.setItem(MOOD_STORAGE_KEY, JSON.stringify(mockMoodHistory));
-    return mockMoodHistory;
+    // No data yet — start empty (no demo seeding).
+    return [];
   } catch (error) {
     console.error('Error loading mood entries:', error);
-    return mockMoodHistory;
+    return [];
   }
 };
 

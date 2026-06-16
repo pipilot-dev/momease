@@ -23,6 +23,7 @@ import {
   Minus,
 } from "lucide-react-native";
 import { colors, gradients } from "../lib/theme";
+import { useMilestoneStore } from "../lib/stores/milestone-store";
 
 const { width } = Dimensions.get("window");
 
@@ -54,7 +55,7 @@ export default function SleepTrackerScreen() {
   const [sleepFactors, setSleepFactors] = useState<string[]>([]);
 
   // Baby's sleep state
-  const [babyName] = useState("Lily");
+  const babyName = useMilestoneStore((s) => s.baby.name) || "Baby";
   const [babySleep, setBabySleep] = useState<BabySleep>({
     lastNightHours: 8,
     napsToday: 2,

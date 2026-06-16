@@ -17,6 +17,7 @@ import {
 } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
+import { useCheckinStore } from "../../lib/stores/checkin-store";
 import { useSettingsStore } from "../../lib/stores/settings-store";
 import { useTheme } from "../../lib/theme-context";
 
@@ -25,9 +26,11 @@ export default function ProfileScreen() {
   const { theme, isDark, toggle } = useTheme();
   const { user, signOut } = useAuthStore();
   const { getCompletedCount } = useTaskStore();
+  const { currentStreak, entries: checkinEntries } = useCheckinStore();
   const { notificationsEnabled, setNotificationsEnabled } = useSettingsStore();
 
-  const tasksDone = 142 + getCompletedCount();
+  const tasksDone = getCompletedCount();
+  const checkinCount = checkinEntries.length;
 
   const handleSignOut = () => {
     Alert.alert("Sign out", "Are you sure you want to sign out?", [
@@ -167,7 +170,7 @@ export default function ProfileScreen() {
           </View>
 
           <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: theme.text.primary }}>
-            {user?.name || "Sarah Mitchell"}
+            {user?.name || "Mama"}
           </Text>
           <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginTop: 2 }}>
             {user?.email || "sarah@momease.app"}
@@ -201,9 +204,9 @@ export default function ProfileScreen() {
 
           <View style={{ flexDirection: "row", marginTop: 24, gap: 32 }}>
             {[
-              { value: "28", label: "Day Streak" },
+              { value: String(currentStreak), label: "Day Streak" },
               { value: String(tasksDone), label: "Tasks Done" },
-              { value: "4.5h", label: "Self-Care" },
+              { value: String(checkinCount), label: "Check-ins" },
             ].map((stat, i) => (
               <View key={stat.label} style={{ flexDirection: "row", alignItems: "center", gap: 32 }}>
                 {i > 0 && <View style={{ width: 1, height: 32, backgroundColor: theme.border, marginLeft: -32 }} />}
