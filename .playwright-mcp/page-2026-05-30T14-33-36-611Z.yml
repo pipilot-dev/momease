@@ -1,0 +1,91 @@
+- generic [ref=e1]:
+  - generic [ref=e8]:
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]: Calm Space
+        - generic [ref=e16]: Sounds & meditations to help you unwind
+        - generic [ref=e17]:
+          - generic [ref=e19] [cursor=pointer]: Calming Sounds
+          - generic [ref=e21] [cursor=pointer]: Meditate
+      - generic [ref=e24]:
+        - generic [ref=e222] [cursor=pointer]:
+          - generic [ref=e227]:
+            - generic [ref=e228]:
+              - generic [ref=e230]: focus
+              - generic [ref=e231]: Morning Calm
+              - generic [ref=e232]: 5 min · beginner
+            - img [ref=e234]
+          - generic [ref=e236]: Start your day with 5 minutes of peaceful breathing and intention setting.
+        - generic [ref=e237] [cursor=pointer]:
+          - generic [ref=e242]:
+            - generic [ref=e243]:
+              - generic [ref=e245]: stress
+              - generic [ref=e246]: Stress Release
+              - generic [ref=e247]: 10 min · beginner
+            - img [ref=e249]
+          - generic [ref=e251]: Let go of the day's tension with guided progressive relaxation.
+        - generic [ref=e252] [cursor=pointer]:
+          - generic [ref=e257]:
+            - generic [ref=e258]:
+              - generic [ref=e260]: sleep
+              - generic [ref=e261]: Deep Sleep Journey
+              - generic [ref=e262]: 20 min · beginner
+            - img [ref=e264]
+          - generic [ref=e266]: Drift into restful sleep with this calming visualization.
+        - generic [ref=e267] [cursor=pointer]:
+          - generic [ref=e272]:
+            - generic [ref=e273]:
+              - generic [ref=e275]: gratitude
+              - generic [ref=e276]: Gratitude Practice
+              - generic [ref=e277]: 8 min · intermediate
+            - img [ref=e279]
+          - generic [ref=e281]: Cultivate thankfulness and joy through guided reflection.
+        - generic [ref=e282] [cursor=pointer]:
+          - generic [ref=e287]:
+            - generic [ref=e288]:
+              - generic [ref=e290]: body-scan
+              - generic [ref=e291]: Body Scan Reset
+              - generic [ref=e292]: 15 min · intermediate
+            - img [ref=e294]
+          - generic [ref=e296]: Full body awareness scan to release held tension.
+    - tablist [ref=e117]:
+      - tab "Home" [ref=e119] [cursor=pointer]:
+        - generic [ref=e120]:
+          - img [ref=e122]
+          - img [ref=e126]
+        - generic [ref=e129]: Home
+      - tab "Tasks" [ref=e131] [cursor=pointer]:
+        - generic [ref=e132]:
+          - img [ref=e134]
+          - img [ref=e138]
+        - generic [ref=e141]: Tasks
+      - tab "Chat" [ref=e143] [cursor=pointer]:
+        - generic [ref=e144]:
+          - img [ref=e147]
+          - img [ref=e152]
+        - generic [ref=e155]: Chat
+      - tab "Sounds" [selected] [ref=e157] [cursor=pointer]:
+        - generic [ref=e158]:
+          - img [ref=e160]
+          - img [ref=e165]
+        - generic [ref=e169]: Sounds
+      - tab "Profile" [ref=e171] [cursor=pointer]:
+        - generic [ref=e172]:
+          - img [ref=e174]
+          - img [ref=e179]
+        - generic [ref=e183]: Profile
+  - dialog [ref=e298]:
+    - generic [ref=e300]:
+      - generic [ref=e301]:
+        - generic [ref=e302]:
+          - generic [ref=e303]: Morning Calm
+          - generic [ref=e304]: 5 min · beginner
+        - img [ref=e306] [cursor=pointer]
+      - generic [ref=e309]:
+        - generic [ref=e313]: Rest
+        - generic [ref=e314]: Find a comfortable seat. Let your shoulders soften.
+      - generic [ref=e315]:
+        - generic [ref=e318]:
+          - generic [ref=e319]: 0:05
+          - generic [ref=e320]: "-4:05"
+        - img [ref=e323] [cursor=pointer]

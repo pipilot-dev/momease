@@ -1,27 +1,32 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   Image,
-  Dimensions,
+  Animated,
+  Easing,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import {
   Play,
   Pause,
   Clock,
   TreePine,
   Waves,
-  CloudRain,
   Music2,
   Brain,
   Volume2,
+  X,
+  Loader,
 } from "lucide-react-native";
+import { useLocalSearchParams } from "expo-router";
 import { mockSounds, mockMeditations } from "../../lib/mock-data";
-
-const { width } = Dimensions.get("window");
+import { useAudioStore } from "../../lib/stores/audio-store";
+import { MeditationPlayer } from "../../components/meditation/MeditationPlayer";
+import type { MeditationSession } from "../../lib/types";
 
 const categoryIcons: Record<string, any> = {
   nature: TreePine,
@@ -31,12 +36,60 @@ const categoryIcons: Record<string, any> = {
   ambient: Waves,
 };
 
-export default function SoundsScreen() {
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"sounds" | "meditate">("sounds");
+const SLEEP_OPTIONS = [15, 30, 45, 60];
 
-  const togglePlay = (id: string) => {
-    setPlayingId(playingId === id ? null : id);
+// Animated equalizer bars shown on the now-playing card.
+function Equalizer({ active }: { active: boolean }) {
+  const bars = [useRef(new Animated.Value(0.4)).current, useRef(new Animated.Value(0.7)).current, useRef(new Animated.Value(0.5)).current];
+  useEffect(() => {
+    if (!active) {
+      bars.forEach((b) => b.stopAnimation());
+      return;
+    }
+    const loops = bars.map((b, i) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(b, { toValue: 1, duration: 380 + i * 90, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+          Animated.timing(b, { toValue: 0.3, duration: 380 + i * 90, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+        ])
+      )
+    );
+    loops.forEach((l) => l.start());
+    return () => loops.forEach((l) => l.stop());
+  }, [active]);
+
+  return (
+    <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 3, height: 20 }}>
+      {bars.map((b, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            width: 3,
+            borderRadius: 2,
+            backgroundColor: "#F9A8D4",
+            height: b.interpolate({ inputRange: [0, 1], outputRange: [5, 20] }),
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+export default function SoundsScreen() {
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const [activeTab, setActiveTab] = useState<"sounds" | "meditate">(
+    params.tab === "meditate" ? "meditate" : "sounds"
+  );
+  const [activeMeditation, setActiveMeditation] = useState<MeditationSession | null>(null);
+
+  const { currentId, isPlaying, isLoading, sleepMinutes, play, toggle, stop, setSleepTimer } =
+    useAudioStore();
+
+  const nowPlaying = mockSounds.find((s) => s.id === currentId);
+
+  const handleTap = (id: string, source: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    play(id, source);
   };
 
   return (
@@ -93,56 +146,100 @@ export default function SoundsScreen() {
         {activeTab === "sounds" ? (
           <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
             {/* Now Playing */}
-            {playingId && (
+            {nowPlaying && (
               <View
                 style={{
                   backgroundColor: "#1F2937",
                   borderRadius: 20,
                   padding: 20,
-                  marginBottom: 24,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 16,
+                  marginBottom: 16,
                 }}
               >
-                <Image
-                  source={mockSounds.find((s) => s.id === playingId)?.imageUrl}
-                  style={{ width: 56, height: 56, borderRadius: 12 }}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#FFFFFF" }}>
-                    {mockSounds.find((s) => s.id === playingId)?.title}
-                  </Text>
-                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#9CA3AF" }}>
-                    Now Playing
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => setPlayingId(null)}>
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: "#F472B6",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Pause size={20} color="#fff" fill="#fff" />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                  <Image
+                    source={nowPlaying.imageUrl}
+                    style={{ width: 56, height: 56, borderRadius: 12 }}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#FFFFFF" }}>
+                      {nowPlaying.title}
+                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
+                      <Equalizer active={isPlaying} />
+                      <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#9CA3AF" }}>
+                        {isPlaying ? "Now playing · looping" : "Paused"}
+                      </Text>
+                    </View>
                   </View>
-                </TouchableOpacity>
+                  <TouchableOpacity onPress={() => toggle()}>
+                    <View
+                      style={{
+                        width: 44, height: 44, borderRadius: 22,
+                        backgroundColor: "#F472B6",
+                        alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      {isPlaying ? (
+                        <Pause size={20} color="#fff" fill="#fff" />
+                      ) : (
+                        <Play size={20} color="#fff" fill="#fff" />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => stop()}>
+                    <View
+                      style={{
+                        width: 36, height: 36, borderRadius: 18,
+                        backgroundColor: "rgba(255,255,255,0.12)",
+                        alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      <X size={18} color="#fff" />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Sleep timer */}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+                  <Clock size={14} color="#9CA3AF" />
+                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: "#9CA3AF", marginRight: 4 }}>
+                    Sleep timer
+                  </Text>
+                  {SLEEP_OPTIONS.map((min) => {
+                    const on = sleepMinutes === min;
+                    return (
+                      <TouchableOpacity
+                        key={min}
+                        onPress={() => {
+                          Haptics.selectionAsync();
+                          setSleepTimer(on ? null : min);
+                        }}
+                        style={{
+                          paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
+                          backgroundColor: on ? "#F472B6" : "rgba(255,255,255,0.1)",
+                        }}
+                      >
+                        <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: on ? "#fff" : "#D1D5DB" }}>
+                          {min}m
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
             )}
 
             {/* Sound Cards */}
             {mockSounds.map((sound) => {
               const CatIcon = categoryIcons[sound.category] || Volume2;
-              const isPlaying = playingId === sound.id;
+              const isCurrent = currentId === sound.id;
+              const cardPlaying = isCurrent && isPlaying;
+              const cardLoading = isCurrent && isLoading;
 
               return (
                 <TouchableOpacity
                   key={sound.id}
-                  onPress={() => togglePlay(sound.id)}
+                  onPress={() => handleTap(sound.id, sound.audioSource)}
                   activeOpacity={0.9}
                   style={{
                     backgroundColor: "#FFFFFF",
@@ -150,7 +247,7 @@ export default function SoundsScreen() {
                     marginBottom: 12,
                     flexDirection: "row",
                     overflow: "hidden",
-                    borderWidth: isPlaying ? 2 : 0,
+                    borderWidth: isCurrent ? 2 : 0,
                     borderColor: "#F9A8D4",
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 1 },
@@ -159,17 +256,8 @@ export default function SoundsScreen() {
                     elevation: 1,
                   }}
                 >
-                  <Image
-                    source={sound.imageUrl}
-                    style={{ width: 80, height: 80 }}
-                  />
-                  <View
-                    style={{
-                      flex: 1,
-                      padding: 14,
-                      justifyContent: "center",
-                    }}
-                  >
+                  <Image source={sound.imageUrl} style={{ width: 80, height: 80 }} />
+                  <View style={{ flex: 1, padding: 14, justifyContent: "center" }}>
                     <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: "#1F2937" }}>
                       {sound.title}
                     </Text>
@@ -178,24 +266,19 @@ export default function SoundsScreen() {
                       <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#9CA3AF" }}>
                         {sound.category}
                       </Text>
-                      <Clock size={12} color="#9CA3AF" />
-                      <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#9CA3AF" }}>
-                        {sound.duration}
-                      </Text>
                     </View>
                   </View>
                   <View style={{ justifyContent: "center", paddingRight: 16 }}>
                     <View
                       style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 20,
-                        backgroundColor: isPlaying ? "#F472B6" : "#F3F4F6",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        width: 40, height: 40, borderRadius: 20,
+                        backgroundColor: cardPlaying ? "#F472B6" : "#F3F4F6",
+                        alignItems: "center", justifyContent: "center",
                       }}
                     >
-                      {isPlaying ? (
+                      {cardLoading ? (
+                        <Loader size={18} color="#6B7280" />
+                      ) : cardPlaying ? (
                         <Pause size={18} color="#fff" fill="#fff" />
                       ) : (
                         <Play size={18} color="#6B7280" fill="#6B7280" />
@@ -205,6 +288,10 @@ export default function SoundsScreen() {
                 </TouchableOpacity>
               );
             })}
+
+            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#B0AAA2", textAlign: "center", marginTop: 8 }}>
+              Sounds loop seamlessly — set a timer and drift off.
+            </Text>
           </View>
         ) : (
           <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
@@ -214,48 +301,28 @@ export default function SoundsScreen() {
                 key={med.id}
                 activeOpacity={0.9}
                 style={{ marginBottom: 16 }}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  stop(); // don't overlap ambient audio with the guided session
+                  setActiveMeditation(med);
+                }}
               >
                 <View style={{ borderRadius: 20, overflow: "hidden" }}>
-                  <Image
-                    source={med.imageUrl}
-                    style={{ width: "100%", height: 160 }}
-                  />
+                  <Image source={med.imageUrl} style={{ width: "100%", height: 160 }} />
                   <LinearGradient
                     colors={["transparent", "rgba(0,0,0,0.7)"]}
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      padding: 20,
-                    }}
+                    style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 20 }}
                   >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "flex-end",
-                      }}
-                    >
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" }}>
                       <View style={{ flex: 1 }}>
                         <View
                           style={{
-                            backgroundColor: "#FFFFFF30",
-                            borderRadius: 999,
-                            paddingHorizontal: 10,
-                            paddingVertical: 4,
-                            alignSelf: "flex-start",
-                            marginBottom: 8,
+                            backgroundColor: "#FFFFFF30", borderRadius: 999,
+                            paddingHorizontal: 10, paddingVertical: 4,
+                            alignSelf: "flex-start", marginBottom: 8,
                           }}
                         >
-                          <Text
-                            style={{
-                              fontFamily: "Quicksand-SemiBold",
-                              fontSize: 11,
-                              color: "#FFFFFF",
-                              textTransform: "capitalize",
-                            }}
-                          >
+                          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 11, color: "#FFFFFF", textTransform: "capitalize" }}>
                             {med.category}
                           </Text>
                         </View>
@@ -268,12 +335,9 @@ export default function SoundsScreen() {
                       </View>
                       <View
                         style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 24,
+                          width: 48, height: 48, borderRadius: 24,
                           backgroundColor: "#F472B6",
-                          alignItems: "center",
-                          justifyContent: "center",
+                          alignItems: "center", justifyContent: "center",
                         }}
                       >
                         <Play size={22} color="#fff" fill="#fff" />
@@ -283,11 +347,8 @@ export default function SoundsScreen() {
                 </View>
                 <Text
                   style={{
-                    fontFamily: "Quicksand-Medium",
-                    fontSize: 13,
-                    color: "#6B7280",
-                    marginTop: 8,
-                    lineHeight: 20,
+                    fontFamily: "Quicksand-Medium", fontSize: 13, color: "#6B7280",
+                    marginTop: 8, lineHeight: 20,
                   }}
                 >
                   {med.description}
@@ -298,6 +359,8 @@ export default function SoundsScreen() {
         )}
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      <MeditationPlayer session={activeMeditation} onClose={() => setActiveMeditation(null)} />
     </View>
   );
 }

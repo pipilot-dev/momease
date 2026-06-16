@@ -27,6 +27,7 @@ import {
   Baby,
   Smile,
   BookOpen,
+  BarChart3,
 } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
@@ -252,7 +253,7 @@ export default function HomeScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }}
                 activeOpacity={0.85}
-                style={{ alignItems: "center", width: (width - 72) / 4 }}
+                style={{ alignItems: "center", width: (width - 56) / 5 }}
               >
                 <View
                   style={{
@@ -283,6 +284,7 @@ export default function HomeScreen() {
                 { icon: Moon, label: "Sleep", color: colors.accent[400], route: "/sleep" },
                 { icon: UtensilsCrossed, label: "Meals", color: "#FBBF24", route: "/meals" },
                 { icon: Users, label: "Community", color: colors.secondary[500], route: "/community" },
+                { icon: BarChart3, label: "Insights", color: colors.accent[500], route: "/insights" },
               ].map((action, i) => (
                 <TouchableOpacity
                   key={i}
@@ -291,7 +293,7 @@ export default function HomeScreen() {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   }}
                   activeOpacity={0.85}
-                  style={{ alignItems: "center", width: (width - 72) / 4 }}
+                  style={{ alignItems: "center", width: (width - 56) / 5 }}
                 >
                   <View
                     style={{
@@ -433,6 +435,10 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={med.id}
                 activeOpacity={0.9}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push({ pathname: "/(tabs)/sounds", params: { tab: "meditate" } } as any);
+                }}
                 style={{ marginRight: 16, width: 200 }}
               >
                 <View style={{ borderRadius: 16, overflow: "hidden" }}>

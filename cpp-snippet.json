@@ -1,0 +1,10 @@
+{
+  "language": "cpp",
+  "stdin": "Peter",
+  "files": [
+    {
+      "name": "HelloWorld.cpp",
+      "content": "#include <iostream>\n#include <string>\n\nint main() {\n    std::string name;\n    std::getline(std::cin, name);\n    std::cout << \"Hello \" << name;\n    return 0;\n}"
+    }
+  ]
+}

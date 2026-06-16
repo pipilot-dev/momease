@@ -149,7 +149,7 @@ export const mockMilestones: Milestone[] = [
     babyId: "baby_1",
     title: "First Walk",
     description: "She took her first steps today!",
-    category: "development",
+    category: "motor",
     date: "2026-05-01",
     ageAtMilestone: "6 months",
     isCustom: false,

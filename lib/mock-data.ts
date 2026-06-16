@@ -28,6 +28,17 @@ const images = {
   lauren: require("../assets/avatar-lauren.png"),
 };
 
+// ── Local audio assets (procedurally generated, see scripts/generate_sounds.py) ──
+const audio = {
+  rain: require("../assets/audio/rain.wav"),
+  ocean: require("../assets/audio/ocean.wav"),
+  whiteNoise: require("../assets/audio/whitenoise.wav"),
+  lullaby: require("../assets/audio/lullaby.wav"),
+  forest: require("../assets/audio/forest.wav"),
+  bodyScan: require("../assets/audio/bodyscan.wav"),
+  meditation: require("../assets/audio/meditation.wav"),
+};
+
 export const mockTasks: Task[] = [
   {
     id: "t1",
@@ -212,58 +223,76 @@ export const mockSounds: Sound[] = [
     id: "s1",
     title: "Gentle Rain",
     description: "Soft rainfall on leaves — perfect for winding down",
-    duration: "30:00",
+    duration: "Loops",
     category: "nature",
     imageUrl: images.gentleRain,
-    audioUrl: "mock://rain.mp3",
+    audioSource: audio.rain,
   },
   {
     id: "s2",
     title: "Ocean Waves",
     description: "Rhythmic ocean waves for deep relaxation",
-    duration: "45:00",
+    duration: "Loops",
     category: "nature",
     imageUrl: images.oceanWaves,
-    audioUrl: "mock://ocean.mp3",
+    audioSource: audio.ocean,
   },
   {
     id: "s3",
     title: "Soft White Noise",
     description: "Consistent white noise to block distractions",
-    duration: "60:00",
+    duration: "Loops",
     category: "white-noise",
     imageUrl: images.whiteNoise,
-    audioUrl: "mock://whitenoise.mp3",
+    audioSource: audio.whiteNoise,
   },
   {
     id: "s4",
     title: "Twinkle Star Lullaby",
     description: "Gentle music box rendition for bedtime",
-    duration: "20:00",
+    duration: "Loops",
     category: "lullaby",
     imageUrl: images.lullaby,
-    audioUrl: "mock://lullaby.mp3",
+    audioSource: audio.lullaby,
   },
   {
     id: "s5",
     title: "Forest Morning",
     description: "Birds chirping in a peaceful forest at dawn",
-    duration: "35:00",
+    duration: "Loops",
     category: "ambient",
     imageUrl: images.forest,
-    audioUrl: "mock://forest.mp3",
+    audioSource: audio.forest,
   },
   {
     id: "s6",
-    title: "Guided Body Scan",
-    description: "Release tension from head to toe",
-    duration: "15:00",
+    title: "Warm Body Scan",
+    description: "A soft drone to release tension from head to toe",
+    duration: "Loops",
     category: "meditation",
     imageUrl: images.bodyScan,
-    audioUrl: "mock://bodyscan.mp3",
+    audioSource: audio.bodyScan,
   },
-  
 ];
+
+// A gentle 4-7-8 style breathing cycle reused across sessions.
+const breathCycle: import("./types").MeditationStep[] = [
+  { seconds: 4, text: "Breathe in slowly through your nose", breath: "in" },
+  { seconds: 4, text: "Hold gently", breath: "hold" },
+  { seconds: 6, text: "Release and breathe out", breath: "out" },
+  { seconds: 2, text: "Rest", breath: "rest" },
+];
+
+function buildScript(
+  intro: { text: string; seconds: number }[],
+  cycles: number,
+  outro: { text: string; seconds: number }
+): import("./types").MeditationStep[] {
+  const steps: import("./types").MeditationStep[] = intro.map((s) => ({ ...s, breath: "rest" as const }));
+  for (let i = 0; i < cycles; i++) steps.push(...breathCycle);
+  steps.push({ ...outro, breath: "rest" });
+  return steps;
+}
 
 export const mockMeditations: MeditationSession[] = [
   {
@@ -274,6 +303,15 @@ export const mockMeditations: MeditationSession[] = [
     category: "focus",
     imageUrl: images.morningCalm,
     level: "beginner",
+    audioSource: audio.meditation,
+    script: buildScript(
+      [
+        { text: "Find a comfortable seat. Let your shoulders soften.", seconds: 8 },
+        { text: "Set one gentle intention for today.", seconds: 8 },
+      ],
+      14,
+      { text: "Carry this calm with you. You've got this, mama.", seconds: 10 }
+    ),
   },
   {
     id: "med2",
@@ -283,6 +321,15 @@ export const mockMeditations: MeditationSession[] = [
     category: "stress",
     imageUrl: images.stressRelease,
     level: "beginner",
+    audioSource: audio.meditation,
+    script: buildScript(
+      [
+        { text: "Notice where you're holding tension right now.", seconds: 8 },
+        { text: "With each exhale, let a little of it go.", seconds: 8 },
+      ],
+      18,
+      { text: "Your body is lighter. The day's weight can wait.", seconds: 10 }
+    ),
   },
   {
     id: "med3",
@@ -292,6 +339,15 @@ export const mockMeditations: MeditationSession[] = [
     category: "sleep",
     imageUrl: images.deepSleep,
     level: "beginner",
+    audioSource: audio.bodyScan,
+    script: buildScript(
+      [
+        { text: "Lie down and let the bed hold you completely.", seconds: 10 },
+        { text: "Picture a warm, quiet place that feels safe.", seconds: 10 },
+      ],
+      24,
+      { text: "Let yourself drift. Rest is productive, not lazy.", seconds: 12 }
+    ),
   },
   {
     id: "med4",
@@ -301,6 +357,15 @@ export const mockMeditations: MeditationSession[] = [
     category: "gratitude",
     imageUrl: images.gratitude,
     level: "intermediate",
+    audioSource: audio.meditation,
+    script: buildScript(
+      [
+        { text: "Bring to mind one small thing that went right today.", seconds: 8 },
+        { text: "Feel the warmth of it in your chest.", seconds: 8 },
+      ],
+      16,
+      { text: "Gratitude is a muscle — you just made it stronger.", seconds: 10 }
+    ),
   },
   {
     id: "med5",
@@ -310,6 +375,15 @@ export const mockMeditations: MeditationSession[] = [
     category: "body-scan",
     imageUrl: images.bodyScanMed,
     level: "intermediate",
+    audioSource: audio.bodyScan,
+    script: buildScript(
+      [
+        { text: "Bring attention to your toes. Let them relax.", seconds: 10 },
+        { text: "Move slowly up — legs, hips, belly, shoulders.", seconds: 10 },
+      ],
+      20,
+      { text: "Your whole body is at ease. Welcome back.", seconds: 10 }
+    ),
   },
 ];
 

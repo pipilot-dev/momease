@@ -34,9 +34,8 @@ import {
   getJournalStats,
   type JournalEntry,
   type JournalPrompt,
-  moodTags as baseMoodTags,
 } from "../lib/mock-journal";
-import { moodLabels } from "../lib/mock-mood";
+import { moodLabels, moodTags as baseMoodTags } from "../lib/mock-mood";
 
 // Journal-specific tags
 const journalTags = [

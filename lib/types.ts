@@ -75,7 +75,18 @@ export interface Sound {
   duration: string;
   category: "nature" | "white-noise" | "lullaby" | "meditation" | "ambient";
   imageUrl: ImageSource;
-  audioUrl: string;
+  /** require()'d local audio module — real, generated, seamless-looping audio. */
+  audioSource: number;
+}
+
+/** One spoken/visual step in a guided meditation. */
+export interface MeditationStep {
+  /** Seconds this step is shown. */
+  seconds: number;
+  /** Short cue shown to the user. */
+  text: string;
+  /** Optional breathing pattern that drives the on-screen orb animation. */
+  breath?: "in" | "hold" | "out" | "rest";
 }
 
 export interface MeditationSession {
@@ -86,6 +97,10 @@ export interface MeditationSession {
   category: "stress" | "sleep" | "focus" | "gratitude" | "body-scan";
   imageUrl: ImageSource;
   level: "beginner" | "intermediate" | "advanced";
+  /** Background ambient pad (require()'d local audio). */
+  audioSource: number;
+  /** Guided script that plays out over the session. */
+  script: MeditationStep[];
 }
 
 export interface BabyProfile {

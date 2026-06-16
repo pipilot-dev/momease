@@ -21,7 +21,6 @@ interface TaskItemProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
 }
-
 const categoryIcons: Record<Task["category"], LucideIcon> = {
   work: Briefcase,
   family: Baby,

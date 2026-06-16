@@ -60,3 +60,5 @@ coverage/
 .pipilot-data/
 .pipilot-tsconfig.json
 .pipilot-tsconfig.tsbuildinfo
+.pipilot/checkpoints/
+.pipilot/search-index.json

@@ -1,0 +1,92 @@
+- generic [ref=e8]:
+  - generic [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]: Calm Space
+      - generic [ref=e16]: Sounds & meditations to help you unwind
+      - generic [ref=e17]:
+        - generic [ref=e19] [cursor=pointer]: Calming Sounds
+        - generic [ref=e21] [cursor=pointer]: Meditate
+    - generic [ref=e24]:
+      - generic [ref=e184]:
+        - generic [ref=e185]:
+          - generic [ref=e188]:
+            - generic [ref=e189]: Gentle Rain
+            - generic [ref=e195]: Now playing · looping
+          - img [ref=e198] [cursor=pointer]
+          - img [ref=e203] [cursor=pointer]
+        - generic [ref=e206]:
+          - img [ref=e207]
+          - generic [ref=e210]: Sleep timer
+          - generic [ref=e212] [cursor=pointer]: 15m
+          - generic [ref=e214] [cursor=pointer]: 30m
+          - generic [ref=e216] [cursor=pointer]: 45m
+          - generic [ref=e218] [cursor=pointer]: 60m
+      - generic [active] [ref=e25] [cursor=pointer]:
+        - generic [ref=e28]:
+          - generic [ref=e29]: Gentle Rain
+          - generic [ref=e30]:
+            - img [ref=e31]
+            - generic [ref=e33]: nature
+        - img [ref=e219]
+      - generic [ref=e38] [cursor=pointer]:
+        - generic [ref=e41]:
+          - generic [ref=e42]: Ocean Waves
+          - generic [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e46]: nature
+        - img [ref=e49]
+      - generic [ref=e51] [cursor=pointer]:
+        - generic [ref=e54]:
+          - generic [ref=e55]: Soft White Noise
+          - generic [ref=e56]:
+            - img [ref=e57]
+            - generic [ref=e61]: white-noise
+        - img [ref=e64]
+      - generic [ref=e66] [cursor=pointer]:
+        - generic [ref=e69]:
+          - generic [ref=e70]: Twinkle Star Lullaby
+          - generic [ref=e71]:
+            - img [ref=e72]
+            - generic [ref=e75]: lullaby
+        - img [ref=e78]
+      - generic [ref=e80] [cursor=pointer]:
+        - generic [ref=e83]:
+          - generic [ref=e84]: Forest Morning
+          - generic [ref=e85]:
+            - img [ref=e86]
+            - generic [ref=e90]: ambient
+        - img [ref=e93]
+      - generic [ref=e95] [cursor=pointer]:
+        - generic [ref=e98]:
+          - generic [ref=e99]: Warm Body Scan
+          - generic [ref=e100]:
+            - img [ref=e101]
+            - generic [ref=e109]: meditation
+        - img [ref=e112]
+      - generic [ref=e114]: Sounds loop seamlessly — set a timer and drift off.
+  - tablist [ref=e117]:
+    - tab "Home" [ref=e119] [cursor=pointer]:
+      - generic [ref=e120]:
+        - img [ref=e122]
+        - img [ref=e126]
+      - generic [ref=e129]: Home
+    - tab "Tasks" [ref=e131] [cursor=pointer]:
+      - generic [ref=e132]:
+        - img [ref=e134]
+        - img [ref=e138]
+      - generic [ref=e141]: Tasks
+    - tab "Chat" [ref=e143] [cursor=pointer]:
+      - generic [ref=e144]:
+        - img [ref=e147]
+        - img [ref=e152]
+      - generic [ref=e155]: Chat
+    - tab "Sounds" [selected] [ref=e157] [cursor=pointer]:
+      - generic [ref=e158]:
+        - img [ref=e160]
+        - img [ref=e165]
+      - generic [ref=e169]: Sounds
+    - tab "Profile" [ref=e171] [cursor=pointer]:
+      - generic [ref=e172]:
+        - img [ref=e174]
+        - img [ref=e179]
+      - generic [ref=e183]: Profile

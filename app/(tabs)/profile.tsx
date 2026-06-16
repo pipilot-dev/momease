@@ -1,7 +1,8 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, Switch } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import {
   User,
   Bell,
@@ -17,41 +18,100 @@ import {
   Star,
 } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
+import { useTaskStore } from "../../lib/stores/task-store";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut } = useAuthStore();
+  const { getCompletedCount } = useTaskStore();
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace("/(auth)/sign-in");
+  // Base demo numbers + the user's real completed tasks so the screen feels live.
+  const tasksDone = 142 + getCompletedCount();
+
+  const handleSignOut = () => {
+    Alert.alert("Sign out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign out",
+        style: "destructive",
+        onPress: async () => {
+          await signOut();
+          router.replace("/(auth)/sign-in");
+        },
+      },
+    ]);
+  };
+
+  const info = (title: string, message: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Alert.alert(title, message);
   };
 
   const menuSections = [
     {
       title: "Account",
       items: [
-        { icon: User, label: "Edit Profile", color: "#F472B6" },
-        { icon: Crown, label: "Upgrade to Premium", color: "#F59E0B", badge: "PRO" },
-        { icon: Bell, label: "Notifications", color: "#8B5CF6", toggle: true, value: notifications, onToggle: setNotifications },
+        {
+          icon: User,
+          label: "Edit Profile",
+          color: "#F472B6",
+          onPress: () => info("Edit Profile", "Update your name, photo, and family details. (Demo)"),
+        },
+        {
+          icon: Crown,
+          label: "Upgrade to Premium",
+          color: "#F59E0B",
+          badge: "PRO",
+          onPress: () =>
+            info(
+              "MomEase Premium",
+              "Unlock unlimited AI chats, all meditations, and offline sounds for $7.99/mo. (Demo)"
+            ),
+        },
+        {
+          icon: Bell,
+          label: "Notifications",
+          color: "#8B5CF6",
+          toggle: true,
+          value: notifications,
+          onToggle: (v: boolean) => {
+            Haptics.selectionAsync();
+            setNotifications(v);
+          },
+        },
       ],
     },
     {
       title: "Preferences",
       items: [
-        { icon: Moon, label: "Dark Mode", color: "#6366F1", toggle: true, value: darkMode, onToggle: setDarkMode },
-        { icon: Settings, label: "App Settings", color: "#6B7280" },
+        {
+          icon: Moon,
+          label: "Dark Mode",
+          color: "#6366F1",
+          toggle: true,
+          value: darkMode,
+          onToggle: (v: boolean) => {
+            Haptics.selectionAsync();
+            setDarkMode(v);
+          },
+        },
+        {
+          icon: Settings,
+          label: "App Settings",
+          color: "#6B7280",
+          onPress: () => info("App Settings", "Manage language, units, and data preferences. (Demo)"),
+        },
       ],
     },
     {
       title: "Support",
       items: [
-        { icon: HelpCircle, label: "Help Center", color: "#10B981" },
-        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6" },
-        { icon: Star, label: "Rate MomEase", color: "#F59E0B" },
-        { icon: Shield, label: "Privacy Policy", color: "#6B7280" },
+        { icon: HelpCircle, label: "Help Center", color: "#10B981", onPress: () => info("Help Center", "Browse FAQs and guides for getting the most out of MomEase.") },
+        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => info("Send Feedback", "We'd love to hear from you at hello@momease.app 💛") },
+        { icon: Star, label: "Rate MomEase", color: "#F59E0B", onPress: () => info("Rate MomEase", "Enjoying the app? A 5-star review helps other moms find us!") },
+        { icon: Shield, label: "Privacy Policy", color: "#6B7280", onPress: () => info("Privacy", "Your data stays yours. We never sell personal information.") },
       ],
     },
   ];
@@ -142,7 +202,7 @@ export default function ProfileScreen() {
             <View style={{ width: 1, backgroundColor: "#E5E7EB" }} />
             <View style={{ alignItems: "center" }}>
               <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: "#1F2937" }}>
-                142
+                {tasksDone}
               </Text>
               <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#6B7280" }}>
                 Tasks Done
@@ -192,6 +252,7 @@ export default function ProfileScreen() {
                   <TouchableOpacity
                     key={item.label}
                     activeOpacity={item.toggle ? 1 : 0.7}
+                    onPress={item.toggle ? undefined : (item as any).onPress}
                     style={{
                       flexDirection: "row",
                       alignItems: "center",

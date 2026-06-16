@@ -2,7 +2,14 @@ import { chromium } from 'playwright';
 import { writeFileSync } from 'fs';
 
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+const context = await browser.newContext({
+  viewport: { width: 1280, height: 720 },
+  recordVideo: {
+    dir: './videos',
+    size: { width: 1280, height: 720 }
+  }
+});
+const page = await context.newPage();
 
 console.log('--- Navigating to app ---');
 await page.goto('http://localhost:38291', { waitUntil: 'networkidle', timeout: 30000 });
@@ -61,5 +68,6 @@ if (consoleErrors.length > 0) {
   console.log('\nNo console errors detected!');
 }
 
+await context.close();
 await browser.close();
 console.log('\n--- Browser test complete ---');

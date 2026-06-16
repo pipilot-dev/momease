@@ -159,7 +159,7 @@ export default function SleepTrackerScreen() {
     return colors.error;
   };
 
-  const getBarColor = (hours: number): string[] => {
+  const getBarColor = (hours: number): readonly [string, string] => {
     if (hours >= 7) return [colors.accent[400], colors.accent[500]];
     if (hours >= 5) return [colors.warning, "#F59E0B"];
     return [colors.primary[400], colors.primary[500]];
