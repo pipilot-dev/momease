@@ -37,12 +37,18 @@ import { useTaskStore } from "../../lib/stores/task-store";
 import { useCheckinStore } from "../../lib/stores/checkin-store";
 import { getRandomMantra, getTimeOfDay, mockMeditations } from "../../lib/mock-data";
 import { getAIGreeting } from "../../lib/mock-ai";
-import { colors, gradients, animation } from "../../lib/theme";
+import { animation } from "../../lib/theme";
+import { useTheme } from "../../lib/theme-context";
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { theme, isDark } = useTheme();
+  // The theme palette mirrors the static token shape, so aliasing it lets the
+  // whole screen pick up light/dark colors without rewiring every reference.
+  const colors = theme;
+  const gradients = theme.gradients;
   const { user } = useAuthStore();
   const { tasks, getPendingCount, getCompletedCount } = useTaskStore();
   const { currentStreak, hasCheckedInToday } = useCheckinStore();
@@ -404,7 +410,7 @@ export default function HomeScreen() {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: colors.secondary[50],
+                  backgroundColor: isDark ? colors.surfaceAlt : colors.secondary[50],
                   borderRadius: 12,
                   padding: 12,
                   alignItems: "center",
@@ -420,7 +426,7 @@ export default function HomeScreen() {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: colors.primary[50],
+                  backgroundColor: isDark ? colors.surfaceAlt : colors.primary[50],
                   borderRadius: 12,
                   padding: 12,
                   alignItems: "center",
