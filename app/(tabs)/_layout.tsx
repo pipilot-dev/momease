@@ -1,26 +1,29 @@
 import { Tabs } from "expo-router";
 import { View, Platform } from "react-native";
 import { Home, ListTodo, MessageCircle, Music, UserCircle } from "lucide-react-native";
+import { useTheme } from "../../lib/theme-context";
 
 export default function TabLayout() {
+  const { theme, isDark } = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopWidth: 0,
+          backgroundColor: theme.surface,
+          borderTopWidth: isDark ? 1 : 0,
+          borderTopColor: theme.border,
           height: Platform.OS === "ios" ? 88 : 68,
           paddingBottom: Platform.OS === "ios" ? 28 : 8,
           paddingTop: 8,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.06,
+          shadowOpacity: isDark ? 0 : 0.06,
           shadowRadius: 12,
           elevation: 8,
         },
         tabBarActiveTintColor: "#F472B6",
-        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarInactiveTintColor: theme.text.muted,
         tabBarLabelStyle: {
           fontFamily: "Quicksand-SemiBold",
           fontSize: 11,
