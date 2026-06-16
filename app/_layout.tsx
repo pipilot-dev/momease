@@ -4,9 +4,15 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ThemeProvider, useTheme } from "../lib/theme-context";
-// Side-effect import: instantiating the settings store hydrates saved
-// preferences and re-arms the daily check-in reminder on app launch.
+// Side-effect imports: instantiating the persisted stores at launch hydrates
+// saved state, re-arms the daily reminder, and registers every store for
+// Supabase cloud sync so a login pulls the full account, not just whatever
+// screens happen to be mounted.
 import "../lib/stores/settings-store";
+import "../lib/stores/task-store";
+import "../lib/stores/chat-store";
+import "../lib/stores/checkin-store";
+import "../lib/stores/milestone-store";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();

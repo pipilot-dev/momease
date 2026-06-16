@@ -71,3 +71,5 @@ videos/
 frames/
 videos-dark/
 frames-dark/
+pw-*.mjs
+pw-*.png
