@@ -33,11 +33,14 @@ import {
   MoodLevel,
   EnergyLevel,
 } from "../lib/mock-mood";
-import { colors, gradients, shadows, radius, spacing } from "../lib/theme";
+import { shadows, radius, spacing } from "../lib/theme";
+import { useTheme } from "../lib/theme-context";
 
 const { width } = Dimensions.get("window");
 
 export default function MoodScreen() {
+  const { theme, isDark } = useTheme();
+  const colors = theme;
   const router = useRouter();
   const { entries, streak, loadEntries, addEntry, getTodayEntry, isLoaded } =
     useMoodStore();
@@ -212,7 +215,7 @@ export default function MoodScreen() {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header */}
       <LinearGradient
-        colors={gradients.warmMorning}
+        colors={isDark ? [theme.gradients.warmMorning[0], theme.gradients.warmMorning[1], theme.bg] : ["#FFF7ED", "#FEF3C7", "#FDFBF7"]}
         style={{
           paddingTop: Platform.OS === "ios" ? 60 : 40,
           paddingBottom: spacing.lg,

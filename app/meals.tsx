@@ -18,6 +18,7 @@ import {
   ChevronUp,
 } from "lucide-react-native";
 import { mockMealPlans } from "../lib/mock-data";
+import { useTheme } from "../lib/theme-context";
 
 const categoryColors: Record<string, string> = {
   breakfast: "#F59E0B",
@@ -27,6 +28,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function MealsScreen() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterCat, setFilterCat] = useState<string>("all");
@@ -35,21 +37,21 @@ export default function MealsScreen() {
   const filtered = filterCat === "all" ? mockMealPlans : mockMealPlans.filter((m) => m.category === filterCat);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FDFCFB" }}>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
       {/* Header */}
       <LinearGradient
-        colors={["#FEF3C7", "#FFFBEB", "#FDFCFB"]}
+        colors={isDark ? [theme.gradients.warmMorning[0], theme.gradients.warmMorning[1], theme.bg] : ["#FEF3C7", "#FFFBEB", theme.bg]}
         style={{ paddingTop: 60, paddingBottom: 16, paddingHorizontal: 24 }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft size={24} color="#1F2937" />
+            <ArrowLeft size={24} color={theme.text.primary} />
           </TouchableOpacity>
           <View>
-            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: "#1F2937" }}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 28, color: theme.text.primary }}>
               Meal Prep
             </Text>
-            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginTop: 2 }}>
+            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginTop: 2 }}>
               Quick, healthy meals the whole family will love
             </Text>
           </View>
@@ -65,17 +67,17 @@ export default function MealsScreen() {
                 paddingHorizontal: 16,
                 paddingVertical: 8,
                 borderRadius: 999,
-                backgroundColor: filterCat === cat ? "#F59E0B" : "#FFFFFF",
+                backgroundColor: filterCat === cat ? "#F59E0B" : theme.surface,
                 marginRight: 8,
                 borderWidth: 1,
-                borderColor: filterCat === cat ? "#F59E0B" : "#E5E7EB",
+                borderColor: filterCat === cat ? "#F59E0B" : theme.border,
               }}
             >
               <Text
                 style={{
                   fontFamily: "Quicksand-SemiBold",
                   fontSize: 13,
-                  color: filterCat === cat ? "#FFFFFF" : "#6B7280",
+                  color: filterCat === cat ? "#FFFFFF" : theme.text.secondary,
                   textTransform: "capitalize",
                 }}
               >
@@ -95,7 +97,7 @@ export default function MealsScreen() {
             <View
               key={meal.id}
               style={{
-                backgroundColor: "#FFFFFF",
+                backgroundColor: theme.surface,
                 borderRadius: 20,
                 marginBottom: 16,
                 overflow: "hidden",
@@ -134,7 +136,7 @@ export default function MealsScreen() {
                         flexDirection: "row",
                         alignItems: "center",
                         gap: 4,
-                        backgroundColor: "#FFF5F9",
+                        backgroundColor: isDark ? theme.surfaceAlt : "#FFF5F9",
                         paddingHorizontal: 8,
                         paddingVertical: 4,
                         borderRadius: 999,
@@ -148,23 +150,23 @@ export default function MealsScreen() {
                   )}
                 </View>
 
-                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: "#1F2937" }}>
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: theme.text.primary }}>
                   {meal.name}
                 </Text>
-                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginTop: 4 }}>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginTop: 4 }}>
                   {meal.description}
                 </Text>
 
                 <View style={{ flexDirection: "row", gap: 16, marginTop: 12 }}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Clock size={14} color="#9CA3AF" />
-                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: "#9CA3AF" }}>
+                    <Clock size={14} color={theme.text.muted} />
+                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: theme.text.muted }}>
                       {meal.prepTime}
                     </Text>
                   </View>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Users size={14} color="#9CA3AF" />
-                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: "#9CA3AF" }}>
+                    <Users size={14} color={theme.text.muted} />
+                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: theme.text.muted }}>
                       Serves {meal.servings}
                     </Text>
                   </View>
@@ -180,7 +182,7 @@ export default function MealsScreen() {
                     gap: 4,
                     marginTop: 16,
                     paddingVertical: 8,
-                    backgroundColor: "#F9FAFB",
+                    backgroundColor: isDark ? theme.surfaceAlt : "#F9FAFB",
                     borderRadius: 12,
                   }}
                 >
@@ -197,7 +199,7 @@ export default function MealsScreen() {
 
                 {isExpanded && (
                   <View style={{ marginTop: 16 }}>
-                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: "#1F2937", marginBottom: 8 }}>
+                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: theme.text.primary, marginBottom: 8 }}>
                       Ingredients
                     </Text>
                     {meal.ingredients.map((ing, i) => (
@@ -205,7 +207,7 @@ export default function MealsScreen() {
                         <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: catColor }}>
                           *
                         </Text>
-                        <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#4B5563" }}>
+                        <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary }}>
                           {ing}
                         </Text>
                       </View>
@@ -215,7 +217,7 @@ export default function MealsScreen() {
                       style={{
                         fontFamily: "Quicksand-Bold",
                         fontSize: 15,
-                        color: "#1F2937",
+                        color: theme.text.primary,
                         marginTop: 16,
                         marginBottom: 8,
                       }}
@@ -238,7 +240,7 @@ export default function MealsScreen() {
                             {i + 1}
                           </Text>
                         </View>
-                        <Text style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 14, color: "#4B5563", lineHeight: 22 }}>
+                        <Text style={{ flex: 1, fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, lineHeight: 22 }}>
                           {step}
                         </Text>
                       </View>

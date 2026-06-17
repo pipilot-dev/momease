@@ -9,11 +9,13 @@ import {
   ScrollView,
   Animated,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { useRouter, Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { Heart, Mail, Lock, Eye, EyeOff } from "lucide-react-native";
+import { Heart, Mail, Lock, Eye, EyeOff, CheckCircle2, X } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
+import { authService } from "../../lib/auth-service";
 
 export default function SignIn() {
   const router = useRouter();
@@ -21,6 +23,36 @@ export default function SignIn() {
   const [email, setEmail] = useState("sarah@momease.app");
   const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Forgot-password reset flow
+  const [resetVisible, setResetVisible] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const openReset = () => {
+    setResetEmail(email);
+    setResetSent(false);
+    setResetError(null);
+    setResetVisible(true);
+  };
+
+  const handleReset = async () => {
+    if (!resetEmail.trim()) {
+      setResetError("Please enter your email address");
+      return;
+    }
+    setResetLoading(true);
+    setResetError(null);
+    const result = await authService.resetPassword(resetEmail.trim());
+    setResetLoading(false);
+    if (result.success) {
+      setResetSent(true);
+    } else {
+      setResetError(result.error || "Couldn't send reset email. Try again.");
+    }
+  };
 
   const handleGoogle = async () => {
     clearError();
@@ -202,7 +234,7 @@ export default function SignIn() {
               )}
 
               {/* Forgot password */}
-              <TouchableOpacity style={{ alignSelf: "flex-end" }}>
+              <TouchableOpacity style={{ alignSelf: "flex-end" }} onPress={openReset}>
                 <Text
                   style={{
                     fontFamily: "Quicksand-SemiBold",
@@ -336,6 +368,108 @@ export default function SignIn() {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Forgot-password reset modal */}
+      <Modal visible={resetVisible} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            justifyContent: "center",
+            paddingHorizontal: 24,
+          }}
+        >
+          <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, padding: 24 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: "#1F2937" }}>
+                Reset password
+              </Text>
+              <TouchableOpacity onPress={() => setResetVisible(false)}>
+                <X size={24} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+
+            {resetSent ? (
+              <View style={{ alignItems: "center", paddingVertical: 16 }}>
+                <CheckCircle2 size={48} color="#10B981" />
+                <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 16, color: "#1F2937", textAlign: "center", marginTop: 12 }}>
+                  Check your inbox
+                </Text>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", textAlign: "center", marginTop: 6 }}>
+                  We've sent a password reset link to {resetEmail}.
+                </Text>
+                <TouchableOpacity onPress={() => setResetVisible(false)} style={{ marginTop: 20 }} activeOpacity={0.85}>
+                  <LinearGradient
+                    colors={["#F9A8D4", "#F472B6"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ borderRadius: 14, paddingVertical: 14, paddingHorizontal: 40, alignItems: "center" }}
+                  >
+                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#FFFFFF" }}>Done</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginBottom: 16 }}>
+                  Enter your email and we'll send you a link to reset your password.
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: 16,
+                    paddingHorizontal: 16,
+                    paddingVertical: 4,
+                    borderWidth: 1.5,
+                    borderColor: "#FBC8DC",
+                  }}
+                >
+                  <Mail size={20} color="#F9A8D4" />
+                  <TextInput
+                    style={{
+                      flex: 1,
+                      fontFamily: "Quicksand-Medium",
+                      fontSize: 16,
+                      color: "#1F2937",
+                      paddingVertical: 14,
+                      marginLeft: 12,
+                    }}
+                    placeholder="Email address"
+                    placeholderTextColor="#9CA3AF"
+                    value={resetEmail}
+                    onChangeText={setResetEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+                {resetError && (
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: "#EF4444", marginTop: 10 }}>
+                    {resetError}
+                  </Text>
+                )}
+                <TouchableOpacity onPress={handleReset} disabled={resetLoading} style={{ marginTop: 20 }} activeOpacity={0.85}>
+                  <LinearGradient
+                    colors={["#F9A8D4", "#F472B6"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ borderRadius: 16, paddingVertical: 16, alignItems: "center" }}
+                  >
+                    {resetLoading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#FFFFFF" }}>
+                        Send reset link
+                      </Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }

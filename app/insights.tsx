@@ -25,13 +25,16 @@ import {
   getMonthlySummary,
   getInsightPatterns,
 } from "../lib/mock-insights";
-import { colors, gradients, shadows, radius, spacing, animation } from "../lib/theme";
+import { shadows, radius, spacing, animation } from "../lib/theme";
+import { useTheme } from "../lib/theme-context";
 
 const { width } = Dimensions.get("window");
 
 type Period = "week" | "month";
 
 export default function InsightsScreen() {
+  const { theme, isDark } = useTheme();
+  const colors = theme;
   const router = useRouter();
   const { entries: moodEntries, loadEntries: loadMood } = useMoodStore();
   const { entries: journalEntries, loadEntries: loadJournal } = useJournalStore();
@@ -106,7 +109,7 @@ export default function InsightsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header */}
       <LinearGradient
-        colors={gradients.violetDream}
+        colors={isDark ? [theme.gradients.violetDream[0], theme.gradients.violetDream[1], theme.bg] : ["#EDE9FE", "#DDD6FE", "#F5F3FF"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
@@ -301,7 +304,7 @@ export default function InsightsScreen() {
                   width: 40,
                   height: 40,
                   borderRadius: radius.card,
-                  backgroundColor: colors.primary[100],
+                  backgroundColor: isDark ? theme.surfaceAlt : colors.primary[100],
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -322,7 +325,7 @@ export default function InsightsScreen() {
             </Text>
           </View>
 
-          <View style={{ height: 8, backgroundColor: colors.primary[100], borderRadius: radius.pill, overflow: "hidden" }}>
+          <View style={{ height: 8, backgroundColor: isDark ? theme.surfaceAlt : colors.primary[100], borderRadius: radius.pill, overflow: "hidden" }}>
             <View
               style={{
                 height: "100%",
@@ -360,7 +363,7 @@ export default function InsightsScreen() {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: colors.secondary[50],
+                  backgroundColor: isDark ? theme.surfaceAlt : colors.secondary[50],
                   borderRadius: radius.card,
                   padding: spacing.md,
                   borderLeftWidth: 3,
@@ -425,7 +428,7 @@ export default function InsightsScreen() {
                   width: 40,
                   height: 40,
                   borderRadius: radius.card,
-                  backgroundColor: colors.accent[100],
+                  backgroundColor: isDark ? theme.surfaceAlt : colors.accent[100],
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -509,7 +512,7 @@ export default function InsightsScreen() {
                   width: 40,
                   height: 40,
                   borderRadius: radius.card,
-                  backgroundColor: colors.primary[100],
+                  backgroundColor: isDark ? theme.surfaceAlt : colors.primary[100],
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -565,7 +568,7 @@ export default function InsightsScreen() {
                   width: 40,
                   height: 40,
                   borderRadius: radius.card,
-                  backgroundColor: colors.accent[100],
+                  backgroundColor: isDark ? theme.surfaceAlt : colors.accent[100],
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -593,7 +596,9 @@ export default function InsightsScreen() {
               };
               const IconComponent = iconMap[pattern.icon] || Activity;
               const colorMap = { positive: colors.secondary[500], caution: colors.warning, actionable: colors.primary[500] };
-              const bgMap = { positive: colors.secondary[50], caution: colors.warning + "18", actionable: colors.primary[50] };
+              const bgMap = isDark
+                ? { positive: theme.surfaceAlt, caution: colors.warning + "18", actionable: theme.surfaceAlt }
+                : { positive: colors.secondary[50], caution: colors.warning + "18", actionable: colors.primary[50] };
 
               return (
                 <View
@@ -648,7 +653,7 @@ export default function InsightsScreen() {
                 width: 64,
                 height: 64,
                 borderRadius: radius.lg,
-                backgroundColor: colors.accent[100],
+                backgroundColor: isDark ? theme.surfaceAlt : colors.accent[100],
                 justifyContent: "center",
                 alignItems: "center",
                 marginBottom: spacing.lg,

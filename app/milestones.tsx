@@ -36,6 +36,7 @@ import {
   Sparkle,
 } from "lucide-react-native";
 import { useMilestoneStore } from "../lib/stores/milestone-store";
+import { useTheme } from "../lib/theme-context";
 import {
   getBabyAge,
   getUpcomingMilestones,
@@ -57,6 +58,7 @@ const categoryIcons: Record<string, any> = {
 };
 
 export default function MilestonesScreen() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const {
     baby,
@@ -98,11 +100,11 @@ export default function MilestonesScreen() {
   const categories = ["all", "motor", "language", "social", "cognitive", "health", "first"];
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FDFCFB" }}>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
-          colors={["#FCE7F3", "#FDF2F8", "#FDFCFB"]}
+          colors={isDark ? [theme.gradients.roseGlow[0], theme.gradients.roseGlow[1], theme.bg] : ["#FCE7F3", "#FDF2F8", theme.bg]}
           style={{ paddingTop: 56, paddingBottom: 20, paddingHorizontal: 24 }}
         >
           {/* Top Bar */}
@@ -113,14 +115,14 @@ export default function MilestonesScreen() {
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: "#FFFFFF80",
+                backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "#FFFFFF80",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <ArrowLeft size={20} color="#1F2937" />
+              <ArrowLeft size={20} color={theme.text.primary} />
             </TouchableOpacity>
-            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: "#1F2937" }}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: theme.text.primary }}>
               Baby Milestones
             </Text>
             <TouchableOpacity
@@ -152,7 +154,7 @@ export default function MilestonesScreen() {
           >
             <View
               style={{
-                backgroundColor: "#FFFFFF",
+                backgroundColor: theme.surface,
                 borderRadius: 20,
                 padding: 20,
                 shadowColor: "#000",
@@ -168,7 +170,7 @@ export default function MilestonesScreen() {
                     width: 64,
                     height: 64,
                     borderRadius: 32,
-                    backgroundColor: "#FCE7F3",
+                    backgroundColor: isDark ? theme.surfaceAlt : "#FCE7F3",
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 3,
@@ -178,26 +180,26 @@ export default function MilestonesScreen() {
                   <Baby size={28} color="#EC4899" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: "#1F2937" }}>
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: theme.text.primary }}>
                     {baby.name}
                   </Text>
-                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginTop: 2 }}>
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginTop: 2 }}>
                     {babyAge.label} old
                   </Text>
                 </View>
                 <View style={{ alignItems: "center" }}>
                   <View
                     style={{
-                      backgroundColor: "#F0FDF4",
+                      backgroundColor: isDark ? theme.surfaceAlt : "#F0FDF4",
                       borderRadius: 12,
                       paddingHorizontal: 12,
                       paddingVertical: 8,
                     }}
                   >
-                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: "#10B981", textAlign: "center" }}>
+                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: theme.success, textAlign: "center" }}>
                       {getCompletedCount()}
                     </Text>
-                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 10, color: "#6B7280" }}>
+                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 10, color: theme.text.secondary }}>
                       recorded
                     </Text>
                   </View>
@@ -207,14 +209,14 @@ export default function MilestonesScreen() {
               {/* Progress Bar */}
               <View style={{ marginTop: 16 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: "#6B7280" }}>
+                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: theme.text.secondary }}>
                     Milestone Progress
                   </Text>
                   <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: "#F472B6" }}>
                     {getCompletedCount()}/{milestoneTemplates.length}
                   </Text>
                 </View>
-                <View style={{ height: 8, borderRadius: 4, backgroundColor: "#F3F4F6" }}>
+                <View style={{ height: 8, borderRadius: 4, backgroundColor: isDark ? theme.surfaceAlt : "#F3F4F6" }}>
                   <LinearGradient
                     colors={["#F9A8D4", "#F472B6"]}
                     start={{ x: 0, y: 0 }}
@@ -236,7 +238,7 @@ export default function MilestonesScreen() {
           <View
             style={{
               flexDirection: "row",
-              backgroundColor: "#F3F4F6",
+              backgroundColor: isDark ? theme.surfaceAlt : "#F3F4F6",
               borderRadius: 12,
               padding: 4,
               marginBottom: 20,
@@ -250,7 +252,7 @@ export default function MilestonesScreen() {
                   flex: 1,
                   paddingVertical: 10,
                   borderRadius: 10,
-                  backgroundColor: activeTab === tab ? "#FFFFFF" : "transparent",
+                  backgroundColor: activeTab === tab ? theme.surface : "transparent",
                   shadowColor: activeTab === tab ? "#000" : "transparent",
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: activeTab === tab ? 0.08 : 0,
@@ -262,7 +264,7 @@ export default function MilestonesScreen() {
                   style={{
                     fontFamily: "Quicksand-Bold",
                     fontSize: 14,
-                    color: activeTab === tab ? "#1F2937" : "#9CA3AF",
+                    color: activeTab === tab ? theme.text.primary : theme.text.muted,
                     textAlign: "center",
                   }}
                 >
@@ -295,7 +297,7 @@ export default function MilestonesScreen() {
                           ? cat === "all"
                             ? "#1F2937"
                             : colors?.bg
-                          : "#F3F4F6",
+                          : isDark ? theme.surfaceAlt : "#F3F4F6",
                         marginRight: 8,
                         borderWidth: isActive && cat !== "all" ? 1.5 : 0,
                         borderColor: isActive && cat !== "all" ? colors?.text : "transparent",
@@ -309,7 +311,7 @@ export default function MilestonesScreen() {
                             ? cat === "all"
                               ? "#FFFFFF"
                               : colors?.text
-                            : "#6B7280",
+                            : theme.text.secondary,
                         }}
                       >
                         {cat === "all" ? "All" : categoryLabels[cat]}
@@ -350,7 +352,7 @@ export default function MilestonesScreen() {
                             style={{
                               width: 2,
                               flex: 1,
-                              backgroundColor: "#E5E7EB",
+                              backgroundColor: theme.border,
                               minHeight: 20,
                             }}
                           />
@@ -361,7 +363,7 @@ export default function MilestonesScreen() {
                       <View
                         style={{
                           flex: 1,
-                          backgroundColor: "#FFFFFF",
+                          backgroundColor: theme.surface,
                           borderRadius: 16,
                           padding: 16,
                           marginBottom: 12,
@@ -377,7 +379,7 @@ export default function MilestonesScreen() {
                       >
                         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                           <View style={{ flex: 1 }}>
-                            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#1F2937" }}>
+                            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: theme.text.primary }}>
                               {milestone.title}
                             </Text>
                             {milestone.description && (
@@ -385,7 +387,7 @@ export default function MilestonesScreen() {
                                 style={{
                                   fontFamily: "Quicksand-Medium",
                                   fontSize: 13,
-                                  color: "#6B7280",
+                                  color: theme.text.secondary,
                                   marginTop: 4,
                                   lineHeight: 20,
                                 }}
@@ -412,8 +414,8 @@ export default function MilestonesScreen() {
 
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 10 }}>
                           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                            <Calendar size={12} color="#9CA3AF" />
-                            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#9CA3AF" }}>
+                            <Calendar size={12} color={theme.text.muted} />
+                            <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.muted }}>
                               {new Date(milestone.date).toLocaleDateString("en-US", {
                                 month: "short",
                                 day: "numeric",
@@ -423,8 +425,8 @@ export default function MilestonesScreen() {
                           </View>
                           {milestone.ageAtMilestone && (
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                              <Clock size={12} color="#9CA3AF" />
-                              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#9CA3AF" }}>
+                              <Clock size={12} color={theme.text.muted} />
+                              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.muted }}>
                                 {milestone.ageAtMilestone}
                               </Text>
                             </View>
@@ -454,18 +456,18 @@ export default function MilestonesScreen() {
                         width: 80,
                         height: 80,
                         borderRadius: 40,
-                        backgroundColor: "#F3F4F6",
+                        backgroundColor: isDark ? theme.surfaceAlt : "#F3F4F6",
                         alignItems: "center",
                         justifyContent: "center",
                         marginBottom: 16,
                       }}
                     >
-                      <Star size={32} color="#D1D5DB" />
+                      <Star size={32} color={theme.text.muted} />
                     </View>
-                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: "#6B7280" }}>
+                    <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: theme.text.secondary }}>
                       No milestones yet
                     </Text>
-                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#9CA3AF", marginTop: 4, textAlign: "center" }}>
+                    <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.muted, marginTop: 4, textAlign: "center" }}>
                       Tap + to record your baby's{"\n"}first special moment
                     </Text>
                   </View>
@@ -475,7 +477,7 @@ export default function MilestonesScreen() {
           ) : (
             /* Upcoming Milestones */
             <View style={{ paddingBottom: 32 }}>
-              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginBottom: 16 }}>
+              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginBottom: 16 }}>
                 Based on {baby.name}'s age ({babyAge.label}), here's what to look forward to:
               </Text>
               {upcoming.map((template, index) => {
@@ -497,7 +499,7 @@ export default function MilestonesScreen() {
                       });
                     }}
                     style={{
-                      backgroundColor: "#FFFFFF",
+                      backgroundColor: theme.surface,
                       borderRadius: 16,
                       padding: 16,
                       marginBottom: 12,
@@ -524,15 +526,15 @@ export default function MilestonesScreen() {
                       <IconComp size={20} color={colors.icon} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: "#1F2937" }}>
+                      <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: theme.text.primary }}>
                         {template.title}
                       </Text>
-                      <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+                      <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.secondary, marginTop: 2 }}>
                         {template.description}
                       </Text>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 }}>
-                        <Clock size={11} color="#9CA3AF" />
-                        <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 11, color: "#9CA3AF" }}>
+                        <Clock size={11} color={theme.text.muted} />
+                        <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 11, color: theme.text.muted }}>
                           Typical: ~{template.typicalAgeMonths} months
                         </Text>
                       </View>
@@ -542,12 +544,12 @@ export default function MilestonesScreen() {
                         width: 32,
                         height: 32,
                         borderRadius: 16,
-                        backgroundColor: "#F0FDF4",
+                        backgroundColor: isDark ? theme.surfaceAlt : "#F0FDF4",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      <Check size={16} color="#10B981" />
+                      <Check size={16} color={theme.success} />
                     </View>
                   </TouchableOpacity>
                 );
@@ -556,10 +558,10 @@ export default function MilestonesScreen() {
               {upcoming.length === 0 && (
                 <View style={{ alignItems: "center", paddingVertical: 48 }}>
                   <Trophy size={48} color="#F59E0B" />
-                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: "#1F2937", marginTop: 16 }}>
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 18, color: theme.text.primary, marginTop: 16 }}>
                     Amazing progress!
                   </Text>
-                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginTop: 4, textAlign: "center" }}>
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginTop: 4, textAlign: "center" }}>
                     {baby.name} has reached all the upcoming{"\n"}milestones for this age range!
                   </Text>
                 </View>
@@ -598,6 +600,7 @@ function AddMilestoneModal({
   babyId: string;
   babyAge: string;
 }) {
+  const { theme, isDark } = useTheme();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<Milestone["category"]>("first");
@@ -639,7 +642,7 @@ function AddMilestoneModal({
       >
         <View
           style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: theme.surface,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             paddingTop: 20,
@@ -650,11 +653,11 @@ function AddMilestoneModal({
         >
           {/* Modal Header */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: "#1F2937" }}>
+            <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: theme.text.primary }}>
               Record a Milestone
             </Text>
             <TouchableOpacity onPress={onClose}>
-              <X size={24} color="#6B7280" />
+              <X size={24} color={theme.text.secondary} />
             </TouchableOpacity>
           </View>
 
@@ -668,53 +671,53 @@ function AddMilestoneModal({
               width: 40,
               height: 4,
               borderRadius: 2,
-              backgroundColor: "#D1D5DB",
+              backgroundColor: theme.border,
             }}
           />
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Title */}
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#4B5563", marginBottom: 8 }}>
+            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: theme.text.secondary, marginBottom: 8 }}>
               What happened?
             </Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
               placeholder="e.g., First time at the beach"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.text.muted}
               style={{
-                backgroundColor: "#F9FAFB",
+                backgroundColor: isDark ? theme.surfaceAlt : "#F9FAFB",
                 borderRadius: 12,
                 padding: 14,
                 fontFamily: "Quicksand-Medium",
                 fontSize: 15,
-                color: "#1F2937",
+                color: theme.text.primary,
                 borderWidth: 1.5,
-                borderColor: "#E5E7EB",
+                borderColor: theme.border,
                 marginBottom: 16,
               }}
             />
 
             {/* Description */}
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#4B5563", marginBottom: 8 }}>
+            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: theme.text.secondary, marginBottom: 8 }}>
               Tell the story (optional)
             </Text>
             <TextInput
               value={description}
               onChangeText={setDescription}
               placeholder="Write a little memory about this moment..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.text.muted}
               multiline
               numberOfLines={3}
               style={{
-                backgroundColor: "#F9FAFB",
+                backgroundColor: isDark ? theme.surfaceAlt : "#F9FAFB",
                 borderRadius: 12,
                 padding: 14,
                 fontFamily: "Quicksand-Medium",
                 fontSize: 15,
-                color: "#1F2937",
+                color: theme.text.primary,
                 borderWidth: 1.5,
-                borderColor: "#E5E7EB",
+                borderColor: theme.border,
                 marginBottom: 16,
                 minHeight: 80,
                 textAlignVertical: "top",
@@ -722,7 +725,7 @@ function AddMilestoneModal({
             />
 
             {/* Category */}
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#4B5563", marginBottom: 8 }}>
+            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: theme.text.secondary, marginBottom: 8 }}>
               Category
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
@@ -737,7 +740,7 @@ function AddMilestoneModal({
                       paddingHorizontal: 14,
                       paddingVertical: 8,
                       borderRadius: 20,
-                      backgroundColor: isActive ? colors.bg : "#F3F4F6",
+                      backgroundColor: isActive ? colors.bg : (isDark ? theme.surfaceAlt : "#F3F4F6"),
                       borderWidth: isActive ? 1.5 : 0,
                       borderColor: isActive ? colors.text : "transparent",
                     }}
@@ -746,7 +749,7 @@ function AddMilestoneModal({
                       style={{
                         fontFamily: "Quicksand-SemiBold",
                         fontSize: 13,
-                        color: isActive ? colors.text : "#6B7280",
+                        color: isActive ? colors.text : theme.text.secondary,
                       }}
                     >
                       {cat.label}
@@ -757,23 +760,23 @@ function AddMilestoneModal({
             </View>
 
             {/* Date */}
-            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#4B5563", marginBottom: 8 }}>
+            <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: theme.text.secondary, marginBottom: 8 }}>
               Date
             </Text>
             <TextInput
               value={date}
               onChangeText={setDate}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.text.muted}
               style={{
-                backgroundColor: "#F9FAFB",
+                backgroundColor: isDark ? theme.surfaceAlt : "#F9FAFB",
                 borderRadius: 12,
                 padding: 14,
                 fontFamily: "Quicksand-Medium",
                 fontSize: 15,
-                color: "#1F2937",
+                color: theme.text.primary,
                 borderWidth: 1.5,
-                borderColor: "#E5E7EB",
+                borderColor: theme.border,
                 marginBottom: 24,
               }}
             />

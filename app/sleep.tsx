@@ -22,8 +22,8 @@ import {
   Plus,
   Minus,
 } from "lucide-react-native";
-import { colors, gradients } from "../lib/theme";
 import { useMilestoneStore } from "../lib/stores/milestone-store";
+import { useTheme } from "../lib/theme-context";
 
 const { width } = Dimensions.get("window");
 
@@ -45,6 +45,9 @@ interface BabySleep {
 }
 
 export default function SleepTrackerScreen() {
+  const { theme, isDark } = useTheme();
+  const colors = theme;
+  const gradients = theme.gradients;
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -194,7 +197,7 @@ export default function SleepTrackerScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
-          colors={gradients.calmingEvening}
+          colors={isDark ? [gradients.violetDream[0], gradients.violetDream[1], theme.bg] : [gradients.calmingEvening[0], gradients.calmingEvening[1], gradients.calmingEvening[2]]}
           style={{ paddingTop: 56, paddingBottom: 24, paddingHorizontal: 24 }}
         >
           {/* Top Bar */}
@@ -212,7 +215,7 @@ export default function SleepTrackerScreen() {
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: "rgba(255,255,255,0.5)",
+                backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.5)",
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -416,7 +419,7 @@ export default function SleepTrackerScreen() {
                         borderRadius: 999,
                         backgroundColor: isSelected ? colors.accent[500] : colors.bg,
                         borderWidth: 1.5,
-                        borderColor: isSelected ? colors.accent[500] : "#E5E7EB",
+                        borderColor: isSelected ? colors.accent[500] : theme.border,
                       }}
                     >
                       <Text
@@ -466,7 +469,7 @@ export default function SleepTrackerScreen() {
                         borderRadius: 999,
                         backgroundColor: isSelected ? colors.accent[500] : colors.bg,
                         borderWidth: 1.5,
-                        borderColor: isSelected ? colors.accent[500] : "#E5E7EB",
+                        borderColor: isSelected ? colors.accent[500] : theme.border,
                       }}
                     >
                       <Text
@@ -570,7 +573,7 @@ export default function SleepTrackerScreen() {
                       borderRadius: 999,
                       backgroundColor: isSelected ? colors.accent[100] : colors.bg,
                       borderWidth: 1.5,
-                      borderColor: isSelected ? colors.accent[500] : "#E5E7EB",
+                      borderColor: isSelected ? colors.accent[500] : theme.border,
                     }}
                   >
                     <Text
@@ -595,7 +598,7 @@ export default function SleepTrackerScreen() {
               style={{ borderRadius: 16, overflow: "hidden" }}
             >
               <LinearGradient
-                colors={gradients.violetDream}
+                colors={[gradients.violetDream[0], gradients.violetDream[1], gradients.violetDream[2]]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
@@ -653,7 +656,7 @@ export default function SleepTrackerScreen() {
                 marginBottom: 16,
                 paddingBottom: 16,
                 borderBottomWidth: 1,
-                borderBottomColor: "#F3F4F6",
+                borderBottomColor: theme.border,
               }}
             >
               <Text
@@ -727,7 +730,7 @@ export default function SleepTrackerScreen() {
                 marginBottom: 16,
                 paddingBottom: 16,
                 borderBottomWidth: 1,
-                borderBottomColor: "#F3F4F6",
+                borderBottomColor: theme.border,
               }}
             >
               <Text
@@ -801,7 +804,7 @@ export default function SleepTrackerScreen() {
                 marginBottom: 16,
                 paddingBottom: 16,
                 borderBottomWidth: 1,
-                borderBottomColor: "#F3F4F6",
+                borderBottomColor: theme.border,
               }}
             >
               <Text
@@ -899,7 +902,7 @@ export default function SleepTrackerScreen() {
                       borderRadius: 12,
                       backgroundColor: isSelected ? bgColor : colors.bg,
                       borderWidth: 1.5,
-                      borderColor: isSelected ? bgColor : "#E5E7EB",
+                      borderColor: isSelected ? bgColor : theme.border,
                       alignItems: "center",
                     }}
                   >
@@ -952,7 +955,7 @@ export default function SleepTrackerScreen() {
               </Text>
               <View
                 style={{
-                  backgroundColor: colors.secondary[50],
+                  backgroundColor: isDark ? theme.surfaceAlt : colors.secondary[50],
                   paddingHorizontal: 12,
                   paddingVertical: 6,
                   borderRadius: 999,
@@ -1048,7 +1051,7 @@ export default function SleepTrackerScreen() {
                 {sleepTips.map((tip, index) => (
                   <LinearGradient
                     key={index}
-                    colors={gradients.violetDream}
+                    colors={[gradients.violetDream[0], gradients.violetDream[1], gradients.violetDream[2]]}
                     style={{
                       width: 200,
                       padding: 16,

@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { ChevronLeft, Play, Pause, RotateCcw, Wind } from "lucide-react-native";
-import { colors } from "../lib/theme";
+import { useTheme } from "../lib/theme-context";
 
 const { width } = Dimensions.get("window");
 const ORB = Math.min(width * 0.62, 260);
@@ -69,6 +69,8 @@ const PATTERNS: Pattern[] = [
 ];
 
 export default function BreatheScreen() {
+  const { theme, isDark } = useTheme();
+  const colors = theme;
   const router = useRouter();
   const [pattern, setPattern] = useState<Pattern>(PATTERNS[0]);
   const [running, setRunning] = useState(false);
@@ -198,8 +200,24 @@ export default function BreatheScreen() {
   const mins = Math.floor(elapsed / 60);
   const secs = elapsed % 60;
 
+  // Dark-aware screen gradient: keep the brand-hued pattern gradient in light
+  // mode, swap to a tinted dark gradient (by hue) in dark mode.
+  const darkPatternGradients: Record<string, [string, string, string]> = {
+    box: [theme.gradients.violetDream[0], theme.gradients.violetDream[1], theme.bg],
+    calm: [theme.gradients.roseGlow[0], theme.gradients.roseGlow[1], theme.bg],
+    relax: [theme.gradients.mintGlow[0], theme.gradients.mintGlow[1], theme.bg],
+  };
+  const screenGradient = isDark
+    ? (darkPatternGradients[pattern.id] || pattern.gradient)
+    : pattern.gradient;
+  // Surfaces that sit on the light gradient as translucent white -> dark surface.
+  const chipBg = isDark ? theme.surfaceAlt : "rgba(255,255,255,0.7)";
+  const ctrlBg = isDark ? theme.surfaceAlt : "rgba(255,255,255,0.8)";
+  const cardSelectedBg = isDark ? theme.surface : "#FFFFFF";
+  const cardBg = isDark ? theme.surfaceAlt : "rgba(255,255,255,0.6)";
+
   return (
-    <LinearGradient colors={pattern.gradient} style={{ flex: 1 }}>
+    <LinearGradient colors={screenGradient} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={{ paddingTop: 60, paddingHorizontal: 24, flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -209,7 +227,7 @@ export default function BreatheScreen() {
               width: 44,
               height: 44,
               borderRadius: 22,
-              backgroundColor: "rgba(255,255,255,0.7)",
+              backgroundColor: chipBg,
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -298,7 +316,7 @@ export default function BreatheScreen() {
               width: 56,
               height: 56,
               borderRadius: 28,
-              backgroundColor: "rgba(255,255,255,0.8)",
+              backgroundColor: ctrlBg,
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -352,7 +370,7 @@ export default function BreatheScreen() {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    backgroundColor: selected ? "#FFFFFF" : "rgba(255,255,255,0.6)",
+                    backgroundColor: selected ? cardSelectedBg : cardBg,
                     borderRadius: 16,
                     padding: 16,
                     borderWidth: 2,

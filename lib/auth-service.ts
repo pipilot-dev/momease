@@ -107,4 +107,14 @@ export const authService = {
     if (!supabase) return;
     await supabase.auth.updateUser({ data: updates });
   },
+
+  /** Send a password-reset email. The link returns to the OAuth proxy. */
+  async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
+    if (!supabase) return mockAuth.resetPassword(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: OAUTH_REDIRECT,
+    });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  },
 };

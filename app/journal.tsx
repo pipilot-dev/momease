@@ -27,7 +27,8 @@ import {
   RefreshCw,
 } from "lucide-react-native";
 
-import { colors, gradients, shadows, radius, spacing } from "../lib/theme";
+import { shadows, radius, spacing } from "../lib/theme";
+import { useTheme } from "../lib/theme-context";
 import { useJournalStore } from "../lib/stores/journal-store";
 import {
   getRandomPrompt,
@@ -58,6 +59,9 @@ const journalTags = [
 const allTags = Array.from(new Set([...baseMoodTags, ...journalTags])).sort();
 
 export default function JournalScreen() {
+  const { theme, isDark } = useTheme();
+  const colors = theme;
+  const gradients = theme.gradients;
   const router = useRouter();
   const {
     entries,
@@ -315,7 +319,7 @@ export default function JournalScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header */}
-      <LinearGradient colors={gradients.violetDream} style={{ paddingTop: spacing.xl + 24 }}>
+      <LinearGradient colors={[gradients.violetDream[0], gradients.violetDream[1], gradients.violetDream[2]]} style={{ paddingTop: spacing.xl + 24 }}>
         <View
           style={{
             flexDirection: "row",
@@ -526,7 +530,7 @@ export default function JournalScreen() {
         {/* Daily Prompt Card */}
         {currentPrompt && !showNewEntryModal && (
           <LinearGradient
-            colors={gradients.goldenHour}
+            colors={isDark ? [gradients.warmMorning[0], gradients.warmMorning[1], gradients.warmMorning[2]] : [gradients.goldenHour[0], gradients.goldenHour[1], gradients.goldenHour[2]]}
             style={{
               marginHorizontal: spacing.lg,
               marginTop: spacing.lg,
@@ -870,7 +874,7 @@ export default function JournalScreen() {
                               paddingHorizontal: spacing.sm,
                               paddingVertical: 4,
                               borderRadius: radius.pill,
-                              backgroundColor: colors.accent[50],
+                              backgroundColor: isDark ? theme.surfaceAlt : colors.accent[50],
                             }}
                           >
                             <Text
@@ -890,7 +894,7 @@ export default function JournalScreen() {
                               paddingHorizontal: spacing.sm,
                               paddingVertical: 4,
                               borderRadius: radius.pill,
-                              backgroundColor: colors.accent[50],
+                              backgroundColor: isDark ? theme.surfaceAlt : colors.accent[50],
                             }}
                           >
                             <Text
@@ -961,7 +965,7 @@ export default function JournalScreen() {
               paddingBottom: spacing.base,
               backgroundColor: colors.surface,
               borderBottomWidth: 1,
-              borderBottomColor: colors.accent[100],
+              borderBottomColor: isDark ? theme.border : colors.accent[100],
             }}
           >
             <View
@@ -1164,6 +1168,8 @@ export default function JournalScreen() {
                     borderWidth: 1,
                     borderColor: selectedTags.includes(tag)
                       ? colors.accent[500]
+                      : isDark
+                      ? theme.border
                       : colors.accent[200],
                   }}
                 >
@@ -1187,7 +1193,7 @@ export default function JournalScreen() {
               padding: spacing.lg,
               backgroundColor: colors.surface,
               borderTopWidth: 1,
-              borderTopColor: colors.accent[100],
+              borderTopColor: isDark ? theme.border : colors.accent[100],
             }}
           >
             <TouchableOpacity
@@ -1242,7 +1248,7 @@ export default function JournalScreen() {
               paddingBottom: spacing.base,
               backgroundColor: colors.surface,
               borderBottomWidth: 1,
-              borderBottomColor: colors.accent[100],
+              borderBottomColor: isDark ? theme.border : colors.accent[100],
             }}
           >
             <View
@@ -1353,7 +1359,7 @@ export default function JournalScreen() {
                         paddingHorizontal: spacing.md,
                         paddingVertical: spacing.xs,
                         borderRadius: radius.pill,
-                        backgroundColor: colors.accent[50],
+                        backgroundColor: isDark ? theme.surfaceAlt : colors.accent[50],
                       }}
                     >
                       <Text
@@ -1374,7 +1380,7 @@ export default function JournalScreen() {
               {selectedEntry.prompt && (
                 <View
                   style={{
-                    backgroundColor: colors.accent[50],
+                    backgroundColor: isDark ? theme.surfaceAlt : colors.accent[50],
                     borderLeftWidth: 4,
                     borderLeftColor: colors.accent[500],
                     padding: spacing.md,
@@ -1435,7 +1441,7 @@ export default function JournalScreen() {
                 style={{
                   paddingTop: spacing.base,
                   borderTopWidth: 1,
-                  borderTopColor: colors.accent[100],
+                  borderTopColor: isDark ? theme.border : colors.accent[100],
                 }}
               >
                 <Text
