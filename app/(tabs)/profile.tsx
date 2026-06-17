@@ -70,7 +70,10 @@ export default function ProfileScreen() {
           icon: User,
           label: "Edit Profile",
           color: "#F472B6",
-          onPress: () => info("Edit Profile", "Update your name, photo, and family details. (Demo)"),
+          onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push("/edit-profile");
+          },
         },
         {
           icon: Crown,
@@ -120,7 +123,10 @@ export default function ProfileScreen() {
           icon: Settings,
           label: "App Settings",
           color: "#6B7280",
-          onPress: () => info("App Settings", "Manage language, units, and data preferences. (Demo)"),
+          onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push("/settings");
+          },
         },
       ],
     },
