@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Heart, ListTodo, Brain } from "lucide-react-native";
 import { useAuthStore } from "../lib/stores/auth-store";
+import { useTheme } from "../lib/theme-context";
 
 const { width } = Dimensions.get("window");
 
@@ -60,6 +61,7 @@ const steps = [
 ];
 
 export default function Onboarding() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const { completeOnboarding } = useAuthStore();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -122,7 +124,7 @@ export default function Onboarding() {
         style={{
           fontFamily: "Quicksand-Bold",
           fontSize: 28,
-          color: "#1F2937",
+          color: theme.text.primary,
           textAlign: "center",
           marginBottom: 12,
         }}
@@ -133,7 +135,7 @@ export default function Onboarding() {
         style={{
           fontFamily: "Quicksand-Medium",
           fontSize: 16,
-          color: "#6B7280",
+          color: theme.text.secondary,
           textAlign: "center",
           lineHeight: 24,
         }}
@@ -147,7 +149,7 @@ export default function Onboarding() {
 
   return (
     <LinearGradient
-      colors={[currentStep.gradient[0], currentStep.gradient[1], "#FDFCFB"]}
+      colors={isDark ? [theme.gradients.roseGlow[0], theme.gradients.roseGlow[1], theme.bg] : [currentStep.gradient[0], currentStep.gradient[1], "#FDFCFB"]}
       style={{ flex: 1 }}
     >
       {/* Skip */}
@@ -163,7 +165,7 @@ export default function Onboarding() {
             style={{
               fontFamily: "Quicksand-SemiBold",
               fontSize: 16,
-              color: "#6B7280",
+              color: theme.text.secondary,
             }}
           >
             Skip
@@ -206,7 +208,7 @@ export default function Onboarding() {
                 width: currentIndex === i ? 24 : 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: currentIndex === i ? currentStep.iconColor : "#D1D5DB",
+                backgroundColor: currentIndex === i ? currentStep.iconColor : theme.border,
               }}
             />
           ))}

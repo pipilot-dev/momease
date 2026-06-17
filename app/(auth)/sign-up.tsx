@@ -14,8 +14,10 @@ import { useRouter, Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, Mail, Lock, User, Eye, EyeOff } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
+import { useTheme } from "../../lib/theme-context";
 
 export default function SignUp() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const { signUp, isLoading, error, clearError } = useAuthStore();
   const [name, setName] = useState("");
@@ -44,25 +46,25 @@ export default function SignUp() {
   const inputStyle = {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: isDark ? theme.surfaceAlt : "#FFFFFF",
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 4,
     borderWidth: 1.5,
-    borderColor: "#FBC8DC",
+    borderColor: isDark ? theme.border : "#FBC8DC",
   };
 
   const textInputStyle = {
     flex: 1,
     fontFamily: "Quicksand-Medium",
     fontSize: 16,
-    color: "#1F2937",
+    color: theme.text.primary,
     paddingVertical: 14,
     marginLeft: 12,
   };
 
   return (
-    <LinearGradient colors={["#FDE5EC", "#FDFCFB"]} style={{ flex: 1 }}>
+    <LinearGradient colors={isDark ? [theme.gradients.roseGlow[0], theme.gradients.roseGlow[1], theme.bg] : ["#FDE5EC", "#FDFCFB"]} style={{ flex: 1 }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -102,7 +104,7 @@ export default function SignUp() {
                 style={{
                   fontFamily: "Quicksand-Bold",
                   fontSize: 32,
-                  color: "#1F2937",
+                  color: theme.text.primary,
                 }}
               >
                 Join MomEase
@@ -111,7 +113,7 @@ export default function SignUp() {
                 style={{
                   fontFamily: "Quicksand-Medium",
                   fontSize: 16,
-                  color: "#6B7280",
+                  color: theme.text.secondary,
                   marginTop: 4,
                 }}
               >
@@ -126,7 +128,7 @@ export default function SignUp() {
                 <TextInput
                   style={textInputStyle}
                   placeholder="Full name"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.text.muted}
                   value={name}
                   onChangeText={setName}
                 />
@@ -137,7 +139,7 @@ export default function SignUp() {
                 <TextInput
                   style={textInputStyle}
                   placeholder="Email address"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.text.muted}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -150,16 +152,16 @@ export default function SignUp() {
                 <TextInput
                   style={textInputStyle}
                   placeholder="Password (min 6 characters)"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.text.muted}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   {showPassword ? (
-                    <EyeOff size={20} color="#9CA3AF" />
+                    <EyeOff size={20} color={theme.text.muted} />
                   ) : (
-                    <Eye size={20} color="#9CA3AF" />
+                    <Eye size={20} color={theme.text.muted} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -226,7 +228,7 @@ export default function SignUp() {
                 style={{
                   fontFamily: "Quicksand-Medium",
                   fontSize: 15,
-                  color: "#6B7280",
+                  color: theme.text.secondary,
                 }}
               >
                 Already have an account?

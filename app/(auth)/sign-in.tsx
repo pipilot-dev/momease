@@ -16,8 +16,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Heart, Mail, Lock, Eye, EyeOff, CheckCircle2, X } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { authService } from "../../lib/auth-service";
+import { useTheme } from "../../lib/theme-context";
 
 export default function SignIn() {
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const { signIn, signInWithGoogle, isLoading, error, clearError } = useAuthStore();
   const [email, setEmail] = useState("sarah@momease.app");
@@ -87,7 +89,7 @@ export default function SignIn() {
   };
 
   return (
-    <LinearGradient colors={["#FDE5EC", "#FDFCFB"]} style={{ flex: 1 }}>
+    <LinearGradient colors={isDark ? [theme.gradients.roseGlow[0], theme.gradients.roseGlow[1], theme.bg] : ["#FDE5EC", "#FDFCFB"]} style={{ flex: 1 }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -130,7 +132,7 @@ export default function SignIn() {
                 style={{
                   fontFamily: "Quicksand-Bold",
                   fontSize: 32,
-                  color: "#1F2937",
+                  color: theme.text.primary,
                 }}
               >
                 Welcome Back
@@ -139,7 +141,7 @@ export default function SignIn() {
                 style={{
                   fontFamily: "Quicksand-Medium",
                   fontSize: 16,
-                  color: "#6B7280",
+                  color: theme.text.secondary,
                   marginTop: 4,
                 }}
               >
@@ -154,12 +156,12 @@ export default function SignIn() {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: isDark ? theme.surfaceAlt : "#FFFFFF",
                   borderRadius: 16,
                   paddingHorizontal: 16,
                   paddingVertical: 4,
                   borderWidth: 1.5,
-                  borderColor: "#FBC8DC",
+                  borderColor: isDark ? theme.border : "#FBC8DC",
                 }}
               >
                 <Mail size={20} color="#F9A8D4" />
@@ -168,12 +170,12 @@ export default function SignIn() {
                     flex: 1,
                     fontFamily: "Quicksand-Medium",
                     fontSize: 16,
-                    color: "#1F2937",
+                    color: theme.text.primary,
                     paddingVertical: 14,
                     marginLeft: 12,
                   }}
                   placeholder="Email address"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.text.muted}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -186,12 +188,12 @@ export default function SignIn() {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: isDark ? theme.surfaceAlt : "#FFFFFF",
                   borderRadius: 16,
                   paddingHorizontal: 16,
                   paddingVertical: 4,
                   borderWidth: 1.5,
-                  borderColor: "#FBC8DC",
+                  borderColor: isDark ? theme.border : "#FBC8DC",
                 }}
               >
                 <Lock size={20} color="#F9A8D4" />
@@ -200,21 +202,21 @@ export default function SignIn() {
                     flex: 1,
                     fontFamily: "Quicksand-Medium",
                     fontSize: 16,
-                    color: "#1F2937",
+                    color: theme.text.primary,
                     paddingVertical: 14,
                     marginLeft: 12,
                   }}
                   placeholder="Password"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={theme.text.muted}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   {showPassword ? (
-                    <EyeOff size={20} color="#9CA3AF" />
+                    <EyeOff size={20} color={theme.text.muted} />
                   ) : (
-                    <Eye size={20} color="#9CA3AF" />
+                    <Eye size={20} color={theme.text.muted} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -286,9 +288,9 @@ export default function SignIn() {
 
             {/* Divider */}
             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 24, gap: 12 }}>
-              <View style={{ flex: 1, height: 1, backgroundColor: "#F3D6E2" }} />
-              <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: "#9CA3AF" }}>or</Text>
-              <View style={{ flex: 1, height: 1, backgroundColor: "#F3D6E2" }} />
+              <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
+              <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: theme.text.muted }}>or</Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
             </View>
 
             {/* Google Sign In */}
@@ -301,12 +303,12 @@ export default function SignIn() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 12,
-                backgroundColor: "#FFFFFF",
+                backgroundColor: isDark ? theme.surfaceAlt : "#FFFFFF",
                 borderRadius: 16,
                 paddingVertical: 15,
                 marginTop: 16,
                 borderWidth: 1.5,
-                borderColor: "#E5E7EB",
+                borderColor: isDark ? theme.border : "#E5E7EB",
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.05,
@@ -328,7 +330,7 @@ export default function SignIn() {
                   transform: [{ rotate: "45deg" }],
                 }}
               />
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#374151" }}>
+              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: theme.text.primary }}>
                 Continue with Google
               </Text>
             </TouchableOpacity>
@@ -346,7 +348,7 @@ export default function SignIn() {
                 style={{
                   fontFamily: "Quicksand-Medium",
                   fontSize: 15,
-                  color: "#6B7280",
+                  color: theme.text.secondary,
                 }}
               >
                 New to MomEase?
@@ -379,23 +381,23 @@ export default function SignIn() {
             paddingHorizontal: 24,
           }}
         >
-          <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, padding: 24 }}>
+          <View style={{ backgroundColor: theme.surface, borderRadius: 24, padding: 24 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: "#1F2937" }}>
+              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: theme.text.primary }}>
                 Reset password
               </Text>
               <TouchableOpacity onPress={() => setResetVisible(false)}>
-                <X size={24} color="#9CA3AF" />
+                <X size={24} color={theme.text.muted} />
               </TouchableOpacity>
             </View>
 
             {resetSent ? (
               <View style={{ alignItems: "center", paddingVertical: 16 }}>
                 <CheckCircle2 size={48} color="#10B981" />
-                <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 16, color: "#1F2937", textAlign: "center", marginTop: 12 }}>
+                <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 16, color: theme.text.primary, textAlign: "center", marginTop: 12 }}>
                   Check your inbox
                 </Text>
-                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", textAlign: "center", marginTop: 6 }}>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, textAlign: "center", marginTop: 6 }}>
                   We've sent a password reset link to {resetEmail}.
                 </Text>
                 <TouchableOpacity onPress={() => setResetVisible(false)} style={{ marginTop: 20 }} activeOpacity={0.85}>
@@ -411,19 +413,19 @@ export default function SignIn() {
               </View>
             ) : (
               <>
-                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: "#6B7280", marginBottom: 16 }}>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginBottom: 16 }}>
                   Enter your email and we'll send you a link to reset your password.
                 </Text>
                 <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: isDark ? theme.surfaceAlt : "#FFFFFF",
                     borderRadius: 16,
                     paddingHorizontal: 16,
                     paddingVertical: 4,
                     borderWidth: 1.5,
-                    borderColor: "#FBC8DC",
+                    borderColor: isDark ? theme.border : "#FBC8DC",
                   }}
                 >
                   <Mail size={20} color="#F9A8D4" />
@@ -432,12 +434,12 @@ export default function SignIn() {
                       flex: 1,
                       fontFamily: "Quicksand-Medium",
                       fontSize: 16,
-                      color: "#1F2937",
+                      color: theme.text.primary,
                       paddingVertical: 14,
                       marginLeft: 12,
                     }}
                     placeholder="Email address"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={theme.text.muted}
                     value={resetEmail}
                     onChangeText={setResetEmail}
                     keyboardType="email-address"

@@ -23,26 +23,12 @@ import {
   Minus,
 } from "lucide-react-native";
 import { useMilestoneStore } from "../lib/stores/milestone-store";
+import { useSleepStore } from "../lib/stores/sleep-store";
 import { useTheme } from "../lib/theme-context";
 
 const { width } = Dimensions.get("window");
 
-// Local types
-interface SleepEntry {
-  date: string;
-  bedtime: string;
-  wakeTime: string;
-  hours: number;
-  quality: number;
-  factors: string[];
-}
-
-interface BabySleep {
-  lastNightHours: number;
-  napsToday: number;
-  napDuration: number;
-  quality: "rough" | "okay" | "great";
-}
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function SleepTrackerScreen() {
   const { theme, isDark } = useTheme();
@@ -57,25 +43,23 @@ export default function SleepTrackerScreen() {
   const [sleepQuality, setSleepQuality] = useState(0);
   const [sleepFactors, setSleepFactors] = useState<string[]>([]);
 
-  // Baby's sleep state
+  // Baby's sleep state (persisted + synced)
   const babyName = useMilestoneStore((s) => s.baby.name) || "Baby";
-  const [babySleep, setBabySleep] = useState<BabySleep>({
-    lastNightHours: 8,
-    napsToday: 2,
-    napDuration: 1.5,
-    quality: "okay",
-  });
+  const { entries: sleepLogs, babySleep, logSleep, setBabySleep } = useSleepStore();
 
-  // Mock 7-day history
-  const [sleepHistory] = useState([
-    { day: "Mon", hours: 6.5, date: "2026-04-13" },
-    { day: "Tue", hours: 7, date: "2026-04-14" },
-    { day: "Wed", hours: 5, date: "2026-04-15" },
-    { day: "Thu", hours: 8, date: "2026-04-16" },
-    { day: "Fri", hours: 6, date: "2026-04-17" },
-    { day: "Sat", hours: 7.5, date: "2026-04-18" },
-    { day: "Sun", hours: 6.5, date: "2026-04-19" },
-  ]);
+  // Last 7 calendar days, filled from logged entries (0 = no log that day).
+  const sleepHistory = (() => {
+    const byDate = new Map(sleepLogs.map((e) => [e.date, e.hours]));
+    const days: { day: string; date: string; hours: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({ day: DAY_LABELS[d.getDay()], date: key, hours: byDate.get(key) ?? 0 });
+    }
+    return days;
+  })();
+  const hasSleepData = sleepLogs.length > 0;
 
   const bedtimeOptions = ["9pm", "10pm", "11pm", "12am", "1am"];
   const wakeTimeOptions = ["4am", "5am", "6am", "7am", "8am"];
@@ -169,9 +153,13 @@ export default function SleepTrackerScreen() {
     return [colors.primary[400], colors.primary[500]];
   };
 
-  const avgSleep =
-    sleepHistory.reduce((acc, entry) => acc + entry.hours, 0) / sleepHistory.length;
-  const sleepScore = Math.round((avgSleep / 8) * 100);
+  const loggedHours = sleepLogs.map((e) => e.hours);
+  const avgSleep = loggedHours.length
+    ? loggedHours.reduce((a, b) => a + b, 0) / loggedHours.length
+    : 0;
+  const sleepScore = loggedHours.length
+    ? Math.min(100, Math.round((avgSleep / 8) * 100))
+    : 0;
 
   const toggleFactor = (factor: string) => {
     Haptics.selectionAsync();
@@ -181,15 +169,19 @@ export default function SleepTrackerScreen() {
   };
 
   const handleLogSleep = () => {
+    if (!duration || sleepQuality === 0) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // In real app, save to store
-    console.log("Logging sleep:", {
-      bedtime: selectedBedtime,
-      wakeTime: selectedWakeTime,
-      duration,
+    logSleep({
+      date: new Date().toISOString().slice(0, 10),
+      hours: duration,
       quality: sleepQuality,
       factors: sleepFactors,
     });
+    // Reset the form after logging.
+    setSelectedBedtime(null);
+    setSelectedWakeTime(null);
+    setSleepQuality(0);
+    setSleepFactors([]);
   };
 
   return (
@@ -319,12 +311,13 @@ export default function SleepTrackerScreen() {
                 height: 120,
                 borderRadius: 60,
                 borderWidth: 8,
-                borderColor:
-                  sleepScore >= 75
-                    ? colors.secondary[400]
-                    : sleepScore >= 50
-                    ? colors.warning
-                    : colors.error,
+                borderColor: !hasSleepData
+                  ? theme.border
+                  : sleepScore >= 75
+                  ? colors.secondary[400]
+                  : sleepScore >= 50
+                  ? colors.warning
+                  : colors.error,
                 alignItems: "center",
                 justifyContent: "center",
                 backgroundColor: colors.bg,
@@ -358,7 +351,9 @@ export default function SleepTrackerScreen() {
                 textAlign: "center",
               }}
             >
-              Based on 7-day average of {avgSleep.toFixed(1)} hours
+              {hasSleepData
+                ? `Based on your average of ${avgSleep.toFixed(1)} hours`
+                : "Log your first night to see your score"}
             </Text>
           </View>
 
@@ -974,6 +969,33 @@ export default function SleepTrackerScreen() {
             </View>
 
             {/* Chart */}
+            {!hasSleepData ? (
+              <View style={{ alignItems: "center", paddingVertical: 32 }}>
+                <Moon size={32} color={colors.text.muted} />
+                <Text
+                  style={{
+                    fontFamily: "Quicksand-SemiBold",
+                    fontSize: 14,
+                    color: colors.text.secondary,
+                    marginTop: 10,
+                    textAlign: "center",
+                  }}
+                >
+                  No sleep logged yet
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "Quicksand-Medium",
+                    fontSize: 12,
+                    color: colors.text.muted,
+                    marginTop: 4,
+                    textAlign: "center",
+                  }}
+                >
+                  Log a night above to start your weekly chart
+                </Text>
+              </View>
+            ) : (
             <View
               style={{
                 flexDirection: "row",
@@ -1032,6 +1054,7 @@ export default function SleepTrackerScreen() {
                 );
               })}
             </View>
+            )}
           </View>
 
           {/* Sleep Tips Section */}

@@ -13,6 +13,7 @@ import "../lib/stores/task-store";
 import "../lib/stores/chat-store";
 import "../lib/stores/checkin-store";
 import "../lib/stores/milestone-store";
+import "../lib/stores/sleep-store";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
