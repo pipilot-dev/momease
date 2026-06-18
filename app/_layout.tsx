@@ -14,6 +14,7 @@ import "../lib/stores/chat-store";
 import "../lib/stores/checkin-store";
 import "../lib/stores/milestone-store";
 import "../lib/stores/sleep-store";
+import "../lib/stores/community-store";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
