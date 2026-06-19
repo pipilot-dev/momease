@@ -153,24 +153,34 @@ export default function HomeScreen() {
                   Hi, {firstName}!
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-                <View style={{ position: "relative" }}>
-                  <Bell size={24} color={colors.text.secondary} />
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: -2,
-                      right: -2,
-                      width: 10,
-                      height: 10,
-                      borderRadius: 5,
-                      backgroundColor: colors.error,
-                      borderWidth: 2,
-                      borderColor: colors.primary[50],
-                    }}
-                  />
-                </View>
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push("/messages" as any);
+                  }}
+                >
+                  <MessageCircle size={24} color={colors.text.secondary} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+                  <View style={{ position: "relative" }}>
+                    <Bell size={24} color={colors.text.secondary} />
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: -2,
+                        right: -2,
+                        width: 10,
+                        height: 10,
+                        borderRadius: 5,
+                        backgroundColor: colors.error,
+                        borderWidth: 2,
+                        borderColor: colors.primary[50],
+                      }}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* AI Greeting */}

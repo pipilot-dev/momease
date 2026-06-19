@@ -41,6 +41,9 @@ function RootNavigator() {
         <Stack.Screen name="sleep" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="breathe" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="checkin" options={{ animation: "slide_from_bottom" }} />
+        <Stack.Screen name="friends" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="messages" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="dm" options={{ animation: "slide_from_right" }} />
       </Stack>
     </>
   );
