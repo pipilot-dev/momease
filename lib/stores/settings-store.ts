@@ -5,6 +5,7 @@ import {
   cancelDailyCheckin,
   requestNotificationPermissions,
 } from "../notifications";
+import { makePinRecord, verifyPinRecord, type PinRecord } from "../pin";
 
 interface SettingsState {
   notificationsEnabled: boolean;
@@ -12,10 +13,22 @@ interface SettingsState {
   reminderMinute: number;
   hydrated: boolean;
 
+  // App-lock PIN. `pin` (a salted hash) is persisted + cloud-synced so the lock
+  // follows the account across devices. `locked` is ephemeral UI state — never
+  // persisted — that gates the app behind the unlock screen.
+  pin: PinRecord | null;
+  locked: boolean;
+
   setNotificationsEnabled: (enabled: boolean) => Promise<boolean>;
   setReminderTime: (hour: number, minute: number) => Promise<void>;
-  /** Re-apply the current preference to the OS scheduler (called on boot). */
   syncReminder: () => Promise<void>;
+
+  pinEnabled: () => boolean;
+  setPin: (pin: string) => Promise<void>;
+  disablePin: () => void;
+  verifyPin: (pin: string) => Promise<boolean>;
+  lock: () => void;
+  unlock: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -23,6 +36,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   reminderHour: 9,
   reminderMinute: 0,
   hydrated: false,
+  pin: null,
+  locked: false,
 
   setNotificationsEnabled: async (enabled) => {
     if (enabled) {
@@ -53,6 +68,22 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       await scheduleDailyCheckin(reminderHour, reminderMinute);
     }
   },
+
+  pinEnabled: () => get().pin !== null,
+
+  setPin: async (pin) => {
+    const record = await makePinRecord(pin);
+    set({ pin: record });
+  },
+
+  disablePin: () => set({ pin: null, locked: false }),
+
+  verifyPin: async (pin) => verifyPinRecord(get().pin, pin),
+
+  lock: () => {
+    if (get().pin) set({ locked: true });
+  },
+  unlock: () => set({ locked: false }),
 }));
 
 attachPersistence(
@@ -62,10 +93,12 @@ attachPersistence(
     notificationsEnabled: s.notificationsEnabled,
     reminderHour: s.reminderHour,
     reminderMinute: s.reminderMinute,
+    pin: s.pin,
   }),
   {
-    onHydrated: () => {
-      useSettingsStore.setState({ hydrated: true });
+    onHydrated: (state) => {
+      // Lock at launch if a PIN was already stored on this device.
+      useSettingsStore.setState({ hydrated: true, locked: !!state.pin });
       // Re-arm the OS reminder to match the restored preference.
       useSettingsStore.getState().syncReminder().catch(() => {});
     },

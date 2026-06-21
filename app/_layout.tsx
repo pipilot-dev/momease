@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ThemeProvider, useTheme } from "../lib/theme-context";
+import { LockGate } from "../components/LockGate";
 // Side-effect imports: instantiating the persisted stores at launch hydrates
 // saved state, re-arms the daily reminder, and registers every store for
 // Supabase cloud sync so a login pulls the full account, not just whatever
@@ -24,6 +25,7 @@ function RootNavigator() {
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
+      <LockGate>
       <Stack
         screenOptions={{
           headerShown: false,
@@ -44,7 +46,9 @@ function RootNavigator() {
         <Stack.Screen name="friends" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="messages" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="dm" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="set-pin" options={{ animation: "slide_from_bottom" }} />
       </Stack>
+      </LockGate>
     </>
   );
 }

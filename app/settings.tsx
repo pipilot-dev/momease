@@ -9,7 +9,7 @@ import {
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { ChevronLeft, Bell, Clock, Moon, Trash2 } from "lucide-react-native";
+import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight } from "lucide-react-native";
 import { useSettingsStore } from "../lib/stores/settings-store";
 import { useTheme } from "../lib/theme-context";
 
@@ -32,7 +32,9 @@ export default function SettingsScreen() {
     reminderHour,
     reminderMinute,
     setReminderTime,
+    pin,
   } = useSettingsStore();
+  const pinEnabled = pin !== null;
 
   const Card = ({ children }: { children: React.ReactNode }) => (
     <View
@@ -191,6 +193,33 @@ export default function SettingsScreen() {
               thumbColor="#FFFFFF"
             />
           </View>
+        </Card>
+
+        {/* App Lock (PIN) */}
+        <Card>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ flex: 1 }}>{rowHeader(Lock, "App Lock", pinEnabled ? "PIN required to open the app" : "Protect the app with a PIN")}</View>
+            <Switch
+              value={pinEnabled}
+              onValueChange={(v) => {
+                Haptics.selectionAsync();
+                if (v) router.push("/set-pin");
+                else router.push({ pathname: "/set-pin", params: { mode: "disable" } });
+              }}
+              trackColor={{ false: theme.border, true: "#F9A8D4" }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+          {pinEnabled && (
+            <TouchableOpacity
+              onPress={() => { Haptics.selectionAsync(); router.push({ pathname: "/set-pin", params: { mode: "change" } }); }}
+              activeOpacity={0.7}
+              style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: theme.border }}
+            >
+              <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 15, color: theme.text.primary }}>Change PIN</Text>
+              <ChevronRight size={18} color={theme.text.muted} />
+            </TouchableOpacity>
+          )}
         </Card>
 
         {/* Data */}
