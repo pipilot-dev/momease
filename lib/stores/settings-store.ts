@@ -6,6 +6,7 @@ import {
   requestNotificationPermissions,
 } from "../notifications";
 import { makePinRecord, verifyPinRecord, type PinRecord } from "../pin";
+import { getBiometricFlag, setBiometricFlag } from "../biometrics";
 
 interface SettingsState {
   notificationsEnabled: boolean;
@@ -18,6 +19,8 @@ interface SettingsState {
   // persisted — that gates the app behind the unlock screen.
   pin: PinRecord | null;
   locked: boolean;
+  // Device-local (never synced): whether biometric unlock is turned on here.
+  biometricEnabled: boolean;
 
   setNotificationsEnabled: (enabled: boolean) => Promise<boolean>;
   setReminderTime: (hour: number, minute: number) => Promise<void>;
@@ -29,6 +32,7 @@ interface SettingsState {
   verifyPin: (pin: string) => Promise<boolean>;
   lock: () => void;
   unlock: () => void;
+  setBiometricEnabled: (on: boolean) => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -38,6 +42,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   hydrated: false,
   pin: null,
   locked: false,
+  biometricEnabled: false,
 
   setNotificationsEnabled: async (enabled) => {
     if (enabled) {
@@ -84,6 +89,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     if (get().pin) set({ locked: true });
   },
   unlock: () => set({ locked: false }),
+
+  setBiometricEnabled: async (on) => {
+    await setBiometricFlag(on);
+    set({ biometricEnabled: on });
+  },
 }));
 
 attachPersistence(
@@ -99,6 +109,8 @@ attachPersistence(
     onHydrated: (state) => {
       // Lock at launch if a PIN was already stored on this device.
       useSettingsStore.setState({ hydrated: true, locked: !!state.pin });
+      // Restore the device-local biometric preference.
+      getBiometricFlag().then((on) => useSettingsStore.setState({ biometricEnabled: on })).catch(() => {});
       // Re-arm the OS reminder to match the restored preference.
       useSettingsStore.getState().syncReminder().catch(() => {});
     },

@@ -1,41 +1,64 @@
 import { useState, useEffect, useRef } from "react";
-import { View, Text, AppState, type AppStateStatus } from "react-native";
+import { View, Text, TouchableOpacity, AppState, type AppStateStatus } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Lock } from "lucide-react-native";
+import { Lock, ScanFace } from "lucide-react-native";
 import { useSettingsStore } from "../lib/stores/settings-store";
 import { useTheme } from "../lib/theme-context";
+import { isBiometricAvailable, biometricLabel, authenticateBiometric } from "../lib/biometrics";
 import { PinPad } from "./PinPad";
 
 /**
  * Wraps the app and, when an app-lock PIN is set, gates everything behind an
  * unlock screen — on cold launch and again whenever the app returns from the
- * background. The PIN itself is verified against the (cloud-synced) hash in the
- * settings store, so it works the same on every signed-in device.
+ * background. If biometric unlock is enabled, the device prompt (Face ID /
+ * fingerprint) fires automatically, with the PIN always available as fallback.
  */
 export function LockGate({ children }: { children: React.ReactNode }) {
   const { theme, isDark } = useTheme();
-  const { hydrated, pin, locked, verifyPin, unlock, lock } = useSettingsStore();
+  const { hydrated, pin, locked, biometricEnabled, verifyPin, unlock, lock } = useSettingsStore();
   const [error, setError] = useState<string | null>(null);
   const [resetToken, setResetToken] = useState(0);
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioName, setBioName] = useState("Face ID");
   const appState = useRef(AppState.currentState);
+  const promptedFor = useRef<boolean>(false);
 
-  // Re-lock when the app comes back to the foreground.
+  // Detect biometric capability once.
+  useEffect(() => {
+    isBiometricAvailable().then(setBioAvailable);
+    biometricLabel().then(setBioName);
+  }, []);
+
+  // Re-lock when the app returns to the foreground.
   useEffect(() => {
     const sub = AppState.addEventListener("change", (next: AppStateStatus) => {
       const prev = appState.current;
       appState.current = next;
-      if (prev.match(/inactive|background/) && next === "active") {
-        lock();
-      }
+      if (prev.match(/inactive|background/) && next === "active") lock();
     });
     return () => sub.remove();
   }, [lock]);
 
-  // Avoid flashing app content before we know the lock state.
-  if (!hydrated) {
-    return <View style={{ flex: 1, backgroundColor: theme.bg }} />;
-  }
+  const promptBiometric = async () => {
+    const ok = await authenticateBiometric("Unlock MomEase");
+    if (ok) {
+      setError(null);
+      unlock();
+    }
+  };
 
+  // Auto-prompt biometric each time the app becomes locked.
+  useEffect(() => {
+    const showing = hydrated && pin && locked;
+    if (showing && biometricEnabled && bioAvailable && !promptedFor.current) {
+      promptedFor.current = true;
+      promptBiometric();
+    }
+    if (!locked) promptedFor.current = false;
+  }, [hydrated, pin, locked, biometricEnabled, bioAvailable]);
+
+  // Avoid flashing app content before we know the lock state.
+  if (!hydrated) return <View style={{ flex: 1, backgroundColor: theme.bg }} />;
   if (!pin || !locked) return <>{children}</>;
 
   const handle = async (entered: string) => {
@@ -60,6 +83,7 @@ export function LockGate({ children }: { children: React.ReactNode }) {
         </View>
         <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: theme.text.primary }}>MomEase</Text>
       </View>
+
       <PinPad
         title="Enter your PIN"
         subtitle="Your calm space is locked"
@@ -67,6 +91,17 @@ export function LockGate({ children }: { children: React.ReactNode }) {
         resetToken={resetToken}
         onComplete={handle}
       />
+
+      {biometricEnabled && bioAvailable && (
+        <TouchableOpacity
+          onPress={promptBiometric}
+          activeOpacity={0.8}
+          style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 24, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }}
+        >
+          <ScanFace size={20} color="#F472B6" />
+          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 15, color: theme.text.primary }}>Unlock with {bioName}</Text>
+        </TouchableOpacity>
+      )}
     </LinearGradient>
   );
 }

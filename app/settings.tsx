@@ -6,12 +6,14 @@ import {
   Switch,
   Alert,
 } from "react-native";
+import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight } from "lucide-react-native";
+import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight, ScanFace } from "lucide-react-native";
 import { useSettingsStore } from "../lib/stores/settings-store";
 import { useTheme } from "../lib/theme-context";
+import { isBiometricAvailable, biometricLabel, authenticateBiometric } from "../lib/biometrics";
 
 // Preset reminder times shown as selectable chips.
 const TIME_OPTIONS: { label: string; hour: number; minute: number }[] = [
@@ -33,8 +35,32 @@ export default function SettingsScreen() {
     reminderMinute,
     setReminderTime,
     pin,
+    biometricEnabled,
+    setBiometricEnabled,
   } = useSettingsStore();
   const pinEnabled = pin !== null;
+
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioName, setBioName] = useState("Face ID");
+  useEffect(() => {
+    isBiometricAvailable().then(setBioAvailable);
+    biometricLabel().then(setBioName);
+  }, []);
+
+  const toggleBiometric = async (on: boolean) => {
+    Haptics.selectionAsync();
+    if (on) {
+      // Confirm the biometric works before turning it on.
+      const ok = await authenticateBiometric("Confirm to enable biometric unlock");
+      if (!ok) {
+        Alert.alert("Couldn't verify", "We couldn't confirm your biometrics. Please try again.");
+        return;
+      }
+      await setBiometricEnabled(true);
+    } else {
+      await setBiometricEnabled(false);
+    }
+  };
 
   const Card = ({ children }: { children: React.ReactNode }) => (
     <View
@@ -210,6 +236,29 @@ export default function SettingsScreen() {
               thumbColor="#FFFFFF"
             />
           </View>
+          {pinEnabled && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: theme.border }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                <ScanFace size={20} color={bioAvailable ? "#F472B6" : theme.text.muted} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 15, color: theme.text.primary }}>
+                    {bioAvailable ? `${bioName} unlock` : "Biometric unlock"}
+                  </Text>
+                  <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.secondary }}>
+                    {bioAvailable ? "Skip the PIN with your face or fingerprint" : "Not available on this device"}
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={biometricEnabled && bioAvailable}
+                disabled={!bioAvailable}
+                onValueChange={toggleBiometric}
+                trackColor={{ false: theme.border, true: "#F9A8D4" }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+          )}
+
           {pinEnabled && (
             <TouchableOpacity
               onPress={() => { Haptics.selectionAsync(); router.push({ pathname: "/set-pin", params: { mode: "change" } }); }}

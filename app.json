@@ -37,6 +37,12 @@
         {
           "color": "#F472B6"
         }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow MomEase to use Face ID to unlock the app."
+        }
       ]
     ],
     "extra": {
