@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MomEase — Your daily dose of calm</title>
+  <meta name="description" content="MomEase is a wellness companion for working mothers. Personalized action plans, AI support, guided breathing, journaling, sleep tracking, and community — all in one calm space." />
+  <meta name="theme-color" content="#F472B6" />
+  <meta property="og:title" content="MomEase — Your daily dose of calm" />
+  <meta property="og:description" content="A wellness companion for working mothers. Personalized in 60 seconds." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --rose-50:  #FFF1F5;
+      --rose-100: #FDE5EC;
+      --rose-200: #FBC8DC;
+      --rose-400: #F472B6;
+      --rose-500: #EC4899;
+      --rose-600: #DB2777;
+      --cream:    #FDFBF7;
+      --warm-100: #FFF7ED;
+      --warm-200: #FED7AA;
+      --violet:   #8B5CF6;
+      --mint:     #10B981;
+      --amber:    #F59E0B;
+      --ink:      #1C1917;
+      --ink-2:    #57534E;
+      --ink-3:    #A8A29E;
+      --line:     #F0E9E0;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Quicksand', ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+    .display { font-family: 'Fraunces', ui-serif, Georgia, serif; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+
+    /* HEADER */
+    header.top {
+      padding: 22px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 21px;
+      background: linear-gradient(135deg, #F9A8D4, #EC4899);
+      display: grid; place-items: center;
+      box-shadow: 0 8px 20px -6px rgba(236, 72, 153, 0.5);
+    }
+    .brand-mark svg { width: 22px; height: 22px; color: #fff; }
+    .brand-name { font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+    header nav a {
+      color: var(--ink-2); text-decoration: none; font-weight: 600; margin-left: 24px; font-size: 14px;
+    }
+    header nav a:hover { color: var(--rose-500); }
+    .cta-pill {
+      background: linear-gradient(135deg, var(--rose-400), var(--rose-500));
+      color: #fff; padding: 10px 20px; border-radius: 999px; font-weight: 700; font-size: 14px;
+      box-shadow: 0 8px 20px -8px rgba(236, 72, 153, 0.55);
+    }
+
+    /* HERO */
+    .hero {
+      max-width: 1200px; margin: 0 auto; padding: 40px 32px 40px;
+      display: grid; grid-template-columns: 1.05fr 1fr; gap: 60px; align-items: center;
+    }
+    .hero-blob {
+      position: absolute; inset: 0; z-index: -1; overflow: hidden;
+      pointer-events: none;
+    }
+    .hero-blob::before, .hero-blob::after {
+      content: ''; position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5;
+    }
+    .hero-blob::before { top: -80px; left: -80px; width: 380px; height: 380px; background: var(--rose-200); }
+    .hero-blob::after  { top: 20%; right: -60px; width: 320px; height: 320px; background: #DDD6FE; }
+    .hero-container { position: relative; }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; border: 1px solid var(--line);
+      padding: 8px 16px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.8px; color: var(--rose-500);
+      box-shadow: 0 4px 20px -8px rgba(0,0,0,0.08);
+    }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 3px; background: var(--mint); box-shadow: 0 0 0 3px #DCFCE7; }
+
+    h1.headline {
+      font-size: clamp(44px, 6.2vw, 76px);
+      margin: 22px 0 20px;
+    }
+    h1.headline em {
+      font-style: italic; color: var(--rose-500); font-weight: 400;
+    }
+    .subhead {
+      font-size: 19px; color: var(--ink-2); max-width: 520px; margin-bottom: 32px;
+    }
+    .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 16px 26px; border-radius: 14px; font-weight: 700; font-size: 15px;
+      text-decoration: none; transition: transform 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--rose-400), var(--rose-500)); color: #fff;
+      box-shadow: 0 12px 28px -12px rgba(236, 72, 153, 0.6);
+    }
+    .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+
+    .trust {
+      margin-top: 26px; display: flex; align-items: center; gap: 14px;
+      font-size: 13px; color: var(--ink-3);
+    }
+    .avatars { display: flex; }
+    .avatars span {
+      width: 28px; height: 28px; border-radius: 14px; border: 2px solid #fff;
+      background: linear-gradient(135deg, #F9A8D4, #C4B5FD);
+      margin-left: -8px;
+    }
+    .avatars span:first-child { margin-left: 0; }
+
+    /* PHONE MOCK */
+    .phone-wrap { display: flex; justify-content: center; align-items: center; position: relative; }
+    .phone {
+      position: relative; width: 300px; height: 620px;
+      background: #111; border-radius: 42px; padding: 12px;
+      box-shadow: 0 40px 80px -20px rgba(31, 41, 55, 0.35), 0 20px 40px -10px rgba(236, 72, 153, 0.2);
+      transform: rotate(-2deg);
+    }
+    .phone::before {
+      content: ''; position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      width: 90px; height: 22px; background: #111; border-radius: 12px; z-index: 2;
+    }
+    .phone video, .phone img {
+      width: 100%; height: 100%; border-radius: 30px; object-fit: cover; display: block;
+    }
+    .phone-badge {
+      position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%) rotate(2deg);
+      background: #fff; border: 1px solid var(--line); border-radius: 999px;
+      padding: 8px 16px; font-size: 12px; font-weight: 700; color: var(--rose-500);
+      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+
+    /* SECTIONS */
+    section { padding: 80px 32px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section-eyebrow { color: var(--rose-500); font-weight: 700; letter-spacing: 1.2px; font-size: 12px; margin-bottom: 12px; text-transform: uppercase; }
+    .section-title { font-size: clamp(32px, 4vw, 46px); margin: 0 0 20px; }
+    .section-sub { font-size: 17px; color: var(--ink-2); max-width: 620px; margin: 0; }
+
+    /* STATS */
+    .stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 60px;
+      padding: 40px; background: #fff; border-radius: 24px; border: 1px solid var(--line);
+    }
+    .stat-val { font-family: 'Fraunces', serif; font-weight: 800; font-size: 44px; color: var(--rose-500); line-height: 1; }
+    .stat-lbl { color: var(--ink-2); font-size: 14px; margin-top: 6px; }
+
+    /* FEATURES */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 50px; }
+    .feature {
+      padding: 28px; border-radius: 20px; background: #fff; border: 1px solid var(--line);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .feature:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -20px rgba(0,0,0,0.15); }
+    .feature-icon {
+      width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; margin-bottom: 18px;
+    }
+    .feature-icon svg { width: 24px; height: 24px; }
+    .feature h3 { font-size: 19px; margin: 0 0 10px; font-weight: 700; }
+    .feature p { color: var(--ink-2); margin: 0; font-size: 15px; }
+
+    /* VALUE PROP — Dr. Bessem's framework */
+    .value {
+      background: linear-gradient(135deg, var(--rose-50) 0%, #FDF2F8 50%, #F5F3FF 100%);
+      border-radius: 32px; padding: 60px 48px; margin-top: 60px;
+    }
+    .value-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 40px; }
+    .value-item {
+      background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);
+      border-radius: 20px; padding: 28px; border: 1px solid rgba(255,255,255,0.9);
+    }
+    .value-num {
+      font-family: 'Fraunces', serif; font-weight: 800; font-size: 32px; color: var(--rose-500);
+    }
+    .value-item h4 { margin: 8px 0 10px; font-size: 18px; }
+    .value-item p { color: var(--ink-2); font-size: 14px; margin: 0; }
+
+    /* CTA */
+    .final-cta {
+      background: linear-gradient(135deg, var(--rose-400), var(--rose-600));
+      border-radius: 32px; padding: 80px 40px; margin-top: 60px;
+      text-align: center; color: #fff;
+    }
+    .final-cta h2 { font-family: 'Fraunces', serif; font-weight: 800; font-size: 44px; margin: 0 0 16px; line-height: 1.05; }
+    .final-cta p { font-size: 18px; opacity: 0.95; margin: 0 0 32px; }
+    .final-cta .btn { background: #fff; color: var(--rose-500); }
+
+    /* FOOTER */
+    footer { padding: 40px 32px; text-align: center; color: var(--ink-3); font-size: 14px; border-top: 1px solid var(--line); margin-top: 60px; }
+    footer a { color: var(--rose-500); text-decoration: none; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 20px; }
+      .phone { transform: none; margin: 0 auto; }
+      .features { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .value-grid { grid-template-columns: 1fr; }
+      .final-cta h2 { font-size: 32px; }
+      header nav a { display: none; }
+      header nav a.cta-pill { display: inline-block; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero-container">
+    <div class="hero-blob"></div>
+    <header class="top">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C.5 8 3 4 6.5 4 9 4 10.5 5.5 12 8c1.5-2.5 3-4 5.5-4C21 4 23.5 8 21.5 12 19 16.5 12 21 12 21z"/></svg>
+        </div>
+        <div class="brand-name">MomEase</div>
+      </div>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#why">Why now</a>
+        <a href="https://open-sandal-z9zr.here.now/" class="cta-pill" target="_blank" rel="noopener">Try the app</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow"><span class="eyebrow-dot"></span> LIVE PWA · INSTALL ON ANY DEVICE</div>
+        <h1 class="display headline">Your daily dose of <em>calm</em>.</h1>
+        <p class="subhead">A wellness companion built for working mothers. Personalized in 60 seconds. Guided breathing, journaling, sleep tracking, AI support — all in one warm, calm space.</p>
+        <div class="cta-row">
+          <a href="https://open-sandal-z9zr.here.now/" class="btn btn-primary" target="_blank" rel="noopener">
+            Try MomEase live
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#demo" class="btn btn-ghost">▶  Watch 90-sec demo</a>
+        </div>
+        <div class="trust">
+          <div class="avatars"><span></span><span></span><span></span><span></span></div>
+          Built with feedback from moms, HR leaders & clinicians.
+        </div>
+      </div>
+      <div class="phone-wrap">
+        <div class="phone">
+          <video autoplay loop muted playsinline id="demo-video">
+            <source src="demo.webm" type="video/webm" />
+          </video>
+        </div>
+        <div class="phone-badge">✨  Personalized action plan</div>
+      </div>
+    </section>
+  </div>
+
+  <section id="demo" style="padding-top: 20px;">
+    <div class="container">
+      <div class="stats">
+        <div><div class="stat-val">60s</div><div class="stat-lbl">Onboarding time</div></div>
+        <div><div class="stat-val">8</div><div class="stat-lbl">Distinct challenges addressed</div></div>
+        <div><div class="stat-val">4</div><div class="stat-lbl">Actions per weekly plan</div></div>
+        <div><div class="stat-val">7</div><div class="stat-lbl">Life stages supported</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container">
+      <div class="section-eyebrow">The Product</div>
+      <h2 class="display section-title">Not just another parenting app.</h2>
+      <p class="section-sub">A digital ecosystem that supports mothers through pregnancy, postpartum, parenting, career transitions, and everyday family life.</p>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon" style="background:#FDF2F8;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9C.5 8 3 4 6.5 4 9 4 10.5 5.5 12 8c1.5-2.5 3-4 5.5-4C21 4 23.5 8 21.5 12 19 16.5 12 21 12 21z"/></svg>
+          </div>
+          <h3>Personalized in 60 seconds</h3>
+          <p>4 questions surface her life stage, biggest challenge, and goals — then generate a weekly action plan she can actually use.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:#EDE9FE;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9-9-4.03-9-9zm4 3c1.5 1 3 2 5 2s3.5-1 5-2M9 9h.01M15 9h.01"/></svg>
+          </div>
+          <h3>AI Companion, 24/7</h3>
+          <p>Warm, judgment-free chat trained on maternal wellbeing. Vent, get reframes, plan the week — she's not alone at 3 AM anymore.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:#DBEAFE;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <h3>Guided breathing</h3>
+          <p>Box, 4-7-8, and gentle-relax patterns. An animated orb syncs to her breath. Two minutes and her nervous system resets.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:#FEF3C7;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M6 6l12 12M6 18L18 6"/></svg>
+          </div>
+          <h3>Mood & journal</h3>
+          <p>60-second daily check-ins. Emotion tagging. Prompted journaling. Streaks that reward consistency, not perfection.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:#D1FAE5;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+          </div>
+          <h3>Peer community</h3>
+          <p>Verified mom-to-mom support. Tips, wins, and honest questions. No comparison culture, no perfect-parenting theatre.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon" style="background:#E0E7FF;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </div>
+          <h3>Sleep, sounds, meditations</h3>
+          <p>Sleep score, wind-down rituals, rain & nature soundscapes, guided meditations. Because rest is her superpower.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="container">
+      <div class="value">
+        <div class="section-eyebrow">Built for a real launch</div>
+        <h2 class="display section-title">Three pillars, one product.</h2>
+        <p class="section-sub">Anchored in commercialization feedback from Dr. Bessem: WOW onboarding, daily engagement, and clinical credibility.</p>
+        <div class="value-grid">
+          <div class="value-item">
+            <div class="value-num">01</div>
+            <h4>The WOW journey</h4>
+            <p>Value visible in the first 5 minutes. Personalized dashboard from the moment she taps "Get Started."</p>
+          </div>
+          <div class="value-item">
+            <div class="value-num">02</div>
+            <h4>Daily engagement</h4>
+            <p>Check-ins, streaks, mood tracking, and AI recommendations that learn her rhythm — so MomEase becomes a routine, not a rescue.</p>
+          </div>
+          <div class="value-item">
+            <div class="value-num">03</div>
+            <h4>Trust & credibility</h4>
+            <p>Evidence-based content, transparent AI, private-by-default data, and pathways for clinician review.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="final-cta">
+        <h2>Ready to feel the difference?</h2>
+        <p>Open the app on your phone. Add to home screen. Take 60 seconds.</p>
+        <a href="https://open-sandal-z9zr.here.now/" class="btn" target="_blank" rel="noopener">
+          Launch MomEase
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>MomEase · Built with love for working mothers · <a href="https://open-sandal-z9zr.here.now/" target="_blank" rel="noopener">Try the live app</a></p>
+  </footer>
+
+  <script>
+    // Pause video when off-screen, resume on-screen (saves battery on mobile)
+    const v = document.getElementById('demo-video');
+    if (v && 'IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        for (const e of entries) { e.isIntersecting ? v.play() : v.pause(); }
+      }, { threshold: 0.2 }).observe(v);
+    }
+  </script>
+</body>
+</html>
