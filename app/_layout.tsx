@@ -5,6 +5,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ThemeProvider, useTheme } from "../lib/theme-context";
 import { LockGate } from "../components/LockGate";
+import { AuthGate } from "../components/AuthGate";
 // Side-effect imports: instantiating the persisted stores at launch hydrates
 // saved state, re-arms the daily reminder, and registers every store for
 // Supabase cloud sync so a login pulls the full account, not just whatever
@@ -26,6 +27,7 @@ function RootNavigator() {
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
       <LockGate>
+      <AuthGate>
       <Stack
         screenOptions={{
           headerShown: false,
@@ -48,6 +50,7 @@ function RootNavigator() {
         <Stack.Screen name="dm" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="set-pin" options={{ animation: "slide_from_bottom" }} />
       </Stack>
+      </AuthGate>
       </LockGate>
     </>
   );
