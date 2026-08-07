@@ -39,6 +39,8 @@ import { getRandomMantra, getTimeOfDay, mockMeditations } from "../../lib/mock-d
 import { getAIGreeting } from "../../lib/mock-ai";
 import { animation } from "../../lib/theme";
 import { useTheme } from "../../lib/theme-context";
+import { buildWeeklyPlan, personalizedGreeting } from "../../lib/personalization";
+import type { ActionItem } from "../../lib/personalization";
 
 const { width } = Dimensions.get("window");
 
@@ -63,12 +65,25 @@ export default function HomeScreen() {
   const actionsAnim = useRef(new Animated.Value(0)).current;
   const tasksAnim = useRef(new Animated.Value(0)).current;
 
-  const firstName = user?.name?.split(" ")[0] || "Mama";
+  // Some auth flows drop the display name (email-only signup gives "sarah");
+  // capitalize so headings read as a proper first name.
+  const rawFirst = user?.name?.split(" ")[0] || "Mama";
+  const firstName = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1);
   const timeOfDay = getTimeOfDay();
   const TimeIcon = timeOfDay === "morning" ? Sunrise : timeOfDay === "afternoon" ? Sun : Moon;
 
+  const personalization = user?.personalization;
+  const plan = buildWeeklyPlan(personalization);
+
   useEffect(() => {
-    getAIGreeting(firstName).then(setGreeting);
+    // Prefer the personalization-driven greeting when available so returning
+    // moms feel the app remembers what they came here for. Fall back to the
+    // generic AI greeting otherwise.
+    if (personalization?.primaryChallenge) {
+      setGreeting(personalizedGreeting(firstName, personalization));
+    } else {
+      getAIGreeting(firstName).then(setGreeting);
+    }
     // Staggered entrance animations — run in parallel with increasing
     // delays so every section becomes visible quickly (~700ms total),
     // rather than chaining serially (which left the nav grids hidden).
@@ -221,6 +236,76 @@ export default function HomeScreen() {
         </Animated.View>
 
         <View style={{ paddingHorizontal: 24 }}>
+          {/* Personalized weekly action plan — the "WOW" hero. */}
+          <Animated.View style={{ opacity: greetingAnim, marginBottom: 24 }}>
+            <View
+              style={{
+                borderRadius: 20,
+                overflow: "hidden",
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                shadowColor: "#F472B6",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: isDark ? 0 : 0.12,
+                shadowRadius: 20,
+                elevation: 4,
+              }}
+            >
+              <LinearGradient
+                colors={isDark ? [gradients.roseGlow[0], gradients.roseGlow[1]] : ["#FDF2F8", "#FFF1F5"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ padding: 20 }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <Sparkles size={16} color="#EC4899" />
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 12, color: "#EC4899", letterSpacing: 1.2 }}>
+                    THIS WEEK'S FOCUS
+                  </Text>
+                  {plan.stageLabel && (
+                    <View style={{ marginLeft: "auto", backgroundColor: isDark ? colors.surface : "#FFFFFF", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                      <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 10, color: colors.text.secondary }}>{plan.stageLabel}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 20, color: colors.text.primary, lineHeight: 26 }}>
+                  {plan.headline}
+                </Text>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: colors.text.secondary, lineHeight: 20, marginTop: 6 }}>
+                  {plan.intro}
+                </Text>
+              </LinearGradient>
+
+              <View style={{ padding: 12, gap: 8 }}>
+                {plan.items.slice(0, 4).map((item) => (
+                  <PlanRow key={item.id} item={item} theme={colors} isDark={isDark} onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                    router.push(item.route as any);
+                  }} />
+                ))}
+              </View>
+
+              {!personalization?.primaryChallenge && (
+                <TouchableOpacity
+                  onPress={() => router.push("/onboarding")}
+                  style={{
+                    borderTopWidth: 1,
+                    borderTopColor: colors.border,
+                    padding: 14,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                  }}
+                >
+                  <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 13, color: "#EC4899" }}>Personalize this plan in 60 sec</Text>
+                  <ChevronRight size={14} color="#EC4899" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </Animated.View>
+
           {/* Daily Mantra with animation */}
           <Animated.View style={{ opacity: mantraAnim, marginBottom: 24 }}>
             <TouchableOpacity
@@ -618,5 +703,49 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
     </View>
+  );
+}
+
+/** Icon map for weekly-plan action rows. Kept out of personalization.ts so
+ *  the engine can stay RN-free / testable. */
+const PLAN_ICONS: Record<ActionItem["icon"], any> = {
+  Wind, Moon, Heart, BookOpen, MessageCircle, Music, Users, Sparkles, Smile, Baby, Sun, ListTodo: CheckCircle2,
+};
+
+const ACCENT_HEX: Record<ActionItem["accent"], string> = {
+  coral: "#FB923C",
+  mint: "#10B981",
+  violet: "#8B5CF6",
+  rose: "#F472B6",
+  amber: "#F59E0B",
+};
+
+function PlanRow({ item, theme, isDark, onPress }: { item: ActionItem; theme: any; isDark: boolean; onPress: () => void }) {
+  const Icon = PLAN_ICONS[item.icon] || Sparkles;
+  const accent = ACCENT_HEX[item.accent];
+  return (
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+          padding: 12,
+          borderRadius: 14,
+          backgroundColor: isDark ? theme.surfaceAlt : "#FDFBF7",
+        }}
+      >
+        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: accent + "20", alignItems: "center", justifyContent: "center" }}>
+          <Icon size={20} color={accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 15, color: theme.text.primary }}>{item.title}</Text>
+          <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.muted, marginTop: 2 }}>
+            {item.detail} · {item.minutes} min
+          </Text>
+        </View>
+        <ChevronRight size={18} color={theme.text.muted} />
+      </View>
+    </TouchableOpacity>
   );
 }

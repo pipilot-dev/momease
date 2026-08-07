@@ -3,6 +3,49 @@
 // ImageSource supports both require() (number) and { uri: string }
 export type ImageSource = number | { uri: string };
 
+/** Where the mom is in her journey — drives content, tone, and dashboard. */
+export type LifeStage =
+  | "trying"
+  | "pregnant"
+  | "postpartum"
+  | "baby"         // 0–12mo
+  | "toddler"      // 1–3y
+  | "school-age"   // 4–12y
+  | "teen";        // 13+
+
+/** The biggest challenge right now — anchors the weekly action plan. */
+export type PrimaryChallenge =
+  | "overwhelm"
+  | "sleep"
+  | "mental-load"
+  | "guilt"
+  | "career-balance"
+  | "loneliness"
+  | "postpartum-recovery"
+  | "co-parenting";
+
+/** Longer-term wellness goals — the mom can pick multiple. */
+export type WellnessGoal =
+  | "reduce-stress"
+  | "better-sleep"
+  | "more-me-time"
+  | "connect-community"
+  | "healthier-habits"
+  | "stronger-boundaries"
+  | "mindful-parenting";
+
+export interface Personalization {
+  lifeStage?: LifeStage;
+  primaryChallenge?: PrimaryChallenge;
+  goals: WellnessGoal[];
+  /** ISO date when the personalization was captured / last updated. */
+  updatedAt?: string;
+  /** Whether the user opted in to daily notification reminders. */
+  notificationsEnabled?: boolean;
+  /** Local time (HH:MM) they want their daily check-in nudge. */
+  preferredCheckinTime?: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -12,6 +55,7 @@ export interface User {
   childrenAges?: string[];
   workSchedule?: "full-time" | "part-time" | "freelance" | "stay-at-home";
   interests?: string[];
+  personalization?: Personalization;
   createdAt: string;
   onboardingCompleted: boolean;
 }
