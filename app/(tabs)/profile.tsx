@@ -179,7 +179,7 @@ export default function ProfileScreen() {
             {user?.name || "Mama"}
           </Text>
           <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 14, color: theme.text.secondary, marginTop: 2 }}>
-            {user?.email || "sarah@momease.app"}
+            {user?.email || ""}
           </Text>
 
           <View

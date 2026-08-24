@@ -69,7 +69,8 @@ export const authService = {
   async signInWithGoogle(): Promise<AuthResult> {
     if (!supabase) {
       // Mock: simulate a Google account sign-in.
-      return mockAuth.signIn("google.user@momease.app", "password123");
+      // No backend configured — fail cleanly instead of impersonating a demo persona.
+      return { success: false, error: "Google sign-in is temporarily unavailable. Please sign in with email." };
     }
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",

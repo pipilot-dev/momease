@@ -105,6 +105,36 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 });
+
+// --- Web push (Phase 2 ready) --------------------------------------------
+// When a real push arrives (once a VAPID-signed backend is wired), render it
+// as a native OS notification. Payload contract: { title, body, url }.
+self.addEventListener('push', (e) => {
+  let payload = { title: 'MomEase', body: 'You have a new notification', url: '/' };
+  try { if (e.data) payload = { ...payload, ...e.data.json() }; }
+  catch { if (e.data) payload.body = e.data.text(); }
+  e.waitUntil(self.registration.showNotification(payload.title, {
+    body: payload.body,
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    data: { url: payload.url },
+    tag: payload.tag || 'momease-push',
+  }));
+});
+
+// Clicking a notification focuses any open MomEase tab (or opens one) at
+// the URL the payload requested.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const target = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil((async () => {
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of clients) {
+      if (c.url.includes(self.location.origin)) { await c.focus(); c.navigate?.(target); return; }
+    }
+    await self.clients.openWindow(target);
+  })());
+});
 `;
   await writeFile(path.join(DIST, 'sw.js'), sw);
   console.log('  ✓ sw.js');

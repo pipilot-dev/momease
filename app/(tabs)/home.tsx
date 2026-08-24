@@ -35,6 +35,7 @@ import {
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
 import { useCheckinStore } from "../../lib/stores/checkin-store";
+import { useNotificationStore } from "../../lib/stores/notification-store";
 import { getRandomMantra, getTimeOfDay, mockMeditations } from "../../lib/mock-data";
 import { getAIGreeting } from "../../lib/mock-ai";
 import { animation } from "../../lib/theme";
@@ -54,6 +55,9 @@ export default function HomeScreen() {
   const { user } = useAuthStore();
   const { tasks, getPendingCount, getCompletedCount } = useTaskStore();
   const { currentStreak, hasCheckedInToday } = useCheckinStore();
+  const unreadNotifs = useNotificationStore((s) =>
+    s.notifications.reduce((n, cur) => n + (cur.read ? 0 : 1), 0)
+  );
   const [greeting, setGreeting] = useState("");
   const [mantra, setMantra] = useState(getRandomMantra());
   const [refreshing, setRefreshing] = useState(false);
@@ -177,22 +181,44 @@ export default function HomeScreen() {
                 >
                   <MessageCircle size={24} color={colors.text.secondary} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                    router.push("/notifications");
+                  }}
+                  hitSlop={8}
+                >
                   <View style={{ position: "relative" }}>
                     <Bell size={24} color={colors.text.secondary} />
-                    <View
-                      style={{
-                        position: "absolute",
-                        top: -2,
-                        right: -2,
-                        width: 10,
-                        height: 10,
-                        borderRadius: 5,
-                        backgroundColor: colors.error,
-                        borderWidth: 2,
-                        borderColor: colors.primary[50],
-                      }}
-                    />
+                    {unreadNotifs > 0 && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: -4,
+                          right: -6,
+                          minWidth: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          backgroundColor: colors.error,
+                          borderWidth: 2,
+                          borderColor: colors.primary[50],
+                          alignItems: "center",
+                          justifyContent: "center",
+                          paddingHorizontal: 3,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "Quicksand-Bold",
+                            fontSize: 9,
+                            color: "#FFFFFF",
+                            lineHeight: 12,
+                          }}
+                        >
+                          {unreadNotifs > 9 ? "9+" : unreadNotifs}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </TouchableOpacity>
               </View>

@@ -6,17 +6,19 @@ import * as SplashScreen from "expo-splash-screen";
 import { ThemeProvider, useTheme } from "../lib/theme-context";
 import { LockGate } from "../components/LockGate";
 import { AuthGate } from "../components/AuthGate";
+import { useSettingsStore } from "../lib/stores/settings-store";
+import { maybeFireDailyReminder } from "../lib/web-push";
 // Side-effect imports: instantiating the persisted stores at launch hydrates
 // saved state, re-arms the daily reminder, and registers every store for
 // Supabase cloud sync so a login pulls the full account, not just whatever
 // screens happen to be mounted.
-import "../lib/stores/settings-store";
 import "../lib/stores/task-store";
 import "../lib/stores/chat-store";
 import "../lib/stores/checkin-store";
 import "../lib/stores/milestone-store";
 import "../lib/stores/sleep-store";
 import "../lib/stores/community-store";
+import "../lib/stores/notification-store";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
@@ -49,6 +51,7 @@ function RootNavigator() {
         <Stack.Screen name="messages" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="dm" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="set-pin" options={{ animation: "slide_from_bottom" }} />
+        <Stack.Screen name="notifications" options={{ animation: "slide_from_right" }} />
       </Stack>
       </AuthGate>
       </LockGate>
@@ -69,6 +72,16 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+
+  // Fire the daily local reminder on app open if we're past the user's
+  // preferred time and haven't already surfaced one today.
+  useEffect(() => {
+    const { reminderHour, reminderMinute } = useSettingsStore.getState();
+    const t = setTimeout(() => {
+      maybeFireDailyReminder(reminderHour, reminderMinute).catch(() => {});
+    }, 2500);
+    return () => clearTimeout(t);
+  }, []);
 
   if (!fontsLoaded) return null;
 

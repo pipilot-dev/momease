@@ -29,7 +29,6 @@ import {
   X,
   Flag,
 } from "lucide-react-native";
-import { mockForumPosts } from "../lib/mock-data";
 import type { ForumPost } from "../lib/types";
 import { useTheme } from "../lib/theme-context";
 import { useCommunityStore } from "../lib/stores/community-store";
@@ -73,11 +72,11 @@ export default function CommunityScreen() {
   const submitPost = () => {
     if (!newTitle.trim() || !newContent.trim()) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // No avatarUrl → we pass undefined and render an initials avatar below,
+    // instead of falling back to an external placeholder image URL.
     addPost({
       authorName,
-      authorAvatar: user?.avatarUrl
-        ? { uri: user.avatarUrl }
-        : { uri: "https://api.a0.dev/assets/image?text=friendly%20mom%20avatar&aspect=1:1" },
+      authorAvatar: user?.avatarUrl ? { uri: user.avatarUrl } : (undefined as any),
       title: newTitle.trim(),
       content: newContent.trim(),
       category: newCat,
@@ -96,8 +95,9 @@ export default function CommunityScreen() {
   };
 
   const categories = ["all", "tips", "support", "wins", "questions", "resources"];
-  const allPosts: ForumPost[] = [...userPosts, ...mockForumPosts];
-  const filtered = allPosts.filter((post) => {
+  // Community is real posts only — no seeded personas. A fresh install shows
+  // an empty state until the first mom posts.
+  const filtered = userPosts.filter((post) => {
     const catMatch = filterCat === "all" || post.category === filterCat;
     const q = searchQuery.toLowerCase();
     const searchMatch =
@@ -106,6 +106,15 @@ export default function CommunityScreen() {
       post.content.toLowerCase().includes(q);
     return catMatch && searchMatch;
   });
+
+  /** First two initials from a display name — for avatar-less authors. */
+  const initials = (name: string) =>
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((n) => n[0]?.toUpperCase() ?? "")
+      .join("") || "M";
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -204,24 +213,92 @@ export default function CommunityScreen() {
       </LinearGradient>
 
       <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false}>
-        {/* Trending Banner */}
-        <View
-          style={{
-            backgroundColor: isDark ? theme.surfaceAlt : "#FEF3C7",
-            borderRadius: 12,
-            padding: 14,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-            marginTop: 16,
-            marginBottom: 20,
-          }}
-        >
-          <TrendingUp size={18} color="#F59E0B" />
-          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: isDark ? theme.text.secondary : "#92400E", flex: 1 }}>
-            Trending: Sunday meal prep tips are getting lots of love this week!
-          </Text>
-        </View>
+        {/* Trending Banner — only when there's a real trending post derived
+            from actual likes. Hidden entirely until the community has one. */}
+        {(() => {
+          const trending = [...userPosts]
+            .map((p) => ({ p, score: p.likes + bonusLikes(p.id) }))
+            .filter((x) => x.score >= 3)
+            .sort((a, b) => b.score - a.score)[0];
+          if (!trending) return null;
+          return (
+            <View
+              style={{
+                backgroundColor: isDark ? theme.surfaceAlt : "#FEF3C7",
+                borderRadius: 12,
+                padding: 14,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 16,
+                marginBottom: 20,
+              }}
+            >
+              <TrendingUp size={18} color="#F59E0B" />
+              <Text
+                style={{
+                  fontFamily: "Quicksand-SemiBold",
+                  fontSize: 13,
+                  color: isDark ? theme.text.secondary : "#92400E",
+                  flex: 1,
+                }}
+                numberOfLines={2}
+              >
+                Trending: "{trending.p.title}" — {trending.score} moms are with you.
+              </Text>
+            </View>
+          );
+        })()}
+
+        {/* Empty state — shown before anyone in the community has posted. */}
+        {filtered.length === 0 && (
+          <View style={{ alignItems: "center", paddingTop: 48, paddingBottom: 32, paddingHorizontal: 8 }}>
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 36,
+                backgroundColor: isDark ? theme.surfaceAlt : "#D1FAE5",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 16,
+              }}
+            >
+              <Heart size={30} color="#10B981" />
+            </View>
+            <Text
+              style={{
+                fontFamily: "Quicksand-Bold",
+                fontSize: 18,
+                color: theme.text.primary,
+                marginBottom: 6,
+                textAlign: "center",
+              }}
+            >
+              {searchQuery
+                ? "No conversations match"
+                : userPosts.length === 0
+                  ? "Be the first to share"
+                  : `Nothing under "${filterCat}" yet`}
+            </Text>
+            <Text
+              style={{
+                fontFamily: "Quicksand-Medium",
+                fontSize: 14,
+                color: theme.text.secondary,
+                textAlign: "center",
+                lineHeight: 20,
+                maxWidth: 300,
+              }}
+            >
+              {searchQuery
+                ? "Try a different word, or start the conversation yourself."
+                : userPosts.length === 0
+                  ? "This is your space — celebrate a win, ask a question, or just say hi. Every post begins with one mom."
+                  : "Try 'All' to see everything, or start a post in this category."}
+            </Text>
+          </View>
+        )}
 
         {/* Posts */}
         {filtered.map((post) => {
@@ -244,10 +321,33 @@ export default function CommunityScreen() {
             >
               {/* Author */}
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <Image
-                  source={post.authorAvatar}
-                  style={{ width: 40, height: 40, borderRadius: 20 }}
-                />
+                {post.authorAvatar ? (
+                  <Image
+                    source={post.authorAvatar}
+                    style={{ width: 40, height: 40, borderRadius: 20 }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: config.color + "22",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Quicksand-Bold",
+                        fontSize: 14,
+                        color: config.color,
+                      }}
+                    >
+                      {initials(post.authorName)}
+                    </Text>
+                  </View>
+                )}
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 14, color: theme.text.primary }}>
                     {post.authorName}

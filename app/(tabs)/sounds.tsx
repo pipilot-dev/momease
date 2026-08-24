@@ -21,6 +21,7 @@ import {
   Volume2,
   X,
   Loader,
+  RotateCw,
 } from "lucide-react-native";
 import { useLocalSearchParams } from "expo-router";
 import { mockSounds, mockMeditations } from "../../lib/mock-data";
@@ -84,10 +85,28 @@ export default function SoundsScreen() {
   );
   const [activeMeditation, setActiveMeditation] = useState<MeditationSession | null>(null);
 
-  const { currentId, isPlaying, isLoading, sleepMinutes, play, toggle, stop, setSleepTimer } =
-    useAudioStore();
+  const {
+    currentId,
+    isPlaying,
+    isLoading,
+    sleepMinutes,
+    play,
+    toggle,
+    stop,
+    setSleepTimer,
+    autoPlayEnabled,
+    setAutoPlayEnabled,
+    autoResume,
+    lastPlayedId,
+  } = useAudioStore();
 
   const nowPlaying = mockSounds.find((s) => s.id === currentId);
+  const lastPlayed = mockSounds.find((s) => s.id === lastPlayedId);
+
+  // Auto-resume the last-played sound when this screen mounts, if opted in.
+  useEffect(() => {
+    autoResume(mockSounds).catch(() => {});
+  }, [autoResume]);
 
   const handleTap = (id: string, source: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -151,6 +170,90 @@ export default function SoundsScreen() {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {activeTab === "sounds" ? (
           <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
+            {/* Auto-play preference — persisted to local storage. */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => {
+                const next = !autoPlayEnabled;
+                setAutoPlayEnabled(next);
+                Haptics.selectionAsync().catch(() => {});
+                if (next) autoResume(mockSounds).catch(() => {});
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                marginBottom: 12,
+                borderRadius: 14,
+                backgroundColor: theme.surface,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <View
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: autoPlayEnabled ? "#F472B6" : (isDark ? theme.surfaceAlt : "#F3F4F6"),
+                }}
+              >
+                <RotateCw size={16} color={autoPlayEnabled ? "#FFFFFF" : theme.text.muted} />
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text
+                  style={{ fontFamily: "Quicksand-Bold", fontSize: 14, color: theme.text.primary }}
+                  numberOfLines={1}
+                >
+                  Auto-play on open
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "Quicksand-Medium",
+                    fontSize: 12,
+                    color: theme.text.muted,
+                    marginTop: 1,
+                  }}
+                  numberOfLines={1}
+                >
+                  {autoPlayEnabled
+                    ? lastPlayed
+                      ? `Will resume "${lastPlayed.title}"`
+                      : "Plays your last sound"
+                    : "Pick up where you left off"}
+                </Text>
+              </View>
+              <View
+                style={{
+                  width: 42,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: autoPlayEnabled ? "#10B981" : (isDark ? theme.surfaceAlt : "#E5E7EB"),
+                  padding: 2,
+                  justifyContent: "center",
+                }}
+              >
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: "#FFFFFF",
+                    marginLeft: autoPlayEnabled ? 18 : 0,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 2,
+                    elevation: 2,
+                  }}
+                />
+              </View>
+            </TouchableOpacity>
+
             {/* Now Playing */}
             {nowPlaying && (
               <View

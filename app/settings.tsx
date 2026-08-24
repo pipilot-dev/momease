@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight, ScanFace, UserX } from "lucide-react-native";
 import { useSettingsStore } from "../lib/stores/settings-store";
 import { useAuthStore } from "../lib/stores/auth-store";
@@ -122,17 +123,46 @@ export default function SettingsScreen() {
     );
   };
 
+  // All persisted store keys — kept in sync with attachPersistence() calls
+  // across lib/stores/*. Clearing these removes local caches and signs the
+  // user out on next launch; auth state also gets wiped so the app returns
+  // to its clean, pre-onboarding state.
+  const CLEARABLE_KEYS = [
+    "momease-auth",
+    "momease-chat",
+    "momease-audio",
+    "momease-notifications",
+    "momease-checkin",
+    "momease-milestones",
+    "momease-sleep",
+    "momease-community",
+    "momease-tasks",
+    "momease-settings",
+    "momease-reminder-lastFired",
+  ];
+
+  const doClearLocal = async () => {
+    try {
+      await Promise.all(CLEARABLE_KEYS.map((k) => AsyncStorage.removeItem(k)));
+    } catch {
+      // AsyncStorage on web writes to localStorage — mirror the wipe directly
+      // in case it fails.
+      if (typeof localStorage !== "undefined") {
+        for (const k of CLEARABLE_KEYS) localStorage.removeItem(k);
+      }
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Bounce to the splash so persisted stores re-initialize from defaults.
+    router.replace("/");
+  };
+
   const handleClearLocal = () => {
     Alert.alert(
       "Clear cached data",
-      "This clears locally cached app data on this device. Your account and cloud-synced data are not affected.",
+      "This clears all locally cached data — sign-in, mood check-ins, tasks, journal entries, notifications, community drafts. You'll be signed out. Continue?",
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
-        },
+        { text: "Clear everything", style: "destructive", onPress: doClearLocal },
       ]
     );
   };

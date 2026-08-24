@@ -22,8 +22,8 @@ export default function SignIn() {
   const { theme, isDark } = useTheme();
   const router = useRouter();
   const { signIn, signInWithGoogle, isLoading, error, clearError } = useAuthStore();
-  const [email, setEmail] = useState("sarah@momease.app");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   // Forgot-password reset flow

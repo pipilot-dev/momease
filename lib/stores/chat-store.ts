@@ -14,14 +14,18 @@ const WELCOME: ChatMessage = {
 interface ChatState {
   messages: ChatMessage[];
   isTyping: boolean;
+  /** Persisted: when true, AI replies are read aloud via Kokoro TTS. */
+  voiceMode: boolean;
 
   sendMessage: (content: string) => Promise<void>;
   clearChat: () => void;
+  setVoiceMode: (on: boolean) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [WELCOME],
   isTyping: false,
+  voiceMode: false,
 
   sendMessage: async (content) => {
     const userMessage: ChatMessage = {
@@ -62,6 +66,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
       ],
     }),
+
+  setVoiceMode: (on) => set({ voiceMode: on }),
 }));
 
-attachPersistence(useChatStore, "momease-chat", (s) => ({ messages: s.messages }));
+attachPersistence(useChatStore, "momease-chat", (s) => ({
+  messages: s.messages,
+  voiceMode: s.voiceMode,
+}));
