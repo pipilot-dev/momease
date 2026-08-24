@@ -12,8 +12,8 @@ import { Platform } from "react-native";
 
 const BASE = "https://tts.voice-generator.com";
 
-/** Soft, gentle American female — chosen for warmth in a wellness context. */
-export const DEFAULT_VOICE = "af_bella";
+/** Soft, gentle British female — chosen for warmth in a wellness context. */
+export const DEFAULT_VOICE = "bf_isabella";
 
 /** Voice id encodes language in its first letter. */
 const langFor = (voice: string): string =>

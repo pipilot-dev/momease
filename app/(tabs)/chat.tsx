@@ -146,7 +146,7 @@ export default function ChatScreen() {
             style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: colors.text.primary }}
             numberOfLines={1}
           >
-            AI Companion
+            Companion
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <View
@@ -256,7 +256,7 @@ export default function ChatScreen() {
                   lineHeight: 20,
                 }}
               >
-                Your AI companion is here to listen and support you.
+                Your companion is here to listen and support you.
               </Text>
             </Animated.View>
           )}
@@ -285,7 +285,7 @@ export default function ChatScreen() {
                         color: colors.text.muted,
                       }}
                     >
-                      MomEase AI
+                      MomEase
                     </Text>
                     {isSpeaking && (
                       <View

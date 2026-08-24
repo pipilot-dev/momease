@@ -83,7 +83,7 @@ export default function ProfileScreen() {
           onPress: () =>
             info(
               "MomEase Premium",
-              "Unlock unlimited AI chats, all meditations, and offline sounds for $7.99/mo. (Demo)"
+              "Unlock unlimited chats, all meditations, and offline sounds for $7.99/mo. (Demo)"
             ),
         },
         {

@@ -26,7 +26,7 @@ export const ChatMessage = memo(function ChatMessage({
       {!isUser && (
         <View style={styles.avatarRow}>
           <Heart size={12} color={colors.accent[400]} fill={colors.accent[400]} />
-          <Text style={styles.avatarText}>MomEase AI</Text>
+          <Text style={styles.avatarText}>MomEase</Text>
         </View>
       )}
       <View

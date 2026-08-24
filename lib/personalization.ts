@@ -111,7 +111,7 @@ const ITEMS = {
   },
   aiChat: {
     id: "chat",
-    title: "Talk to your AI companion",
+    title: "Talk to your companion",
     detail: "Vent, plan the week, or ask for a reframe.",
     icon: "MessageCircle" as const,
     accent: "violet" as const,

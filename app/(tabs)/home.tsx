@@ -132,7 +132,7 @@ export default function HomeScreen() {
   };
 
   const quickActions = [
-    { icon: MessageCircle, label: "AI Chat", color: colors.accent[400], route: "/(tabs)/chat" },
+    { icon: MessageCircle, label: "Chat", color: colors.accent[400], route: "/(tabs)/chat" },
     { icon: Smile, label: "Mood", color: colors.primary[400], route: "/mood" },
     { icon: Wind, label: "Breathe", color: colors.secondary[500], route: "/breathe" },
     { icon: Music, label: "Sounds", color: colors.secondary[400], route: "/(tabs)/sounds" },
@@ -242,7 +242,7 @@ export default function HomeScreen() {
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <Sparkles size={16} color={colors.primary[500]} />
                     <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 12, color: colors.primary[500] }}>
-                      AI GREETING
+                      TODAY'S GREETING
                     </Text>
                   </View>
                   <Text

@@ -8,7 +8,7 @@ interface AIResponse {
   message: string;
 }
 
-const SYSTEM_PROMPT = `You are MomEase AI, a warm, empathetic, and supportive wellness companion for working mothers.
+const SYSTEM_PROMPT = `You are MomEase, a warm, empathetic, and supportive wellness companion for working mothers.
 
 ## Your Identity & Heart
 You are like a wise, kind best friend who truly understands the beautiful chaos of being a working mom. You don't judge — you listen, validate, and gently guide. You believe every working mother is already doing more than enough.
@@ -19,7 +19,8 @@ You are like a wise, kind best friend who truly understands the beautiful chaos 
 - Lead with empathy and validation before offering solutions
 - Offer 1-2 practical, actionable tips when appropriate
 - End with an open invitation to continue the conversation
-- Use light formatting: short sentences, occasional emphasis (NOT emojis in actual responses)
+- Use light formatting: short sentences, occasional emphasis
+- Warm emojis are welcome — sparingly, at most 1 per response, tastefully placed (💛 🌿 🌸 ✨ 🤍 🌷 ☕ 🌙). Never spammy.
 
 ## Emotional Intelligence Guidelines
 When a mother shares her struggles, follow this order:
@@ -60,7 +61,7 @@ Validate the strain working parents face. Suggest communication tips and seeking
 ## What You Never Do
 - Judge or criticize parenting choices
 - Use guilt-inducing language ("You should...", "As a mother, you must...")
-- Send excessive emojis or excessive exclamation marks
+- Send excessive emojis (one, sparingly placed, is plenty) or excessive exclamation marks
 - Be preachy or lecture-y
 - Pretend to have all the answers — you can say "That's a complex situation" and offer to explore together
 - Share personal opinions on politics, religion, or controversial parenting debates
@@ -110,7 +111,7 @@ export async function getAIGreeting(userName: string): Promise<string> {
           {
             role: "system",
             content: `Generate a warm, personalized ${timeOfDay} greeting for ${userName}, a working mother.
-            Keep it to 1-2 sentences. Be encouraging and uplifting. Don't use emojis.`,
+            Keep it to 1-2 sentences. Be encouraging and uplifting. A single tasteful emoji (💛 🌿 🌸 ✨ ☕ 🌙) is welcome but not required.`,
           },
           { role: "user", content: `Greet me for this ${timeOfDay}` },
         ],
@@ -152,16 +153,16 @@ export async function getAITaskPrioritization(tasks: string[]): Promise<string> 
 function getLocalGreeting(name: string, timeOfDay: string): string {
   const greetings: Record<string, string[]> = {
     morning: [
-      `Good morning, ${name}! Today is a fresh start, full of possibilities.`,
-      `Rise and shine, ${name}! You're going to do amazing things today.`,
+      `Good morning, ${name} ☕ Today is a fresh start, full of possibilities.`,
+      `Rise and shine, ${name} ✨ You're going to do amazing things today.`,
     ],
     afternoon: [
-      `Hey ${name}! Halfway through the day and you're doing wonderfully.`,
-      `Afternoon, ${name}! Remember to take a moment for yourself.`,
+      `Hey ${name} 🌿 Halfway through the day and you're doing wonderfully.`,
+      `Afternoon, ${name} 💛 Remember to take a moment for yourself.`,
     ],
     evening: [
-      `Good evening, ${name}! You made it through another beautiful day.`,
-      `Hey ${name}, time to unwind. You've earned some peace tonight.`,
+      `Good evening, ${name} 🌙 You made it through another beautiful day.`,
+      `Hey ${name} 🌸 Time to unwind. You've earned some peace tonight.`,
     ],
   };
   const options = greetings[timeOfDay] || greetings.morning;
@@ -181,50 +182,50 @@ function getFallbackResponse(message: string): string {
 
   // Stress & overwhelm
   if (lower.includes("stress") || lower.includes("overwhelm") || lower.includes("anxious") || lower.includes("can't cope")) {
-    return "What you're feeling is completely valid — the pressure you carry is real. Taking just 3 deep breaths right now can help reset your nervous system. One thing at a time. You're stronger than you feel right now.";
+    return "What you're feeling is completely valid — the pressure you carry is real 🌿 Take 3 slow breaths right now. It genuinely resets your nervous system. One thing at a time. You're stronger than you feel.";
   }
 
   // Guilt
   if (lower.includes("guilt") || lower.includes("bad mom") || lower.includes("not enough")) {
-    return "The fact that you care this deeply? That's the mark of an incredible mother. Guilt means you care — it doesn't mean you're failing. Give yourself the grace you'd give your best friend.";
+    return "The fact that you care this deeply? That's the mark of an incredible mother 💛 Guilt means you care — it doesn't mean you're failing. Give yourself the grace you'd give your best friend.";
   }
 
   // Exhaustion
   if (lower.includes("tired") || lower.includes("exhausted") || lower.includes("burned out") || lower.includes("sleep")) {
-    return "Your exhaustion is real and deserves acknowledgment. Rest isn't lazy — it's necessary for you to keep showing up. Can you carve out even 15 quiet minutes today just for yourself?";
+    return "Your exhaustion is real and deserves acknowledgment 🌙 Rest isn't lazy — it's necessary for you to keep showing up. Can you carve out even 15 quiet minutes today just for yourself?";
   }
 
   // Balance/juggling
   if (lower.includes("balance") || lower.includes("juggle") || lower.includes("two jobs")) {
-    return "Perfect balance is a myth — and honestly, that's freeing. Some seasons work wins, some seasons family wins. What matters is that you're showing up. You're doing more than you realize.";
+    return "Perfect balance is a myth — and honestly, that's freeing ✨ Some seasons work wins, some seasons family wins. What matters is that you're showing up. You're doing more than you realize.";
   }
 
   // Time pressure
   if (lower.includes("not enough time") || lower.includes("too busy") || lower.includes("schedule")) {
-    return "Time scarcity is real for working moms — you're not alone in this. Try batch-scheduling similar tasks, and remember: done is better than perfect. What one thing can you let go of today?";
+    return "Time scarcity is real for working moms — you're not alone in this ☕ Try batching similar tasks together, and remember: done is better than perfect. What one thing can you let go of today?";
   }
 
   // Work challenges
   if (lower.includes("work") && (lower.includes("hard") || lower.includes("difficult") || lower.includes("boss") || lower.includes("coworker"))) {
-    return "Workplace challenges as a mom are real — you're carrying a unique weight. It takes strength to navigate both worlds. What would feel most supportive for you right now — problem-solving or just being heard?";
+    return "Workplace challenges as a mom are real — you're carrying a unique weight 🤍 It takes strength to navigate both worlds. What would feel most supportive right now — problem-solving, or just being heard?";
   }
 
   // Child challenges
   if (lower.includes("baby") || lower.includes("child") || lower.includes("kid") || lower.includes("toddler")) {
     if (lower.includes("sleep") || lower.includes("wake")) {
-      return "Sleep battles are so common and exhausting — you're not alone. Have you tried adjusting the routine by just 15 minutes? Sometimes tiny shifts make a big difference. You're doing great.";
+      return "Sleep battles are so common and exhausting — you're not alone 🌙 Try adjusting the routine by just 15 minutes. Tiny shifts often make a big difference. You're doing great.";
     }
     if (lower.includes("eat") || lower.includes("food") || lower.includes("picky")) {
-      return "Picky eating phases are developmentally normal and so frustrating. Try not pressuring — division of responsibility helps. One accepted bite is a win! How old is your little one?";
+      return "Picky eating phases are developmentally normal and so frustrating 🌷 Try not pressuring — division of responsibility helps. One accepted bite is a win. How old is your little one?";
     }
-    return "Children bring so much joy and so many challenges. What aspect of parenting would feel most helpful to talk about today?";
+    return "Children bring so much joy and so many challenges 💛 What aspect of parenting would feel most helpful to talk about today?";
   }
 
   // Celebration
   if (lower.includes("achieved") || lower.includes("accomplished") || lower.includes("proud") || lower.includes("won") || lower.includes("good news")) {
-    return "That's wonderful! Celebrating your wins — big or small — is so important. You absolutely deserve to feel proud. What made it feel especially meaningful?";
+    return "That's wonderful ✨ Celebrating your wins — big or small — is so important. You absolutely deserve to feel proud. What made it feel especially meaningful?";
   }
 
   // Default warm response
-  return "I hear you, and I want you to know that whatever you're navigating, you're not alone. What would feel most supportive for you right now — perspective, tips, or just a listening ear?";
+  return "I hear you, and I want you to know that whatever you're navigating, you're not alone 🌸 What would feel most supportive right now — perspective, tips, or just a listening ear?";
 }
