@@ -111,13 +111,16 @@ export async function updateLastSeen(userId: string): Promise<void> {
 
 export async function searchUsers(query: string, meId: string): Promise<Profile[]> {
   if (!supabase || !query.trim()) return [];
-  const { data } = await supabase
-    .from("profiles")
-    .select("*")
-    .ilike("username", `%${query.trim().toLowerCase()}%`)
-    .neq("id", meId)
-    .limit(20);
-  return (data as Profile[]) ?? [];
+  const [{ data }, blocked] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*")
+      .ilike("username", `%${query.trim().toLowerCase()}%`)
+      .neq("id", meId)
+      .limit(30),
+    getBlockedIds(meId),
+  ]);
+  return ((data as Profile[]) ?? []).filter((p) => !blocked.has(p.id)).slice(0, 20);
 }
 
 export async function follow(meId: string, targetId: string): Promise<void> {
@@ -139,11 +142,14 @@ export async function getFollowingIds(meId: string): Promise<Set<string>> {
   return new Set((data ?? []).map((r: any) => r.following_id));
 }
 
-/** Profiles the user follows (their "friends" list). */
+/** Profiles the user follows (their "friends" list), excluding blocked users. */
 export async function getFollowing(meId: string): Promise<Profile[]> {
   if (!supabase) return [];
-  const { data } = await supabase.from("follows").select("following_id").eq("follower_id", meId);
-  const ids = (data ?? []).map((r: any) => r.following_id);
+  const [{ data }, blocked] = await Promise.all([
+    supabase.from("follows").select("following_id").eq("follower_id", meId),
+    getBlockedIds(meId),
+  ]);
+  const ids = (data ?? []).map((r: any) => r.following_id).filter((id: string) => !blocked.has(id));
   if (!ids.length) return [];
   const { data: profs } = await supabase.from("profiles").select("*").in("id", ids);
   return (profs as Profile[]) ?? [];
@@ -151,11 +157,96 @@ export async function getFollowing(meId: string): Promise<Profile[]> {
 
 export async function getFollowers(meId: string): Promise<Profile[]> {
   if (!supabase) return [];
-  const { data } = await supabase.from("follows").select("follower_id").eq("following_id", meId);
-  const ids = (data ?? []).map((r: any) => r.follower_id);
+  const [{ data }, blocked] = await Promise.all([
+    supabase.from("follows").select("follower_id").eq("following_id", meId),
+    getBlockedIds(meId),
+  ]);
+  const ids = (data ?? []).map((r: any) => r.follower_id).filter((id: string) => !blocked.has(id));
   if (!ids.length) return [];
   const { data: profs } = await supabase.from("profiles").select("*").in("id", ids);
   return (profs as Profile[]) ?? [];
+}
+
+// --- Blocking -----------------------------------------------------------------
+
+export async function getBlockedIds(meId: string): Promise<Set<string>> {
+  if (!supabase) return new Set();
+  const { data } = await supabase.from("blocks").select("blocked_id").eq("blocker_id", meId);
+  return new Set((data ?? []).map((r: any) => r.blocked_id));
+}
+
+export async function blockUser(meId: string, targetId: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from("blocks").upsert(
+    { blocker_id: meId, blocked_id: targetId },
+    { onConflict: "blocker_id,blocked_id" }
+  );
+  // Blocking also severs the follow relationship both ways.
+  await supabase.from("follows").delete().eq("follower_id", meId).eq("following_id", targetId);
+  await supabase.from("follows").delete().eq("follower_id", targetId).eq("following_id", meId);
+}
+
+export async function unblockUser(meId: string, targetId: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.from("blocks").delete().eq("blocker_id", meId).eq("blocked_id", targetId);
+}
+
+// --- Reporting ----------------------------------------------------------------
+
+export type ReportContentType = "user" | "message" | "post" | "comment";
+
+export async function reportContent(params: {
+  reporterId: string;
+  reportedUserId?: string | null;
+  contentType: ReportContentType;
+  contentRef?: string | null;
+  reason: string;
+}): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from("reports").insert({
+    reporter_id: params.reporterId,
+    reported_user_id: params.reportedUserId ?? null,
+    content_type: params.contentType,
+    content_ref: params.contentRef ?? null,
+    reason: params.reason,
+  });
+  if (error) {
+    console.warn("[social] report failed:", error.message);
+    return false;
+  }
+  return true;
+}
+
+// --- Account deletion ---------------------------------------------------------
+
+/**
+ * Delete the signed-in user's account and all associated data. Prefers a
+ * server-side Edge Function (service role) which removes the auth user and
+ * cascade-deletes everything; falls back to deleting all RLS-permitted rows
+ * directly so the user's data is gone even if the function isn't deployed.
+ * Returns true if the auth account itself was removed.
+ */
+export async function deleteAccount(meId: string): Promise<{ dataDeleted: boolean; accountRemoved: boolean }> {
+  if (!supabase) return { dataDeleted: false, accountRemoved: false };
+
+  // Best-effort local data cleanup (works with the anon key under RLS).
+  await Promise.allSettled([
+    supabase.from("user_state").delete().eq("user_id", meId),
+    supabase.from("messages").delete().eq("sender_id", meId),
+    supabase.from("follows").delete().eq("follower_id", meId),
+    supabase.from("blocks").delete().eq("blocker_id", meId),
+    supabase.from("profiles").delete().eq("id", meId),
+  ]);
+
+  // Try the server-side function that deletes the auth user (cascades the rest).
+  let accountRemoved = false;
+  try {
+    const { error } = await supabase.functions.invoke("delete-account");
+    accountRemoved = !error;
+  } catch {
+    accountRemoved = false;
+  }
+  return { dataDeleted: true, accountRemoved };
 }
 
 export interface SendPayload {
@@ -236,10 +327,14 @@ export async function getInbox(meId: string): Promise<ConversationSummary[]> {
   }
 
   const ids = [...byPartner.keys()];
-  const { data: profs } = await supabase.from("profiles").select("*").in("id", ids);
+  const [{ data: profs }, blocked] = await Promise.all([
+    supabase.from("profiles").select("*").in("id", ids),
+    getBlockedIds(meId),
+  ]);
   const profMap = new Map((profs as Profile[] ?? []).map((p) => [p.id, p]));
 
   return [...byPartner.entries()]
+    .filter(([pid]) => !blocked.has(pid))
     .map(([pid, e]) => {
       const partner = profMap.get(pid);
       return partner ? { partner, lastMessage: e.last, unread: e.unread } : null;

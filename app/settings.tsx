@@ -10,10 +10,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight, ScanFace } from "lucide-react-native";
+import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight, ScanFace, UserX } from "lucide-react-native";
 import { useSettingsStore } from "../lib/stores/settings-store";
+import { useAuthStore } from "../lib/stores/auth-store";
 import { useTheme } from "../lib/theme-context";
 import { isBiometricAvailable, biometricLabel, authenticateBiometric } from "../lib/biometrics";
+import { deleteAccount } from "../lib/social";
 
 // Preset reminder times shown as selectable chips.
 const TIME_OPTIONS: { label: string; hour: number; minute: number }[] = [
@@ -97,6 +99,28 @@ export default function SettingsScreen() {
       </View>
     </View>
   );
+
+  const { user, signOut } = useAuthStore();
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete account",
+      "This permanently deletes your account and all your data — journal, mood history, tasks, messages, and profile. This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete forever",
+          style: "destructive",
+          onPress: async () => {
+            if (user) await deleteAccount(user.id);
+            await signOut();
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            router.replace("/(auth)/sign-in");
+          },
+        },
+      ]
+    );
+  };
 
   const handleClearLocal = () => {
     Alert.alert(
@@ -275,6 +299,19 @@ export default function SettingsScreen() {
         <Card>
           <TouchableOpacity onPress={handleClearLocal} activeOpacity={0.7}>
             {rowHeader(Trash2, "Clear cached data", "Free up space on this device")}
+          </TouchableOpacity>
+        </Card>
+
+        {/* Danger zone */}
+        <Card>
+          <TouchableOpacity onPress={handleDeleteAccount} activeOpacity={0.7} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: theme.error + (isDark ? "28" : "15"), alignItems: "center", justifyContent: "center" }}>
+              <UserX size={20} color={theme.error} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: theme.error }}>Delete account</Text>
+              <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.secondary }}>Permanently remove your account and data</Text>
+            </View>
           </TouchableOpacity>
         </Card>
 

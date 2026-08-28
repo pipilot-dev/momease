@@ -27,12 +27,15 @@ import {
   BookOpen,
   Plus,
   X,
+  Flag,
 } from "lucide-react-native";
 import { mockForumPosts } from "../lib/mock-data";
 import type { ForumPost } from "../lib/types";
 import { useTheme } from "../lib/theme-context";
 import { useCommunityStore } from "../lib/stores/community-store";
 import { useAuthStore } from "../lib/stores/auth-store";
+import { reportContent } from "../lib/social";
+import { ReportModal } from "../components/ReportModal";
 
 const categoryConfig: Record<string, { icon: any; color: string }> = {
   tips: { icon: Lightbulb, color: "#F59E0B" },
@@ -62,6 +65,8 @@ export default function CommunityScreen() {
   // Comments modal
   const [activePost, setActivePost] = useState<ForumPost | null>(null);
   const [commentText, setCommentText] = useState("");
+  // Report
+  const [reportPost, setReportPost] = useState<ForumPost | null>(null);
 
   const authorName = user?.name || "You";
 
@@ -319,6 +324,14 @@ export default function CommunityScreen() {
                     {post.comments + commentsFor(post.id).length}
                   </Text>
                 </TouchableOpacity>
+                <View style={{ flex: 1 }} />
+                <TouchableOpacity
+                  onPress={() => { Haptics.selectionAsync(); setReportPost(post); }}
+                  hitSlop={8}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+                >
+                  <Flag size={15} color={theme.text.muted} />
+                </TouchableOpacity>
               </View>
             </TouchableOpacity>
           );
@@ -440,6 +453,21 @@ export default function CommunityScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Report a post */}
+      <ReportModal
+        visible={!!reportPost}
+        targetLabel="this post"
+        onClose={() => setReportPost(null)}
+        onSubmit={(reason) =>
+          reportContent({
+            reporterId: user?.id || "",
+            contentType: "post",
+            contentRef: reportPost?.id ?? null,
+            reason,
+          }).then(() => {})
+        }
+      />
     </View>
   );
 }

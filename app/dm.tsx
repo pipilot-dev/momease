@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, Image,
-  KeyboardAvoidingView, Platform, Modal,
+  KeyboardAvoidingView, Platform, Modal, Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { ArrowLeft, Send, Plus, X, Heart, Music, Brain, Sparkles, Check, CheckCheck } from "lucide-react-native";
+import { ArrowLeft, Send, Plus, X, Heart, Music, Brain, Sparkles, Check, CheckCheck, MoreVertical, Ban, Flag } from "lucide-react-native";
 import { useAuthStore } from "../lib/stores/auth-store";
 import { useTheme } from "../lib/theme-context";
 import { mockMantras, mockSounds, mockMeditations } from "../lib/mock-data";
+import { ReportModal } from "../components/ReportModal";
 import {
   ensureProfile, updateLastSeen, getConversation, sendMessage, markRead,
-  getProfileById, isOnline, resolveShareRoute,
+  getProfileById, isOnline, resolveShareRoute, blockUser, reportContent,
   type DirectMessage, type Profile, type ShareKind,
 } from "../lib/social";
 
@@ -31,6 +32,30 @@ export default function DMScreen() {
   const [input, setInput] = useState("");
   const [showShare, setShowShare] = useState(false);
   const [shareTab, setShareTab] = useState<ShareKind>("mantra");
+  const [showActions, setShowActions] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
+  const partnerName = String(params.name || partner?.display_name || "this user");
+
+  const confirmBlock = () => {
+    setShowActions(false);
+    Alert.alert(
+      `Block ${partnerName}?`,
+      "They won't be able to message you, and you won't see each other in search or messages.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Block",
+          style: "destructive",
+          onPress: async () => {
+            await blockUser(meId, otherId);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            router.back();
+          },
+        },
+      ]
+    );
+  };
   const scrollRef = useRef<ScrollView>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -144,8 +169,37 @@ export default function DMScreen() {
               {online ? "● online" : `@${params.username || partner?.username || ""}`}
             </Text>
           </View>
+          <TouchableOpacity onPress={() => { Haptics.selectionAsync(); setShowActions(true); }} hitSlop={10}>
+            <MoreVertical size={22} color={theme.text.secondary} />
+          </TouchableOpacity>
         </View>
       </LinearGradient>
+
+      {/* Block / Report actions */}
+      <Modal visible={showActions} transparent animationType="fade">
+        <TouchableOpacity activeOpacity={1} onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}>
+          <View style={{ backgroundColor: theme.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40, gap: 4 }}>
+            <View style={{ alignItems: "center", marginBottom: 8 }}>
+              <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: theme.border }} />
+            </View>
+            <TouchableOpacity onPress={() => { setShowActions(false); setShowReport(true); }} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 16, paddingHorizontal: 8 }}>
+              <Flag size={22} color={theme.text.primary} />
+              <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 16, color: theme.text.primary }}>Report {partnerName}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={confirmBlock} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 16, paddingHorizontal: 8 }}>
+              <Ban size={22} color={theme.error} />
+              <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 16, color: theme.error }}>Block {partnerName}</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <ReportModal
+        visible={showReport}
+        targetLabel={`@${params.username || partner?.username || "user"}`}
+        onClose={() => setShowReport(false)}
+        onSubmit={(reason) => reportContent({ reporterId: meId, reportedUserId: otherId, contentType: "user", reason }).then(() => {})}
+      />
 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView ref={scrollRef} style={{ flex: 1, paddingHorizontal: 16 }} contentContainerStyle={{ paddingTop: 12 }} showsVerticalScrollIndicator={false}>
