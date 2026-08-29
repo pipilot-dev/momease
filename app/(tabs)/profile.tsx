@@ -80,11 +80,7 @@ export default function ProfileScreen() {
           label: "Upgrade to Premium",
           color: "#F59E0B",
           badge: "PRO",
-          onPress: () =>
-            info(
-              "MomEase Premium",
-              "Unlock unlimited chats, all meditations, and offline sounds for $7.99/mo. (Demo)"
-            ),
+          onPress: () => router.push("/upgrade"),
         },
         {
           icon: Bell,

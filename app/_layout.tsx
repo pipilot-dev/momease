@@ -19,6 +19,7 @@ import "../lib/stores/milestone-store";
 import "../lib/stores/sleep-store";
 import "../lib/stores/community-store";
 import "../lib/stores/notification-store";
+import "../lib/stores/subscription-store";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
@@ -52,6 +53,7 @@ function RootNavigator() {
         <Stack.Screen name="dm" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="set-pin" options={{ animation: "slide_from_bottom" }} />
         <Stack.Screen name="notifications" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="upgrade" options={{ animation: "slide_from_bottom" }} />
       </Stack>
       </AuthGate>
       </LockGate>

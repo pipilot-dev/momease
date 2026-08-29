@@ -1,0 +1,15 @@
+name = "momease-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespace holds { status, priceId, currentPeriodEnd, cancelAtPeriodEnd }
+# keyed by `sub:<userId>`. Rewritten by the Stripe webhook, read by the client
+# via GET /status?user_id=... so the app can show Premium instantly.
+[[kv_namespaces]]
+binding = "SUBS"
+id = "6a5508178743421fbfd02e4d41009d74"
+
+# Secrets — set via `wrangler secret put`, NEVER committed:
+#   STRIPE_SECRET_KEY       (sk_live_...)
+#   STRIPE_WEBHOOK_SECRET   (whsec_...)  set once the webhook endpoint exists
