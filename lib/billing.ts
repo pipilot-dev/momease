@@ -65,11 +65,17 @@ export async function checkoutSession(user: {
   email: string;
 }, opts?: { priceId?: string; returnUrl?: string }): Promise<{ url: string }> {
   const priceId = opts?.priceId ?? PREMIUM_PRICE_ID;
-  const returnUrl =
-    opts?.returnUrl ??
-    (Platform.OS === "web" && typeof window !== "undefined"
+  // When the client will hand checkout off to the system browser, we want
+  // Stripe to redirect to a friendly page that helps the user hop back
+  // into the app. When we're in the app's own tab, /upgrade re-renders
+  // the same screen and picks up the ?checkout=success query.
+  const { usesExternalBrowserForCheckout } = await import("./env");
+  const defaultReturn = usesExternalBrowserForCheckout
+    ? "https://mease.mom/checkout-complete"
+    : Platform.OS === "web" && typeof window !== "undefined"
       ? `${window.location.origin}/upgrade`
-      : "https://app.mease.mom/upgrade");
+      : "https://app.mease.mom/upgrade";
+  const returnUrl = opts?.returnUrl ?? defaultReturn;
   const { url } = await post<{ url: string }>("/checkout", {
     user_id: user.id,
     email: user.email,

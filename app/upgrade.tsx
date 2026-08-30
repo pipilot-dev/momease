@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Platform, ActivityIndicator } from "react-native";
+import { useEffect, useState, useRef } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Platform, ActivityIndicator, AppState, type AppStateStatus } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import { usesExternalBrowserForCheckout } from "../lib/env";
 import {
   ChevronLeft,
   Crown,
@@ -61,6 +62,29 @@ export default function UpgradeScreen() {
       cancelled = true;
     };
   }, [params.checkout, user?.id, refresh]);
+
+  // Refresh subscription whenever the app becomes active — covers the flow
+  // where the user paid in an external browser (native / webview) and is
+  // now switching back. Also polls once immediately in case the webhook
+  // was in flight when the user returned.
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  useEffect(() => {
+    if (!user?.id) return;
+    const sub = AppState.addEventListener("change", async (next) => {
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      if (prev !== "active" && next === "active") {
+        // brief poll — webhook usually lands in <3s but be generous
+        for (let i = 0; i < 3; i++) {
+          await refresh(user.id);
+          const cur = useSubscriptionStore.getState().status;
+          if (cur.premium) return;
+          await new Promise((r) => setTimeout(r, 1500));
+        }
+      }
+    });
+    return () => sub.remove();
+  }, [user?.id, refresh]);
 
   const handleUpgrade = async () => {
     if (!user) {
@@ -271,13 +295,35 @@ export default function UpgradeScreen() {
               ) : (
                 <>
                   <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: "#FFFFFF" }}>
-                    {isPremium ? "Manage subscription" : "Start free trial"}
+                    {isPremium
+                      ? usesExternalBrowserForCheckout
+                        ? "Manage on the web"
+                        : "Manage subscription"
+                      : usesExternalBrowserForCheckout
+                        ? "Continue in your browser"
+                        : "Start free trial"}
                   </Text>
                   <ExternalLink size={16} color="#FFFFFF" />
                 </>
               )}
             </LinearGradient>
           </TouchableOpacity>
+
+          {usesExternalBrowserForCheckout && !isPremium && (
+            <Text
+              style={{
+                marginTop: 10,
+                fontFamily: "Quicksand-Medium",
+                fontSize: 12,
+                color: theme.text.muted,
+                textAlign: "center",
+                lineHeight: 17,
+              }}
+            >
+              We'll open Stripe securely in your browser. Come back here
+              when you're done — we'll unlock Premium automatically.
+            </Text>
+          )}
 
           {error && (
             <Text
