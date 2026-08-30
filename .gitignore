@@ -82,3 +82,6 @@ af/
 .herenow/
 landing/demo.webm
 momease-play-assets.zip
+
+# Play service-account key (never commit)
+credentials/

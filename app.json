@@ -23,7 +23,11 @@
         "backgroundColor": "#FDE5EC"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.momease.app"
+      "package": "com.momease.app",
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -48,7 +52,12 @@
     "extra": {
       "supabaseUrl": "https://xvpoklpwdepwnawfekfu.supabase.co",
       "supabaseAnonKey": "sb_publishable_rkaEb4CTxTd3bxkOnvdlAA_uNekn2fL",
-      "oauthRedirect": "https://oauth.lovable.app/callback"
-    }
+      "oauthRedirect": "https://oauth.lovable.app/callback",
+      "router": {},
+      "eas": {
+        "projectId": "5931850e-959d-45b6-8b17-b7bf8a332841"
+      }
+    },
+    "owner": "hansade"
   }
 }
