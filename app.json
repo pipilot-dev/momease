@@ -47,7 +47,8 @@
         {
           "faceIDPermission": "Allow MomEase to use Face ID to unlock the app."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "supabaseUrl": "https://xvpoklpwdepwnawfekfu.supabase.co",
