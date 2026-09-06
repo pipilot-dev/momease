@@ -75,25 +75,17 @@ export default function ProfileScreen() {
 
   const sendFeedback = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const subject = encodeURIComponent(`MomEase Feedback — v${appVersion}`);
-    const body = encodeURIComponent(
-      `Hi MomEase team,\n\n` +
-        `[Please share your feedback, bug reports, or feature ideas here]\n\n` +
-        `---\n` +
-        `App version: ${appVersion}\n` +
-        `Platform: ${Platform.OS} ${Platform.Version}\n` +
-        `User: ${user?.email || "(not signed in)"}\n`
-    );
-    const mailto = `mailto:hello@momease.app?subject=${subject}&body=${body}`;
-    Linking.openURL(mailto).catch(() =>
-      Alert.alert(
-        "No email app found",
-        "Please send your feedback to hello@momease.app",
-        [
-          { text: "Copy address", onPress: () => {} },
-          { text: "OK", style: "cancel" },
-        ]
-      )
+    const base =
+      "https://docs.google.com/forms/d/e/1FAIpQLSeuHAmAGfXrxjVNi9KFeKs8cTdWtIRkCfeq0Xuf163AjGbCWQ/viewform";
+    const params = new URLSearchParams({
+      usp: "pp_url",
+      "entry.725542452": `${Platform.OS} ${Platform.Version}`,
+      "entry.1616706843": appVersion,
+      "entry.165584884": user?.email || "",
+    });
+    const url = `${base}?${params.toString()}`;
+    Linking.openURL(url).catch(() =>
+      Alert.alert("Couldn't open feedback form", url)
     );
   };
 
