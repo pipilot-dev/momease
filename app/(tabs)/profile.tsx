@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert, Linking, Platform } from "react-native";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -49,6 +50,64 @@ export default function ProfileScreen() {
   const info = (title: string, message: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Alert.alert(title, message);
+  };
+
+  const openUrl = async (url: string, fallback?: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await Linking.openURL(url);
+    } catch {
+      if (fallback) {
+        try {
+          await Linking.openURL(fallback);
+          return;
+        } catch {}
+      }
+      Alert.alert("Couldn't open link", url);
+    }
+  };
+
+  const appVersion =
+    (Constants.expoConfig?.version ?? "1.0.0") +
+    (Constants.expoConfig?.android?.versionCode
+      ? ` (${Constants.expoConfig.android.versionCode})`
+      : "");
+
+  const sendFeedback = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const subject = encodeURIComponent(`MomEase Feedback — v${appVersion}`);
+    const body = encodeURIComponent(
+      `Hi MomEase team,\n\n` +
+        `[Please share your feedback, bug reports, or feature ideas here]\n\n` +
+        `---\n` +
+        `App version: ${appVersion}\n` +
+        `Platform: ${Platform.OS} ${Platform.Version}\n` +
+        `User: ${user?.email || "(not signed in)"}\n`
+    );
+    const mailto = `mailto:hello@momease.app?subject=${subject}&body=${body}`;
+    Linking.openURL(mailto).catch(() =>
+      Alert.alert(
+        "No email app found",
+        "Please send your feedback to hello@momease.app",
+        [
+          { text: "Copy address", onPress: () => {} },
+          { text: "OK", style: "cancel" },
+        ]
+      )
+    );
+  };
+
+  const rateApp = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const marketUrl =
+      Platform.OS === "android"
+        ? "market://details?id=com.momease.app"
+        : "itms-apps://itunes.apple.com/app/id0";
+    const webUrl =
+      Platform.OS === "android"
+        ? "https://play.google.com/store/apps/details?id=com.momease.app"
+        : "https://mease.mom";
+    Linking.openURL(marketUrl).catch(() => Linking.openURL(webUrl));
   };
 
   type MenuItem = {
@@ -129,10 +188,10 @@ export default function ProfileScreen() {
     {
       title: "Support",
       items: [
-        { icon: HelpCircle, label: "Help Center", color: "#10B981", onPress: () => info("Help Center", "Browse FAQs and guides for getting the most out of MomEase.") },
-        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => info("Send Feedback", "We'd love to hear from you at hello@momease.app") },
-        { icon: Star, label: "Rate MomEase", color: "#F59E0B", onPress: () => info("Rate MomEase", "Enjoying the app? A 5-star review helps other moms find us!") },
-        { icon: Shield, label: "Privacy Policy", color: "#6B7280", onPress: () => info("Privacy", "Your data stays yours. We never sell personal information.") },
+        { icon: HelpCircle, label: "Help Center", color: "#10B981", onPress: () => openUrl("https://mease.mom/#help") },
+        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: sendFeedback },
+        { icon: Star, label: "Rate MomEase", color: "#F59E0B", onPress: rateApp },
+        { icon: Shield, label: "Privacy Policy", color: "#6B7280", onPress: () => openUrl("https://mease.mom/privacy") },
       ],
     },
   ];
