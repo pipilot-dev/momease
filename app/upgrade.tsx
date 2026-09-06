@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Platform, ActivityIndicator, AppState, type AppStateStatus } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Platform, ActivityIndicator, AppState, Linking, type AppStateStatus } from "react-native";
+import Constants from "expo-constants";
+import { MessageSquare } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -113,6 +115,24 @@ export default function UpgradeScreen() {
       setError((e as Error).message);
       setBusy(false);
     }
+  };
+
+  const openFeedback = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    const v =
+      (Constants.expoConfig?.version ?? "1.0.0") +
+      (Constants.expoConfig?.android?.versionCode
+        ? ` (${Constants.expoConfig.android.versionCode})`
+        : "");
+    const base =
+      "https://docs.google.com/forms/d/e/1FAIpQLSeuHAmAGfXrxjVNi9KFeKs8cTdWtIRkCfeq0Xuf163AjGbCWQ/viewform";
+    const params = new URLSearchParams({
+      usp: "pp_url",
+      "entry.725542452": `${Platform.OS} ${Platform.Version}`,
+      "entry.1616706843": v,
+      "entry.165584884": user?.email || "",
+    });
+    Linking.openURL(`${base}?${params.toString()}`).catch(() => {});
   };
 
   const isPremium = status.premium;
@@ -400,6 +420,33 @@ export default function UpgradeScreen() {
             </View>
           ))}
         </View>
+
+        {/* Feedback */}
+        <TouchableOpacity
+          onPress={openFeedback}
+          activeOpacity={0.75}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingVertical: 12,
+            marginBottom: 12,
+            borderRadius: 12,
+            backgroundColor: theme.surface,
+          }}
+        >
+          <MessageSquare size={16} color={theme.accent[500]} />
+          <Text
+            style={{
+              fontFamily: "Quicksand-SemiBold",
+              fontSize: 13,
+              color: theme.accent[500],
+            }}
+          >
+            Questions about Premium? Send us feedback
+          </Text>
+        </TouchableOpacity>
 
         {/* Trust */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 6 }}>
