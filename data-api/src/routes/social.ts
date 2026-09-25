@@ -48,6 +48,18 @@ function slugify(raw: string): string {
   return raw.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20) || 'mama'
 }
 
+// Uniform integer in [0, max) using rejection sampling on Web Crypto —
+// avoids the modulo bias that plain `% max` gives when 2^32 isn't a
+// multiple of max.
+function uniformInt(max: number): number {
+  const limit = 0x100000000 - (0x100000000 % max)
+  const buf = new Uint32Array(1)
+  for (;;) {
+    crypto.getRandomValues(buf)
+    if (buf[0] < limit) return buf[0] % max
+  }
+}
+
 async function getMyProfile(env: Env, uid: string): Promise<Response> {
   const row = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(uid).first()
   return Response.json(row ?? null)
@@ -69,7 +81,7 @@ async function upsertMyProfile(req: Request, env: Env, uid: string): Promise<Res
   // Create — pick a unique username from the requested one or a default.
   const base = slugify(body.username ?? body.display_name ?? 'mama')
   for (let i = 0; i < 5; i++) {
-    const suffix = crypto.getRandomValues(new Uint32Array(1))[0] % 9000
+    const suffix = uniformInt(9000)
     const username = i === 0 ? base : `${base}${1000 + suffix}`
     try {
       await env.DB.prepare(
