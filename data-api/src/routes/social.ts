@@ -69,7 +69,8 @@ async function upsertMyProfile(req: Request, env: Env, uid: string): Promise<Res
   // Create — pick a unique username from the requested one or a default.
   const base = slugify(body.username ?? body.display_name ?? 'mama')
   for (let i = 0; i < 5; i++) {
-    const username = i === 0 ? base : `${base}${1000 + Math.floor(Math.random() * 9000)}`
+    const suffix = crypto.getRandomValues(new Uint32Array(1))[0] % 9000
+    const username = i === 0 ? base : `${base}${1000 + suffix}`
     try {
       await env.DB.prepare(
         `INSERT INTO profiles (id, username, display_name, avatar_url) VALUES (?, ?, ?, ?)`,
