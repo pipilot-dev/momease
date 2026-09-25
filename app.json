@@ -51,9 +51,6 @@
       "expo-web-browser"
     ],
     "extra": {
-      "supabaseUrl": "https://xvpoklpwdepwnawfekfu.supabase.co",
-      "supabaseAnonKey": "sb_publishable_rkaEb4CTxTd3bxkOnvdlAA_uNekn2fL",
-      "oauthRedirect": "https://oauth.lovable.app/callback",
       "router": {},
       "eas": {
         "projectId": "5931850e-959d-45b6-8b17-b7bf8a332841"
