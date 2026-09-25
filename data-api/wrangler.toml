@@ -1,0 +1,18 @@
+name = "momease-data-api"
+main = "src/worker.ts"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "momease-prod"
+database_id = "b92ef035-81b6-49b4-8c21-8fe8ed0dd4ae"
+
+# Secrets set via `wrangler secret put`:
+#   GOOGLE_CLIENT_ID
+#   GOOGLE_CLIENT_SECRET
+#   JWT_SIGNING_KEY
+
+[vars]
+APP_SCHEME = "momease"
+ALLOWED_ORIGINS = "https://mease.mom,https://www.mease.mom,https://app.mease.mom,https://momease-landing.pages.dev,https://momease-app.pages.dev,http://localhost:8081,http://localhost:19006"

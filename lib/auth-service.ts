@@ -1,121 +1,132 @@
-// Unified auth service.
-//
-// Routes to real Supabase auth when configured (lib/supabase.ts), and
-// transparently falls back to the in-memory mock service otherwise, so the
-// app is fully usable in development with zero backend setup.
+// Auth service — talks to the momease-data-api Worker.
+// Google OAuth (Web client) opens the Worker's /auth/google/start URL in an
+// in-app browser; Google redirects to the Worker's callback, which in turn
+// redirects to momease://auth-callback with the session token in the query.
+
 import { Platform } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import type { User } from "./types";
-import { authService as mockAuth, type AuthResult } from "./mock-auth";
-import { supabase, isSupabaseConfigured, OAUTH_REDIRECT } from "./supabase";
+import type { AuthResult } from "./mock-auth";
+import { authService as mockAuth } from "./mock-auth";
+import { API_BASE, api, getToken, loadToken, setToken } from "./api";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export type { AuthResult };
 
-const DEFAULTS = {
-  role: "free" as const,
-  childrenAges: [] as string[],
-  interests: [] as string[],
-  onboardingCompleted: false,
-};
+interface ApiUser {
+  id: string;
+  email: string;
+  name?: string;
+  avatarUrl?: string;
+  role?: "free" | "premium";
+  childrenAges?: string[];
+  workSchedule?: User["workSchedule"];
+  interests?: string[];
+  personalization?: User["personalization"];
+  onboardingCompleted?: boolean;
+  createdAt?: string;
+}
+interface AuthPayload { user: ApiUser; token: string }
 
-/** Map a Supabase user record into the app's User shape. */
-function mapSupabaseUser(su: any): User {
-  const meta = su.user_metadata ?? {};
+function toUser(u: ApiUser): User {
   return {
-    id: su.id,
-    email: su.email ?? meta.email ?? "",
-    name: meta.full_name || meta.name || (su.email ? su.email.split("@")[0] : "Mama"),
-    avatarUrl: meta.avatar_url || meta.picture,
-    role: meta.role ?? DEFAULTS.role,
-    childrenAges: meta.childrenAges ?? DEFAULTS.childrenAges,
-    workSchedule: meta.workSchedule,
-    interests: meta.interests ?? DEFAULTS.interests,
-    createdAt: su.created_at ?? new Date().toISOString(),
-    onboardingCompleted: meta.onboardingCompleted ?? DEFAULTS.onboardingCompleted,
+    id: u.id,
+    email: u.email,
+    name: u.name ?? (u.email ? u.email.split("@")[0] : "Mama"),
+    avatarUrl: u.avatarUrl,
+    role: u.role ?? "free",
+    childrenAges: u.childrenAges ?? [],
+    workSchedule: u.workSchedule,
+    interests: u.interests ?? [],
+    personalization: u.personalization,
+    createdAt: u.createdAt ?? new Date().toISOString(),
+    onboardingCompleted: u.onboardingCompleted ?? false,
   };
 }
 
 export const authService = {
-  get usesSupabase() {
-    return isSupabaseConfigured;
-  },
+  // Legacy flag name — every caller only reads this to know a real backend
+  // is available. The Cloudflare Worker is always configured, so: true.
+  get usesSupabase() { return true },
 
   async signIn(email: string, password: string): Promise<AuthResult> {
-    if (!supabase) return mockAuth.signIn(email, password);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) return { success: false, error: error?.message || "Sign in failed" };
-    return { success: true, user: mapSupabaseUser(data.user) };
+    try {
+      const data = await api.postNoAuth<AuthPayload>("/auth/signin", { email, password });
+      await setToken(data.token);
+      return { success: true, user: toUser(data.user) };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Sign in failed" };
+    }
   },
 
   async signUp(email: string, password: string, name: string): Promise<AuthResult> {
-    if (!supabase) return mockAuth.signUp(email, password, name);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name, onboardingCompleted: false } },
-    });
-    if (error || !data.user) return { success: false, error: error?.message || "Sign up failed" };
-    return { success: true, user: mapSupabaseUser(data.user) };
+    try {
+      const data = await api.postNoAuth<AuthPayload>("/auth/signup", { email, password, name });
+      await setToken(data.token);
+      return { success: true, user: toUser(data.user) };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Sign up failed" };
+    }
   },
 
-  /**
-   * Google OAuth. On web, Supabase performs a full-page redirect. On native,
-   * we open the provider URL in a browser tab and the deep link returns control.
-   * Returns the signed-in user once the session is established (web resolves
-   * after redirect via getCurrentUser on next load).
-   */
   async signInWithGoogle(): Promise<AuthResult> {
-    if (!supabase) {
-      // Mock: simulate a Google account sign-in.
-      // No backend configured — fail cleanly instead of impersonating a demo persona.
-      return { success: false, error: "Google sign-in is temporarily unavailable. Please sign in with email." };
-    }
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: OAUTH_REDIRECT,
-        skipBrowserRedirect: Platform.OS !== "web",
-      },
-    });
-    if (error) return { success: false, error: error.message };
+    try {
+      const redirectTo =
+        Platform.OS === "web" && typeof window !== "undefined"
+          ? window.location.origin + "/auth-callback"
+          : "momease://auth-callback";
+      const startUrl = `${API_BASE}/auth/google/start?redirect=${encodeURIComponent(redirectTo)}`;
 
-    if (Platform.OS !== "web" && data?.url) {
-      const result = await WebBrowser.openAuthSessionAsync(data.url, OAUTH_REDIRECT);
-      if (result.type !== "success") {
-        return { success: false, error: "Google sign-in was cancelled" };
+      if (Platform.OS === "web") {
+        if (typeof window !== "undefined") window.location.href = startUrl;
+        return { success: true };
       }
-      const { data: sessionData } = await supabase.auth.getUser();
-      if (sessionData.user) return { success: true, user: mapSupabaseUser(sessionData.user) };
+
+      const result = await WebBrowser.openAuthSessionAsync(startUrl, redirectTo);
+      if (result.type !== "success") return { success: false, error: "Google sign-in was cancelled" };
+      const final = new URL(result.url);
+      const token = final.searchParams.get("token");
+      if (!token) return { success: false, error: "Google sign-in did not return a session." };
+      await setToken(token);
+      const me = await api.get<{ user: ApiUser }>("/session");
+      return { success: true, user: toUser(me.user) };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Google sign-in failed" };
     }
-    // Web: the page redirects; resolution happens on reload.
-    return { success: true };
   },
 
   async signOut(): Promise<void> {
-    if (!supabase) return mockAuth.signOut();
-    await supabase.auth.signOut();
+    try { if (getToken()) await api.post("/auth/signout") } catch {}
+    await setToken(null);
   },
 
   async getCurrentUser(): Promise<User | null> {
-    if (!supabase) return mockAuth.getCurrentUser();
-    const { data } = await supabase.auth.getUser();
-    return data.user ? mapSupabaseUser(data.user) : null;
+    await loadToken();
+    if (!getToken()) return null;
+    try {
+      const me = await api.get<{ user: ApiUser }>("/session");
+      return toUser(me.user);
+    } catch {
+      return null;
+    }
   },
 
   async updateProfile(updates: Partial<User>): Promise<void> {
-    if (!supabase) return;
-    await supabase.auth.updateUser({ data: updates });
+    if (!getToken()) return;
+    try { await api.post("/auth/update", updates) }
+    catch (e) { console.warn("[auth] updateProfile failed:", e) }
   },
 
-  /** Send a password-reset email. The link returns to the OAuth proxy. */
   async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
-    if (!supabase) return mockAuth.resetPassword(email);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: OAUTH_REDIRECT,
-    });
-    if (error) return { success: false, error: error.message };
-    return { success: true };
+    try {
+      await api.postNoAuth("/auth/reset/request", { email });
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : "Could not send reset email." };
+    }
   },
 };
+
+// Keep mock-auth linked so its module still resolves during rollout.
+void mockAuth;
