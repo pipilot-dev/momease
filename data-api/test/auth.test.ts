@@ -232,7 +232,7 @@ describe('google oauth: callback', () => {
   })
 
   it('surfaces a failed token exchange as 502 without leaking details', async () => {
-    mockOutbound((url) => (url.includes('oauth2.googleapis.com') ? new Response('{"error":"invalid_grant","secret":"x"}', { status: 400 }) : undefined))
+    mockOutbound((url) => (new URL(url).hostname === 'oauth2.googleapis.com' ? new Response('{"error":"invalid_grant","secret":"x"}', { status: 400 }) : undefined))
     const state = await stateFor('momease://auth-callback')
     const r = await call(`/auth/google/callback?code=bad&state=${encodeURIComponent(state)}`)
     expect(r.status).toBe(502)
@@ -294,7 +294,7 @@ describe('password reset', () => {
     const u = await signup('hashed')
     let html = ''
     mockOutbound((url, init) => {
-      if (url.includes('resend')) { html = JSON.parse(String(init?.body)).html; return Response.json({}) }
+      if (new URL(url).hostname === 'api.resend.com') { html = JSON.parse(String(init?.body)).html; return Response.json({}) }
     })
     await call('/auth/reset/request', { body: { email: u.email }, envOverride: withResend })
     const raw = /token=([a-f0-9]+)/.exec(html)![1]
