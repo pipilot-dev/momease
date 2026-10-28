@@ -22,6 +22,7 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET?: string
   STRIPE_PRICE_ID?: string
   STRIPE_PORTAL_CONFIG_ID?: string
+  STRIPE_API_BASE?: string
   RESEND_API_KEY?: string
   MAIL_FROM?: string
 }

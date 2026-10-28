@@ -8,6 +8,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
+import { createHmac } from 'node:crypto';
 import { existsSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 import { chromium } from 'playwright';
@@ -21,7 +22,8 @@ const APP = `http://localhost:${APP_PORT}`;
 const PASSWORD = 'correct-horse-9';
 const ART = join(ROOT, 'tests/e2e/.artifacts');
 
-let worker, server, browser;
+let worker, server, browser, fakeStripe;
+const subs = new Map(); // fake Stripe: subscription id -> user id
 let seq = 0;
 const email = (tag) => `${tag}-${Date.now()}-${seq++}@e2e.test`;
 
@@ -65,9 +67,15 @@ async function makeUser(tag, { onboarded = true, name = tag } = {}) {
   return { email: e, id: r.json.user.id, token: r.json.token };
 }
 
-function d1(sql) {
-  const r = spawnSync('npx', ['wrangler', 'd1', 'execute', 'momease-prod', '--local', '--command', sql], { cwd: API_DIR, encoding: 'utf8' });
-  assert.equal(r.status, 0, r.stderr || r.stdout);
+/** What Stripe does after a successful checkout: tell the Worker (signed) and answer its follow-up lookup. */
+async function stripeSubscribes(userId, status = 'trialing') {
+  const subId = `sub_e2e_${seq++}`;
+  subs.set(subId, { userId, status });
+  const body = JSON.stringify({ id: `evt_e2e_${seq++}`, type: 'customer.subscription.created', data: { object: { id: subId } } });
+  const ts = Math.floor(Date.now() / 1000);
+  const sig = createHmac('sha256', 'whsec_e2e').update(`${ts}.${body}`).digest('hex');
+  const r = await fetch(`${API}/billing/webhook`, { method: 'POST', headers: { 'stripe-signature': `t=${ts},v1=${sig}` }, body });
+  assert.equal(r.status, 200, `webhook rejected: ${await r.text()}`);
 }
 
 async function newPage(t) {
@@ -104,11 +112,18 @@ before(async () => {
     'STRIPE_SECRET_KEY=sk_test_e2e',
     'STRIPE_WEBHOOK_SECRET=whsec_e2e',
     'STRIPE_PRICE_ID=price_e2e',
+    'STRIPE_API_BASE=http://127.0.0.1:8799/v1',
   ].join('\n'));
   const mig = spawnSync('npx', ['wrangler', 'd1', 'migrations', 'apply', 'momease-prod', '--local'], { cwd: API_DIR, encoding: 'utf8' });
   assert.equal(mig.status, 0, mig.stderr || mig.stdout);
   worker = spawn('npx', ['wrangler', 'dev', '--port', '8787', '--ip', '127.0.0.1', '--local'], { cwd: API_DIR, stdio: 'ignore', detached: true });
   await waitFor(`${API}/health`);
+  fakeStripe = createServer((req, res) => {
+    const m = /^\/v1\/subscriptions\/(sub_e2e_\d+)$/.exec(req.url ?? '');
+    const sub = m && subs.get(m[1]);
+    res.writeHead(sub ? 200 : 404, { 'content-type': 'application/json' });
+    res.end(JSON.stringify(sub ? { id: m[1], status: sub.status, customer: `cus_${m[1]}`, current_period_end: 1893456000, cancel_at_period_end: false, metadata: { user_id: sub.userId } } : { error: { message: 'No such subscription' } }));
+  }).listen(8799, '127.0.0.1');
   server = serveStatic();
   // Playwright 1.56 expects a different Chromium revision than the preinstalled one, so
   // prefer an explicit binary when available (CI installs the matching browser instead).
@@ -119,6 +134,7 @@ before(async () => {
 after(async () => {
   await browser?.close();
   server?.close();
+  fakeStripe?.close();
   if (worker?.pid) { try { process.kill(-worker.pid, 'SIGTERM'); } catch { /* already gone */ } } // whole process group: npx -> wrangler -> workerd
   rmSync(join(API_DIR, '.dev.vars'), { force: true });
 });
@@ -285,7 +301,7 @@ test('friends & messages screens show real data from the API', async (t) => {
 
 // ───────────────────────────── billing ─────────────────────────────
 
-test('upgrade: checkout request carries the session and NO price or user id; premium shows after the role flips', async (t) => {
+test('upgrade: checkout request carries the session and NO price or user id; premium shows after a signed Stripe webhook', async (t) => {
   const u = await makeUser('billing');
   const { page, errors } = await newPage(t);
   await signInViaUI(page, u.email);
@@ -308,8 +324,8 @@ test('upgrade: checkout request carries the session and NO price or user id; pre
   assert.deepEqual(Object.keys(body).sort(), ['return_url']);
   assert.match(checkoutReq.headers().authorization ?? '', /^Bearer /);
 
-  // What Stripe's webhook would do (covered in depth by the API suite):
-  d1(`UPDATE users SET role='premium', sub_status='trialing' WHERE id='${u.id}'`);
+  // Stripe confirms the subscription: a signed webhook hits the real Worker code path.
+  await stripeSubscribes(u.id);
   await page.reload();
   await page.getByText(/7-day free trial/).waitFor({ timeout: 20000 });
   assert.deepEqual(errors, []);

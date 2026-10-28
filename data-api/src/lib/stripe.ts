@@ -8,7 +8,8 @@ export async function stripe(
   method: 'GET' | 'POST',
   form?: Record<string, string>,
 ): Promise<any> {
-  const res = await fetch(`https://api.stripe.com/v1/${path}`, {
+  const base = env.STRIPE_API_BASE || 'https://api.stripe.com/v1' // override only for local tests
+  const res = await fetch(`${base}/${path}`, {
     method,
     headers: {
       Authorization: `Basic ${btoa(`${env.STRIPE_SECRET_KEY}:`)}`,
