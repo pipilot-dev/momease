@@ -6,7 +6,13 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run tests/unit",
+    "test:api": "pnpm --dir data-api test",
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e/app.e2e.mjs",
+    "build:e2e": "EXPO_PUBLIC_API_BASE=http://localhost:8787 expo export --platform web --clear --output-dir dist-e2e",
+    "build:web": "expo export --platform web --clear && node scripts/pwa-ify.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "^6.1.2",
@@ -51,7 +57,8 @@
     "@types/react": "~19.1.0",
     "playwright": "1.56.1",
     "sharp": "^0.34.5",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.12"
   },
   "private": true,
   "packageManager": "pnpm@10.33.0",

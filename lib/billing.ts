@@ -1,104 +1,70 @@
 // Client-side billing service.
 //
-// Talks to the MomEase billing Worker (Cloudflare) at BILLING_API_BASE.
-// The Worker holds the Stripe secret + webhook secret; this module never
-// touches secrets and is safe to bundle in the client.
+// Subscriptions are bought on the WEB (Stripe Checkout) and the app only reads
+// the result. The server decides the price and who the customer is, from the
+// signed-in session -- this module never sends a price id or user id.
 //
 // Flow:
-//   1. User taps "Upgrade" → checkoutSession(user) → returns a hosted
-//      Stripe Checkout URL. The client redirects the browser to that URL.
-//   2. On completion, Stripe redirects back to `${return_url}?checkout=success`.
-//   3. The Stripe webhook fires (out of band) and updates KV in the Worker.
-//   4. Client calls fetchStatus(user.id) to see the fresh premium flag.
-//   5. To manage/cancel, portalSession() returns a Stripe Billing Portal URL.
+//   1. User taps "Upgrade" -> checkoutSession() -> hosted Stripe Checkout URL.
+//   2. Stripe redirects back to `${return}?checkout=success`.
+//   3. Stripe's webhook (out of band) sets role=premium in the API's database.
+//   4. The app calls fetchStatus() -> GET /session to see the fresh role.
+//   5. portalSession() returns a Stripe Billing Portal URL to manage/cancel.
 
 import { Platform } from "react-native";
-import Constants from "expo-constants";
-
-const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, string>;
-
-/** Cloudflare Worker base URL. Override via app.json expo.extra.billingApi. */
-export const BILLING_API_BASE =
-  extra.billingApi || "https://momease-api.pipilot-rpc.workers.dev";
-
-/** Public Stripe Price id for MomEase Premium ($7.99/mo, 7-day trial). */
-export const PREMIUM_PRICE_ID =
-  extra.stripePremiumPriceId || "price_1U9g9SFL6fziSfdwF4ve8eOn";
+import { api } from "./api";
 
 export interface SubStatus {
   premium: boolean;
   status: "none" | "trialing" | "active" | "past_due" | "canceled" | "unpaid" | "incomplete" | string;
   current_period_end?: number;
   cancel_at_period_end?: boolean;
-  stripe_customer_id?: string;
 }
 
-async function post<T>(path: string, body: Record<string, unknown>): Promise<T> {
-  const res = await fetch(`${BILLING_API_BASE}${path}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as any).error || `billing ${res.status}`);
-  return data as T;
+interface SessionPayload {
+  user: { role?: string };
+  subscription?: { status: string; current_period_end: number | null; cancel_at_period_end: boolean };
 }
 
-/** Fetch the user's current subscription status from KV. Non-throwing. */
-export async function fetchStatus(userId: string): Promise<SubStatus> {
+/** Read the signed-in user's subscription from the server. Non-throwing. */
+export async function fetchStatus(_userId?: string): Promise<SubStatus> {
   try {
-    const res = await fetch(`${BILLING_API_BASE}/status?user_id=${encodeURIComponent(userId)}`);
-    if (!res.ok) return { premium: false, status: "none" };
-    return (await res.json()) as SubStatus;
+    const s = await api.get<SessionPayload>("/session");
+    return {
+      premium: s.user.role === "premium",
+      status: s.subscription?.status ?? "none",
+      current_period_end: s.subscription?.current_period_end ?? undefined,
+      cancel_at_period_end: s.subscription?.cancel_at_period_end,
+    };
   } catch {
     return { premium: false, status: "none" };
   }
 }
 
-/**
- * Start a subscription checkout. Returns the hosted URL — the caller
- * navigates the browser there. On web we do a full-page redirect; on native
- * we open the URL in the system browser.
- */
-export async function checkoutSession(user: {
-  id: string;
-  email: string;
-}, opts?: { priceId?: string; returnUrl?: string }): Promise<{ url: string }> {
-  const priceId = opts?.priceId ?? PREMIUM_PRICE_ID;
-  // When the client will hand checkout off to the system browser, we want
-  // Stripe to redirect to a friendly page that helps the user hop back
-  // into the app. When we're in the app's own tab, /upgrade re-renders
-  // the same screen and picks up the ?checkout=success query.
-  const { usesExternalBrowserForCheckout } = await import("./env");
-  const defaultReturn = usesExternalBrowserForCheckout
-    ? "https://mease.mom/checkout-complete"
-    : Platform.OS === "web" && typeof window !== "undefined"
-      ? `${window.location.origin}/upgrade`
-      : "https://app.mease.mom/upgrade";
-  const returnUrl = opts?.returnUrl ?? defaultReturn;
-  const { url } = await post<{ url: string }>("/checkout", {
-    user_id: user.id,
-    email: user.email,
-    price_id: priceId,
-    return_url: returnUrl,
-  });
-  return { url };
+function defaultReturn(path: string): string {
+  return Platform.OS === "web" && typeof window !== "undefined"
+    ? `${window.location.origin}${path}`
+    : `https://app.mease.mom${path}`;
 }
 
 /**
- * Create a Billing Portal session so the user can update card, cancel,
- * see invoices. Returns the hosted URL.
+ * Start a subscription checkout. Returns the hosted URL; the caller navigates
+ * the browser there (full-page redirect on web, system browser on native).
  */
-export async function portalSession(userId: string, returnUrl?: string): Promise<{ url: string }> {
-  const rtn =
-    returnUrl ??
-    (Platform.OS === "web" && typeof window !== "undefined"
-      ? `${window.location.origin}/profile`
-      : "https://app.mease.mom/profile");
-  return post<{ url: string }>("/portal", {
-    user_id: userId,
-    return_url: rtn,
-  });
+export async function checkoutSession(
+  _user?: { id: string; email: string },
+  opts?: { returnUrl?: string },
+): Promise<{ url: string }> {
+  const { usesExternalBrowserForCheckout } = await import("./env");
+  // Native hands off to the system browser, so land on a friendly page that
+  // helps the user hop back into the app.
+  const returnUrl = opts?.returnUrl ?? (usesExternalBrowserForCheckout ? "https://app.mease.mom/upgrade" : defaultReturn("/upgrade"));
+  return api.post<{ url: string }>("/billing/checkout", { return_url: returnUrl });
+}
+
+/** Billing Portal session so the user can update card, cancel, see invoices. */
+export async function portalSession(_userId?: string, returnUrl?: string): Promise<{ url: string }> {
+  return api.post<{ url: string }>("/billing/portal", { return_url: returnUrl ?? defaultReturn("/upgrade") });
 }
 
 /** Best-effort browser redirect that works on web and native. */
@@ -107,8 +73,6 @@ export async function openBillingUrl(url: string): Promise<void> {
     window.location.href = url;
     return;
   }
-  // Native: open the URL in the system browser via expo-linking. Import
-  // dynamically so web builds don't pull it in unused.
   const Linking = await import("expo-linking");
   await Linking.default.openURL(url);
 }

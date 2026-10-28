@@ -20,6 +20,7 @@ import {
 import { useAuthStore } from "../lib/stores/auth-store";
 import { useSubscriptionStore } from "../lib/stores/subscription-store";
 import { checkoutSession, portalSession, openBillingUrl } from "../lib/billing";
+import { friendlyError } from "../lib/api";
 import { useTheme } from "../lib/theme-context";
 
 const FEATURES = [
@@ -98,7 +99,7 @@ export default function UpgradeScreen() {
       const { url } = await checkoutSession({ id: user.id, email: user.email });
       await openBillingUrl(url);
     } catch (e) {
-      setError((e as Error).message || "Something went wrong. Try again in a moment.");
+      setError(friendlyError(e, "Something went wrong. Try again in a moment."));
       setBusy(false);
     }
   };
@@ -110,7 +111,7 @@ export default function UpgradeScreen() {
       const { url } = await portalSession(user.id);
       await openBillingUrl(url);
     } catch (e) {
-      setError((e as Error).message);
+      setError(friendlyError(e, "We couldn't open billing. Try again in a moment."));
       setBusy(false);
     }
   };

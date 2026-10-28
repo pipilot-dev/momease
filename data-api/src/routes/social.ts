@@ -42,6 +42,11 @@ export async function handleSocial(req: Request, env: Env, url: URL, uid: string
   return null
 }
 
+
+async function userExists(env: Env, id: string): Promise<boolean> {
+  return !!(await env.DB.prepare('SELECT 1 FROM users WHERE id = ?').bind(id).first())
+}
+
 // ---------- profiles ----------
 
 function slugify(raw: string): string {
@@ -72,8 +77,9 @@ async function upsertMyProfile(req: Request, env: Env, uid: string): Promise<Res
   const existing = await env.DB.prepare('SELECT id FROM profiles WHERE id = ?').bind(uid).first<{ id: string }>()
   if (existing) {
     await env.DB.prepare(
-      `UPDATE profiles SET display_name = ?, avatar_url = ? WHERE id = ?`,
-    ).bind(body.display_name ?? '', body.avatar_url ?? null, uid).run()
+      `UPDATE profiles SET display_name = COALESCE(?, display_name),
+         avatar_url = CASE WHEN ? = 1 THEN ? ELSE avatar_url END WHERE id = ?`,
+    ).bind(body.display_name?.slice(0, 80) ?? null, 'avatar_url' in body ? 1 : 0, body.avatar_url ?? null, uid).run()
     const updated = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(uid).first()
     return Response.json(updated)
   }
@@ -86,7 +92,7 @@ async function upsertMyProfile(req: Request, env: Env, uid: string): Promise<Res
     try {
       await env.DB.prepare(
         `INSERT INTO profiles (id, username, display_name, avatar_url) VALUES (?, ?, ?, ?)`,
-      ).bind(uid, username, body.display_name ?? '', body.avatar_url ?? null).run()
+      ).bind(uid, username, (body.display_name ?? '').slice(0, 80), body.avatar_url ?? null).run()
       const row = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(uid).first()
       return Response.json(row)
     } catch (e) {
@@ -117,10 +123,10 @@ async function touchLastSeen(env: Env, uid: string): Promise<Response> {
 async function searchProfiles(env: Env, url: URL, uid: string): Promise<Response> {
   const q = (url.searchParams.get('q') ?? '').trim().toLowerCase()
   if (!q) return Response.json([])
-  const like = `%${q}%`
+  const like = `%${q.replace(/[\\%_]/g, (c) => '\\' + c)}%`
   const rows = await env.DB.prepare(
     `SELECT p.* FROM profiles p
-     WHERE lower(p.username) LIKE ?
+     WHERE lower(p.username) LIKE ? ESCAPE '\\'
        AND p.id != ?
        AND p.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ?)
      LIMIT 30`,
@@ -157,6 +163,7 @@ async function listFollowers(env: Env, uid: string): Promise<Response> {
 
 async function follow(env: Env, uid: string, target: string): Promise<Response> {
   if (target === uid) return Response.json({ error: 'cannot_follow_self' }, { status: 400 })
+  if (!(await userExists(env, target))) return Response.json({ error: 'user_not_found' }, { status: 404 })
   await env.DB.prepare(
     `INSERT INTO follows (follower_id, following_id) VALUES (?, ?)
      ON CONFLICT(follower_id, following_id) DO NOTHING`,
@@ -180,6 +187,7 @@ async function listBlocks(env: Env, uid: string): Promise<Response> {
 
 async function block(env: Env, uid: string, target: string): Promise<Response> {
   if (target === uid) return Response.json({ error: 'cannot_block_self' }, { status: 400 })
+  if (!(await userExists(env, target))) return Response.json({ error: 'user_not_found' }, { status: 404 })
   await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO blocks (blocker_id, blocked_id) VALUES (?, ?)
@@ -210,6 +218,13 @@ async function sendMessage(req: Request, env: Env, uid: string): Promise<Respons
   const b = await req.json<SendBody>().catch(() => ({} as SendBody))
   if (!b.recipient_id) return Response.json({ error: 'recipient_required' }, { status: 400 })
   if (b.recipient_id === uid) return Response.json({ error: 'no_self_message' }, { status: 400 })
+  const text = (b.body ?? '').trim()
+  if (!text && !b.share) return Response.json({ error: 'empty_message' }, { status: 400 })
+  if (text.length > 4000) return Response.json({ error: 'message_too_long' }, { status: 400 })
+  if (b.share && !['mantra', 'sound', 'meditation'].includes(b.share.type)) {
+    return Response.json({ error: 'invalid_share' }, { status: 400 })
+  }
+  if (!(await userExists(env, b.recipient_id))) return Response.json({ error: 'user_not_found' }, { status: 404 })
 
   const blocked = await env.DB.prepare(
     `SELECT 1 FROM blocks
@@ -224,8 +239,8 @@ async function sendMessage(req: Request, env: Env, uid: string): Promise<Respons
     `INSERT INTO messages (id, sender_id, recipient_id, body, share_type, share_ref, share_title)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
-    id, uid, b.recipient_id, b.body ?? '',
-    b.share?.type ?? null, b.share?.ref ?? null, b.share?.title ?? null,
+    id, uid, b.recipient_id, text,
+    b.share?.type ?? null, b.share?.ref?.slice(0, 100) ?? null, b.share?.title?.slice(0, 200) ?? null,
   ).run()
   const row = await env.DB.prepare('SELECT * FROM messages WHERE id = ?').bind(id).first()
   return Response.json(row)
@@ -306,11 +321,17 @@ interface ReportBody {
 
 async function report(req: Request, env: Env, uid: string): Promise<Response> {
   const b = await req.json<ReportBody>().catch(() => ({} as ReportBody))
-  if (!b.content_type || !b.reason) return Response.json({ error: 'missing_fields' }, { status: 400 })
+  if (!b.content_type || !b.reason?.trim()) return Response.json({ error: 'missing_fields' }, { status: 400 })
+  if (!['user', 'message', 'post', 'comment'].includes(b.content_type)) {
+    return Response.json({ error: 'invalid_content_type' }, { status: 400 })
+  }
+  if (b.reported_user_id && !(await userExists(env, b.reported_user_id))) {
+    return Response.json({ error: 'user_not_found' }, { status: 404 })
+  }
   const id = crypto.randomUUID()
   await env.DB.prepare(
     `INSERT INTO reports (id, reporter_id, reported_user_id, content_type, content_ref, reason)
      VALUES (?, ?, ?, ?, ?, ?)`,
-  ).bind(id, uid, b.reported_user_id ?? null, b.content_type, b.content_ref ?? null, b.reason).run()
+  ).bind(id, uid, b.reported_user_id ?? null, b.content_type, b.content_ref?.slice(0, 200) ?? null, b.reason.trim().slice(0, 2000)).run()
   return Response.json({ ok: true, id })
 }

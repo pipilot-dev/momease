@@ -18,18 +18,44 @@
 //
 // We wait for `hydrated` before making decisions so a persisted session isn't
 // clobbered by a mid-hydration redirect on hard reload.
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { View } from "react-native";
 import { useRouter, useSegments } from "expo-router";
 import { useAuthStore } from "../lib/stores/auth-store";
+import { authService } from "../lib/auth-service";
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
   const { isAuthenticated, user, hydrated } = useAuthStore();
+  const [restoreChecked, setRestoreChecked] = useState(false);
 
+  // The stored "signed in" flag is a debounced cache; the session token is the
+  // source of truth. Validate it on every start: this restores a lost flag,
+  // signs out a revoked/expired/pre-migration session, restarts cloud sync, and
+  // keeps the cached user when the server is simply unreachable.
   useEffect(() => {
     if (!hydrated) return;
+    let cancelled = false;
+    authService
+      .restoreSession()
+      .then(({ user: restored, offline }) => {
+        if (cancelled) return;
+        const st = useAuthStore.getState();
+        if (restored) st.setUser(restored); // also (re)starts cloud sync after a reload
+        else if (!offline && st.isAuthenticated) useAuthStore.setState({ user: null, isAuthenticated: false });
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setRestoreChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || !restoreChecked) return;
 
     // segments[] is the route match. Root "/" gives []; "/(auth)/sign-in"
     // gives ["(auth)", "sign-in"]; "/(tabs)/home" gives ["(tabs)", "home"].
@@ -37,7 +63,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     const inAuthGroup = first === "(auth)";
     const isSplash = !first; // matches "/"
     const isOnboarding = first === "onboarding";
-    const isPublic = isSplash || inAuthGroup;
+    const isCallback = first === "auth-callback"; // finishes Google sign-in before we are authed
+    const isPublic = isSplash || inAuthGroup || isCallback;
 
     if (!isAuthenticated) {
       // Splash owns its own redirect flow — don't step on it.
@@ -46,6 +73,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     }
 
     // Authed from here down.
+    if (isCallback) return;
     if (inAuthGroup) {
       router.replace(user?.onboardingCompleted ? "/(tabs)/home" : "/onboarding");
       return;
@@ -53,7 +81,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     if (user && !user.onboardingCompleted && !isOnboarding && !isSplash) {
       router.replace("/onboarding");
     }
-  }, [hydrated, isAuthenticated, user?.onboardingCompleted, segments.join("/")]);
+  }, [hydrated, restoreChecked, isAuthenticated, user?.onboardingCompleted, segments.join("/")]);
 
   // Render children unconditionally — the effect's router.replace will swap
   // the mounted route on the next tick. Blocking with a spinner here caused a

@@ -5,7 +5,7 @@
 //
 // Delivery is poll-based: screens re-fetch on an interval / focus.
 
-import { api, getToken } from "./api";
+import { api, getToken, loadToken } from "./api";
 import type { User } from "./types";
 
 export interface Profile {
@@ -44,7 +44,10 @@ export function isOnline(lastSeen?: string | null): boolean {
   return Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS;
 }
 
-function ready(): boolean { return Boolean(getToken()) }
+async function ready(): Promise<boolean> {
+  await loadToken();
+  return Boolean(getToken());
+}
 async function safe<T>(op: () => Promise<T>, fallback: T, tag: string): Promise<T> {
   try { return await op() } catch (e) {
     console.warn(`[social] ${tag} failed:`, e instanceof Error ? e.message : e);
@@ -55,7 +58,7 @@ async function safe<T>(op: () => Promise<T>, fallback: T, tag: string): Promise<
 // ---------- profiles ----------
 
 export async function ensureProfile(user: User): Promise<Profile | null> {
-  if (!ready()) return null;
+  if (!(await ready())) return null;
   return safe(async () => {
     const existing = await api.get<Profile | null>("/profile/me");
     if (existing && existing.id) return existing;
@@ -67,17 +70,17 @@ export async function ensureProfile(user: User): Promise<Profile | null> {
 }
 
 export async function getMyProfile(_userId: string): Promise<Profile | null> {
-  if (!ready()) return null;
+  if (!(await ready())) return null;
   return safe(() => api.get<Profile | null>("/profile/me"), null, "getMyProfile");
 }
 
 export async function getProfileById(id: string): Promise<Profile | null> {
-  if (!ready()) return null;
+  if (!(await ready())) return null;
   return safe(() => api.get<Profile | null>(`/profile/${id}`), null, "getProfileById");
 }
 
 export async function setUsername(_userId: string, username: string): Promise<string | null> {
-  if (!ready()) return "Not connected";
+  if (!(await ready())) return "Not connected";
   try {
     await api.put("/profile/username", { username });
     return null;
@@ -90,7 +93,7 @@ export async function setUsername(_userId: string, username: string): Promise<st
 }
 
 export async function updateLastSeen(_userId: string): Promise<void> {
-  if (!ready()) return;
+  if (!(await ready())) return;
   await safe(() => api.post("/profile/last-seen"), undefined, "updateLastSeen");
 }
 
@@ -105,35 +108,35 @@ export async function searchUsers(query: string, _meId: string): Promise<Profile
 // ---------- follows ----------
 
 export async function follow(_meId: string, targetId: string): Promise<void> {
-  if (!ready()) return;
+  if (!(await ready())) return;
   await safe(() => api.put(`/follows/${targetId}`), undefined, "follow");
 }
 
 export async function unfollow(_meId: string, targetId: string): Promise<void> {
-  if (!ready()) return;
+  if (!(await ready())) return;
   await safe(() => api.del(`/follows/${targetId}`), undefined, "unfollow");
 }
 
 export async function getFollowingIds(_meId: string): Promise<Set<string>> {
-  if (!ready()) return new Set();
+  if (!(await ready())) return new Set();
   const rows = await safe(() => api.get<Profile[]>("/follows"), [], "getFollowingIds");
   return new Set(rows.map((r) => r.id));
 }
 
 export async function getFollowing(_meId: string): Promise<Profile[]> {
-  if (!ready()) return [];
+  if (!(await ready())) return [];
   return safe(() => api.get<Profile[]>("/follows"), [], "getFollowing");
 }
 
 export async function getFollowers(_meId: string): Promise<Profile[]> {
-  if (!ready()) return [];
+  if (!(await ready())) return [];
   return safe(() => api.get<Profile[]>("/followers"), [], "getFollowers");
 }
 
 // ---------- blocking ----------
 
 export async function getBlockedIds(_meId: string): Promise<Set<string>> {
-  if (!ready()) return new Set();
+  if (!(await ready())) return new Set();
   const rows = await safe(
     () => api.get<Array<{ blocked_id: string }>>("/blocks"),
     [] as Array<{ blocked_id: string }>,
@@ -143,12 +146,12 @@ export async function getBlockedIds(_meId: string): Promise<Set<string>> {
 }
 
 export async function blockUser(_meId: string, targetId: string): Promise<void> {
-  if (!ready()) return;
+  if (!(await ready())) return;
   await safe(() => api.put(`/blocks/${targetId}`), undefined, "blockUser");
 }
 
 export async function unblockUser(_meId: string, targetId: string): Promise<void> {
-  if (!ready()) return;
+  if (!(await ready())) return;
   await safe(() => api.del(`/blocks/${targetId}`), undefined, "unblockUser");
 }
 
@@ -163,7 +166,7 @@ export async function reportContent(params: {
   contentRef?: string | null;
   reason: string;
 }): Promise<boolean> {
-  if (!ready()) return false;
+  if (!(await ready())) return false;
   try {
     await api.post("/reports", {
       reported_user_id: params.reportedUserId ?? null,
@@ -181,7 +184,7 @@ export async function reportContent(params: {
 // ---------- account deletion ----------
 
 export async function deleteAccount(_meId: string): Promise<{ dataDeleted: boolean; accountRemoved: boolean }> {
-  if (!ready()) return { dataDeleted: false, accountRemoved: false };
+  if (!(await ready())) return { dataDeleted: false, accountRemoved: false };
   try {
     await api.del("/account");
     return { dataDeleted: true, accountRemoved: true };
@@ -203,7 +206,7 @@ export async function sendMessage(
   recipientId: string,
   payload: SendPayload,
 ): Promise<DirectMessage | null> {
-  if (!ready()) return null;
+  if (!(await ready())) return null;
   try {
     return await api.post<DirectMessage>("/messages", {
       recipient_id: recipientId,
@@ -217,17 +220,17 @@ export async function sendMessage(
 }
 
 export async function getConversation(_meId: string, otherId: string): Promise<DirectMessage[]> {
-  if (!ready()) return [];
+  if (!(await ready())) return [];
   return safe(() => api.get<DirectMessage[]>(`/messages/${otherId}`), [], "getConversation");
 }
 
 export async function markRead(_meId: string, otherId: string): Promise<void> {
-  if (!ready()) return;
+  if (!(await ready())) return;
   await safe(() => api.post(`/messages/${otherId}/read`), undefined, "markRead");
 }
 
 export async function getInbox(_meId: string): Promise<ConversationSummary[]> {
-  if (!ready()) return [];
+  if (!(await ready())) return [];
   return safe(() => api.get<ConversationSummary[]>("/messages/inbox"), [], "getInbox");
 }
 

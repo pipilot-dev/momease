@@ -3,6 +3,7 @@ import type { User } from "../types";
 import { authService } from "../auth-service";
 import { attachPersistence } from "../persist";
 import { onSignedIn, onSignedOut } from "../cloud-sync";
+import { setUnauthorizedHandler } from "../api";
 
 interface AuthState {
   user: User | null;
@@ -98,3 +99,11 @@ attachPersistence(
   (s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }),
   { onHydrated: () => useAuthStore.setState({ hydrated: true }) }
 );
+
+// A rejected token (expired, revoked, account deleted) must not leave the UI
+// looking signed-in: every later call would 401 and nothing would sync.
+setUnauthorizedHandler(() => {
+  if (!useAuthStore.getState().isAuthenticated) return;
+  onSignedOut();
+  useAuthStore.setState({ user: null, isAuthenticated: false });
+});
