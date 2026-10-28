@@ -40,9 +40,14 @@ export default function SplashEntry() {
     // persisted/OAuth session, otherwise send the user to sign-in.
     const timer = setTimeout(async () => {
       try {
-        const sessionUser = await authService.getCurrentUser();
+        const { user: sessionUser, offline } = await authService.restoreSession();
         const { user, isAuthenticated, setUser } = useAuthStore.getState();
-        const activeUser = sessionUser || (isAuthenticated ? user : null);
+        // Only an unreachable server may fall back to the cached user; a
+        // missing/invalid token means signed out (e.g. pre-migration installs).
+        const activeUser = sessionUser || (offline && isAuthenticated ? user : null);
+        if (!sessionUser && !offline && isAuthenticated) {
+          useAuthStore.setState({ user: null, isAuthenticated: false });
+        }
         if (activeUser) {
           if (sessionUser) setUser(sessionUser);
           if (activeUser.onboardingCompleted) router.replace("/(tabs)/home");

@@ -1,11 +1,11 @@
 // MomEase Data API. Cloudflare Worker + D1. Replaces Supabase.
-//
-// Note: the /billing endpoints (Stripe checkout/portal/status/webhook) still
-// live on the sibling `worker/` deployment — that's intentional and unchanged.
+// Also owns web billing (Stripe Checkout/Portal/webhook) — the role in D1 is
+// the single source of truth the native app reads from /session.
 
-import { handleAuth } from './routes/auth'
+import { handleAuth, publicUser, type UserRow } from './routes/auth'
 import { handleState } from './routes/state'
 import { handleSocial } from './routes/social'
+import { handleBilling } from './routes/billing'
 import { requireSession } from './lib/session'
 import { corsPreflight, withCors } from './lib/cors'
 
@@ -16,6 +16,15 @@ export interface Env {
   JWT_SIGNING_KEY: string
   APP_SCHEME: string
   ALLOWED_ORIGINS: string
+  WEB_APP_URL?: string
+  BILLING_RETURN_BASE?: string
+  STRIPE_SECRET_KEY?: string
+  STRIPE_WEBHOOK_SECRET?: string
+  STRIPE_PRICE_ID?: string
+  STRIPE_PORTAL_CONFIG_ID?: string
+  STRIPE_API_BASE?: string
+  RESEND_API_KEY?: string
+  MAIL_FROM?: string
 }
 
 export default {
@@ -28,6 +37,9 @@ export default {
       }
       if (url.pathname.startsWith('/auth/')) {
         return withCors(req, env, await handleAuth(req, env, ctx, url))
+      }
+      if (url.pathname.startsWith('/billing/')) {
+        return withCors(req, env, await handleBilling(req, env, url))
       }
       // Everything below needs a session.
       const session = await requireSession(req, env)
@@ -42,27 +54,27 @@ export default {
         await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(session.userId).run()
         return withCors(req, env, Response.json({ ok: true }))
       }
-      // Social routes: profiles, follows, messages, blocks, reports.
       const social = await handleSocial(req, env, url, session.userId)
       if (social) return withCors(req, env, social)
       return withCors(req, env, Response.json({ error: 'not_found' }, { status: 404 }))
     } catch (e) {
       console.error('unhandled', e)
-      const msg = e instanceof Error ? e.message : String(e)
-      return withCors(req, env, Response.json({ error: 'server_error', detail: msg }, { status: 500 }))
+      return withCors(req, env, Response.json({ error: 'server_error' }, { status: 500 }))
     }
   },
 } satisfies ExportedHandler<Env>
 
 async function getSession(env: Env, uid: string): Promise<Response> {
-  const user = await env.DB.prepare('SELECT id, email, meta FROM users WHERE id = ?')
-    .bind(uid).first<{ id: string; email: string; meta: string }>()
-  if (!user) return Response.json({ error: 'user_missing' }, { status: 404 })
-  const meta = safeJson(user.meta)
-  return Response.json({ user: { id: user.id, email: user.email, ...meta } })
-}
-
-function safeJson(s: string | null | undefined): Record<string, unknown> {
-  if (!s) return {}
-  try { return JSON.parse(s) as Record<string, unknown> } catch { return {} }
+  const u = await env.DB.prepare(
+    'SELECT id, email, meta, role, sub_status, sub_current_period_end, sub_cancel_at_period_end FROM users WHERE id = ?',
+  ).bind(uid).first<UserRow>()
+  if (!u) return Response.json({ error: 'user_missing' }, { status: 404 })
+  return Response.json({
+    user: publicUser(u),
+    subscription: {
+      status: u.sub_status,
+      current_period_end: u.sub_current_period_end,
+      cancel_at_period_end: !!u.sub_cancel_at_period_end,
+    },
+  })
 }

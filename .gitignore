@@ -85,3 +85,9 @@ momease-play-assets.zip
 
 # Play service-account key (never commit)
 credentials/
+
+# test artifacts
+dist-e2e/
+.wrangler/
+.dev.vars
+tests/e2e/.artifacts/

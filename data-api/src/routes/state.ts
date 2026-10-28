@@ -22,8 +22,10 @@ export async function handleState(req: Request, env: Env, url: URL, uid: string)
   if (m) {
     const key = m[1]
     if (req.method === 'PUT') {
+      const raw = await req.text()
+      if (raw.length > 512 * 1024) return Response.json({ error: 'too_large' }, { status: 413 })
       let data: unknown
-      try { data = await req.json() } catch {
+      try { data = JSON.parse(raw) } catch {
         return Response.json({ error: 'invalid_json' }, { status: 400 })
       }
       await env.DB.prepare(

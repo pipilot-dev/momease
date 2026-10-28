@@ -8,7 +8,8 @@ import * as WebBrowser from "expo-web-browser";
 import type { User } from "./types";
 import type { AuthResult } from "./mock-auth";
 import { authService as mockAuth } from "./mock-auth";
-import { API_BASE, api, getToken, loadToken, setToken } from "./api";
+import { API_BASE, api, ApiError, friendlyError, getToken, isNetworkError, loadToken, setToken } from "./api";
+import { parseCallbackUrl } from "./auth-callback";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -46,17 +47,13 @@ function toUser(u: ApiUser): User {
 }
 
 export const authService = {
-  // Legacy flag name — every caller only reads this to know a real backend
-  // is available. The Cloudflare Worker is always configured, so: true.
-  get usesSupabase() { return true },
-
   async signIn(email: string, password: string): Promise<AuthResult> {
     try {
       const data = await api.postNoAuth<AuthPayload>("/auth/signin", { email, password });
       await setToken(data.token);
       return { success: true, user: toUser(data.user) };
     } catch (e) {
-      return { success: false, error: e instanceof Error ? e.message : "Sign in failed" };
+      return { success: false, error: friendlyError(e, "Sign in failed. Please try again.") };
     }
   },
 
@@ -66,7 +63,7 @@ export const authService = {
       await setToken(data.token);
       return { success: true, user: toUser(data.user) };
     } catch (e) {
-      return { success: false, error: e instanceof Error ? e.message : "Sign up failed" };
+      return { success: false, error: friendlyError(e, "Sign up failed. Please try again.") };
     }
   },
 
@@ -85,20 +82,35 @@ export const authService = {
 
       const result = await WebBrowser.openAuthSessionAsync(startUrl, redirectTo);
       if (result.type !== "success") return { success: false, error: "Google sign-in was cancelled" };
-      const final = new URL(result.url);
-      const token = final.searchParams.get("token");
+      const { token } = parseCallbackUrl(result.url);
       if (!token) return { success: false, error: "Google sign-in did not return a session." };
       await setToken(token);
       const me = await api.get<{ user: ApiUser }>("/session");
       return { success: true, user: toUser(me.user) };
     } catch (e) {
-      return { success: false, error: e instanceof Error ? e.message : "Google sign-in failed" };
+      return { success: false, error: friendlyError(e, "Google sign-in failed. Please try again.") };
     }
   },
 
   async signOut(): Promise<void> {
     try { if (getToken()) await api.post("/auth/signout") } catch {}
     await setToken(null);
+  },
+
+  /**
+   * Restore a session at app start. `offline` means the server couldn't be
+   * reached, so the caller may keep trusting a previously persisted user
+   * instead of logging them out on a plane.
+   */
+  async restoreSession(): Promise<{ user: User | null; offline: boolean }> {
+    await loadToken();
+    if (!getToken()) return { user: null, offline: false };
+    try {
+      const me = await api.get<{ user: ApiUser }>("/session");
+      return { user: toUser(me.user), offline: false };
+    } catch (e) {
+      return { user: null, offline: isNetworkError(e) || (e instanceof ApiError && e.status >= 500) };
+    }
   },
 
   async getCurrentUser(): Promise<User | null> {
@@ -123,7 +135,7 @@ export const authService = {
       await api.postNoAuth("/auth/reset/request", { email });
       return { success: true };
     } catch (e) {
-      return { success: false, error: e instanceof Error ? e.message : "Could not send reset email." };
+      return { success: false, error: friendlyError(e, "Could not send reset email. Try again.") };
     }
   },
 };

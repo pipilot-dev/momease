@@ -1,4 +1,4 @@
-// Subscription store — mirror of what the billing Worker's KV knows.
+// Subscription store — cached mirror of the user's role/subscription from GET /session.
 //
 // Not the source of truth (Stripe is). We cache the last known status locally
 // so the UI can render Premium instantly, and refresh from the Worker on

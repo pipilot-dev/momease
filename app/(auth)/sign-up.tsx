@@ -37,7 +37,16 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     clearError();
-    const success = await signUp(email, password, name);
+    // Mirror the server rules so people get instant, specific feedback.
+    if (!name.trim() || !email.trim() || !password) {
+      useAuthStore.setState({ error: "Please fill in your name, email and password." });
+      return;
+    }
+    if (password.length < 8) {
+      useAuthStore.setState({ error: "Password must be at least 8 characters." });
+      return;
+    }
+    const success = await signUp(email.trim(), password, name.trim());
     if (success) {
       router.replace("/onboarding");
     }
@@ -151,7 +160,7 @@ export default function SignUp() {
                 <Lock size={20} color="#A7F3D0" />
                 <TextInput
                   style={textInputStyle}
-                  placeholder="Password (min 6 characters)"
+                  placeholder="Password (min 8 characters)"
                   placeholderTextColor={theme.text.muted}
                   value={password}
                   onChangeText={setPassword}
