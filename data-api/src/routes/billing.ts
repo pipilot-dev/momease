@@ -59,7 +59,18 @@ async function checkout(req: Request, env: Env, uid: string): Promise<Response> 
   else form.customer_email = user.email
 
   try {
-    const s = await stripe(env, 'checkout/sessions', 'POST', form)
+    let s
+    try {
+      s = await stripe(env, 'checkout/sessions', 'POST', form)
+    } catch (e) {
+      // The stored customer belongs to a different Stripe account (account switch) or was deleted:
+      // forget it and let Stripe create a fresh customer from the email.
+      if (!user.stripe_customer_id || !/No such customer/i.test(String(e))) throw e
+      await env.DB.prepare('UPDATE users SET stripe_customer_id = NULL, sub_status = ?, role = ? WHERE id = ?').bind('none', 'free', uid).run()
+      delete form.customer
+      form.customer_email = user.email
+      s = await stripe(env, 'checkout/sessions', 'POST', form)
+    }
     return Response.json({ url: s.url, id: s.id })
   } catch (e) {
     console.error('[billing] checkout failed', e)
@@ -82,6 +93,10 @@ async function portal(req: Request, env: Env, uid: string): Promise<Response> {
     const s = await stripe(env, 'billing_portal/sessions', 'POST', form)
     return Response.json({ url: s.url })
   } catch (e) {
+    if (/No such customer/i.test(String(e))) {
+      await env.DB.prepare('UPDATE users SET stripe_customer_id = NULL WHERE id = ?').bind(uid).run()
+      return Response.json({ error: 'no_subscription' }, { status: 404 })
+    }
     console.error('[billing] portal failed', e)
     return Response.json({ error: 'portal_failed' }, { status: 502 })
   }

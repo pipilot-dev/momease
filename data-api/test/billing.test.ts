@@ -86,6 +86,32 @@ describe('POST /billing/checkout', () => {
   })
 })
 
+describe('switching Stripe accounts', () => {
+  it('checkout forgets a customer id that belongs to another Stripe account and retries with the email', async () => {
+    const u = await signup('acctswitch')
+    await env.DB.prepare("UPDATE users SET stripe_customer_id = 'cus_OLD_ACCOUNT', role='premium', sub_status='canceled' WHERE id = ?").bind(u.id).run()
+    const forms: URLSearchParams[] = []
+    mockOutbound((url, init) => {
+      if (!url.endsWith('/checkout/sessions')) return
+      const f = formOf(init); forms.push(f)
+      return f.get('customer') ? Response.json({ error: { message: "No such customer: 'cus_OLD_ACCOUNT'" } }, { status: 400 }) : Response.json({ id: 'cs_new', url: 'https://checkout.stripe.com/new' })
+    })
+    const r = await call('/billing/checkout', { token: u.token, body: {} })
+    expect(r.status).toBe(200)
+    expect(forms.map((f) => [f.get('customer'), f.get('customer_email')])).toEqual([['cus_OLD_ACCOUNT', null], [null, u.email]])
+    const row = await env.DB.prepare('SELECT stripe_customer_id, role FROM users WHERE id = ?').bind(u.id).first<any>()
+    expect(row).toEqual({ stripe_customer_id: null, role: 'free' })
+  })
+
+  it('portal with a stale customer id answers 404 and clears it', async () => {
+    const u = await signup('acctportal')
+    await env.DB.prepare("UPDATE users SET stripe_customer_id = 'cus_OLD_ACCOUNT' WHERE id = ?").bind(u.id).run()
+    mockOutbound((url) => (url.endsWith('/billing_portal/sessions') ? Response.json({ error: { message: "No such customer: 'cus_OLD_ACCOUNT'" } }, { status: 400 }) : undefined))
+    expect((await call('/billing/portal', { token: u.token, body: {} })).status).toBe(404)
+    expect((await env.DB.prepare('SELECT stripe_customer_id c FROM users WHERE id = ?').bind(u.id).first<any>()).c).toBeNull()
+  })
+})
+
 describe('POST /billing/portal', () => {
   it('404s without a subscription, returns a portal URL with one', async () => {
     const u = await signup('portal')

@@ -12,13 +12,13 @@ database_id = "b92ef035-81b6-49b4-8c21-8fe8ed0dd4ae"
 #   GOOGLE_CLIENT_ID
 #   GOOGLE_CLIENT_SECRET
 #   JWT_SIGNING_KEY
-#   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID
+#   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID, STRIPE_PORTAL_CONFIG_ID
+#   (all Stripe-account-specific values live here; `node scripts/stripe-setup.mjs` sets them for ANY account)
 #   RESEND_API_KEY   (optional; without it password-reset emails are not sent)
 
 [vars]
 APP_SCHEME = "momease"
 WEB_APP_URL = "https://mease.mom"
 BILLING_RETURN_BASE = "https://app.mease.mom"
-STRIPE_PORTAL_CONFIG_ID = "bpc_1UVamh3G7U0M1bp1wmIyK4Wz"
 MAIL_FROM = "MomEase <noreply@mease.mom>"
 ALLOWED_ORIGINS = "https://mease.mom,https://www.mease.mom,https://app.mease.mom,https://momease-landing.pages.dev,https://momease-app.pages.dev,http://localhost:8081,http://localhost:19006"
