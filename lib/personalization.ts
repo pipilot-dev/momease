@@ -47,7 +47,18 @@ export const LIFE_STAGE_META: Record<LifeStage, { label: string; blurb: string; 
   toddler: { label: "Mom to a toddler (1–3yr)", blurb: "Big feelings, tiny humans, endless energy." },
   "school-age": { label: "Mom to school-age kids", blurb: "Balancing schedules, growth, and independence." },
   teen: { label: "Mom to a teen", blurb: "New chapter — you're still their safe place." },
+  "not-a-mom": { label: "Not a mom (yet)", blurb: "Just here to feel calmer, sleep better and look after me." },
 };
+
+/** True for someone who is not (yet) a mom: she gets general wellbeing content, no parenting copy. */
+export function isNotMom(stage?: LifeStage): boolean {
+  return stage === "not-a-mom";
+}
+
+/** Name used when we have none. */
+export function fallbackName(stage?: LifeStage): string {
+  return isNotMom(stage) ? "Friend" : "Mama";
+}
 
 export const CHALLENGE_META: Record<PrimaryChallenge, { label: string; icon: string }> = {
   overwhelm: { label: "I feel overwhelmed most days", icon: "Waves" },
@@ -58,6 +69,9 @@ export const CHALLENGE_META: Record<PrimaryChallenge, { label: string; icon: str
   loneliness: { label: "I feel isolated / need connection", icon: "Users" },
   "postpartum-recovery": { label: "I'm recovering physically & emotionally", icon: "Sparkles" },
   "co-parenting": { label: "Co-parenting is stressful", icon: "MessageCircle" },
+  burnout: { label: "I'm burned out / running on empty", icon: "Waves" },
+  "self-care": { label: "I want a real self-care routine", icon: "Sparkles" },
+  "planning-ahead": { label: "I'm planning ahead for motherhood", icon: "Heart" },
 };
 
 export const GOAL_META: Record<WellnessGoal, { label: string; icon: string }> = {
@@ -68,7 +82,57 @@ export const GOAL_META: Record<WellnessGoal, { label: string; icon: string }> = 
   "healthier-habits": { label: "Healthier daily habits", icon: "Sun" },
   "stronger-boundaries": { label: "Stronger boundaries", icon: "Shield" },
   "mindful-parenting": { label: "Be a more present parent", icon: "Sparkles" },
+  "prepare-motherhood": { label: "Prepare for motherhood", icon: "Heart" },
 };
+
+const MOM_CHALLENGES: PrimaryChallenge[] = [
+  "overwhelm", "sleep", "mental-load", "guilt", "career-balance", "loneliness", "postpartum-recovery", "co-parenting",
+];
+const NOT_MOM_CHALLENGES: PrimaryChallenge[] = [
+  "overwhelm", "burnout", "sleep", "mental-load", "career-balance", "loneliness", "self-care", "planning-ahead",
+];
+const MOM_GOALS: WellnessGoal[] = [
+  "reduce-stress", "better-sleep", "more-me-time", "connect-community", "healthier-habits", "stronger-boundaries", "mindful-parenting",
+];
+const NOT_MOM_GOALS: WellnessGoal[] = [
+  "reduce-stress", "better-sleep", "more-me-time", "connect-community", "healthier-habits", "stronger-boundaries", "prepare-motherhood",
+];
+
+/** Challenges offered for a life stage (no parenting-only options for someone who is not a mom). */
+export function challengesFor(stage?: LifeStage): PrimaryChallenge[] {
+  return isNotMom(stage) ? NOT_MOM_CHALLENGES : MOM_CHALLENGES;
+}
+
+/** Goals offered for a life stage. */
+export function goalsFor(stage?: LifeStage): WellnessGoal[] {
+  return isNotMom(stage) ? NOT_MOM_GOALS : MOM_GOALS;
+}
+
+const NOT_MOM_CHALLENGE_LABEL: Partial<Record<PrimaryChallenge, string>> = {
+  "career-balance": "Work + life feels impossible",
+};
+const NOT_MOM_GOAL_LABEL: Partial<Record<WellnessGoal, string>> = {
+  "connect-community": "Connect with others",
+};
+
+export function challengeLabel(c: PrimaryChallenge, stage?: LifeStage): string {
+  return (isNotMom(stage) && NOT_MOM_CHALLENGE_LABEL[c]) || CHALLENGE_META[c].label;
+}
+
+export function goalLabel(g: WellnessGoal, stage?: LifeStage): string {
+  return (isNotMom(stage) && NOT_MOM_GOAL_LABEL[g]) || GOAL_META[g].label;
+}
+
+/** Drop answers that do not exist for the chosen stage (she went back and changed her stage). */
+export function sanitizeForStage<T extends { lifeStage?: LifeStage; primaryChallenge?: PrimaryChallenge; goals: WellnessGoal[] }>(a: T): T {
+  const okC = challengesFor(a.lifeStage);
+  const okG = goalsFor(a.lifeStage);
+  return {
+    ...a,
+    primaryChallenge: a.primaryChallenge && okC.includes(a.primaryChallenge) ? a.primaryChallenge : undefined,
+    goals: a.goals.filter((g) => okG.includes(g)),
+  };
+}
 
 // Reusable action-item recipes. Keeping them in one place makes it easy to
 // tune tone/copy without touching the composition logic.
@@ -175,6 +239,9 @@ const CHALLENGE_ITEMS: Record<PrimaryChallenge, ActionItem[]> = {
   loneliness: [ITEMS.community, ITEMS.aiChat, ITEMS.journalPrompt, ITEMS.moodCheckin],
   "postpartum-recovery": [ITEMS.moodCheckin, ITEMS.sleepWinddown, ITEMS.breathe4min, ITEMS.journalPrompt],
   "co-parenting": [ITEMS.aiChat, ITEMS.journalPrompt, ITEMS.breathe4min, ITEMS.community],
+  burnout: [ITEMS.meditation10, ITEMS.sleepWinddown, ITEMS.breathe4min, ITEMS.journalPrompt],
+  "self-care": [ITEMS.moodCheckin, ITEMS.meditation10, ITEMS.gratitude, ITEMS.planWeek],
+  "planning-ahead": [ITEMS.journalPrompt, ITEMS.aiChat, ITEMS.community, ITEMS.gratitude],
 };
 
 const CHALLENGE_HEADLINE: Record<PrimaryChallenge, string> = {
@@ -186,6 +253,9 @@ const CHALLENGE_HEADLINE: Record<PrimaryChallenge, string> = {
   loneliness: "You're not doing this alone this week",
   "postpartum-recovery": "One recovery win a day",
   "co-parenting": "Steady ground, one step at a time",
+  burnout: "Refill the tank, gently",
+  "self-care": "A routine that is actually yours",
+  "planning-ahead": "Room to dream, room to prepare",
 };
 
 /** Short second-person phrasing of the challenge — reads naturally in copy. */
@@ -198,6 +268,18 @@ const CHALLENGE_PHRASE: Record<PrimaryChallenge, string> = {
   loneliness: "feeling less alone",
   "postpartum-recovery": "your postpartum recovery",
   "co-parenting": "steadier co-parenting",
+  burnout: "recovering from burnout",
+  "self-care": "building a self-care routine you will keep",
+  "planning-ahead": "preparing for motherhood at your own pace",
+};
+
+/** Copy that would otherwise assume kids. Only used for someone who is not (yet) a mom. */
+const NOT_MOM_HEADLINE: Partial<Record<PrimaryChallenge, string>> = {
+  "career-balance": "Small rituals, big room for you",
+  loneliness: "You're not alone this week",
+};
+const NOT_MOM_PHRASE: Partial<Record<PrimaryChallenge, string>> = {
+  "career-balance": "protecting your energy between work and the rest of life",
 };
 
 /** Compose a personalized 4-item plan from a challenge, filling from goals if needed. */
@@ -221,6 +303,7 @@ export function buildWeeklyPlan(p?: Personalization): WeeklyPlan {
 
   // Add up to 2 goal-driven items if they aren't already in the list.
   const goalItems: Record<WellnessGoal, ActionItem | undefined> = {
+    "prepare-motherhood": ITEMS.journalPrompt,
     "reduce-stress": ITEMS.breathe4min,
     "better-sleep": ITEMS.sleepWinddown,
     "more-me-time": ITEMS.meditation10,
@@ -234,9 +317,12 @@ export function buildWeeklyPlan(p?: Personalization): WeeklyPlan {
     if (it && !items.find((x) => x.id === it.id)) items.push(it);
   }
 
+  const notMom = isNotMom(p?.lifeStage);
+  const headline = (notMom && NOT_MOM_HEADLINE[challenge]) || CHALLENGE_HEADLINE[challenge];
+  const phrase = (notMom && NOT_MOM_PHRASE[challenge]) || CHALLENGE_PHRASE[challenge];
   return {
-    headline: CHALLENGE_HEADLINE[challenge],
-    intro: `Your plan focuses on ${CHALLENGE_PHRASE[challenge]}. Tap any card to start — most take under 5 minutes.`,
+    headline,
+    intro: `Your plan focuses on ${phrase}. Tap any card to start — most take under 5 minutes.`,
     items: items.slice(0, 5),
     focusChallenge: challenge,
     stageLabel,
@@ -245,7 +331,7 @@ export function buildWeeklyPlan(p?: Personalization): WeeklyPlan {
 
 /** Warm, contextual greeting for the dashboard hero. */
 export function personalizedGreeting(name: string, p?: Personalization): string {
-  const raw = (name || "Mama").split(" ")[0];
+  const raw = (name || fallbackName(p?.lifeStage)).split(" ")[0];
   const first = raw.charAt(0).toUpperCase() + raw.slice(1);
   if (!p?.primaryChallenge) return `Hi ${first}, glad you're here.`;
   const c = p.primaryChallenge;
@@ -258,6 +344,10 @@ export function personalizedGreeting(name: string, p?: Personalization): string 
     loneliness: `${first}, you belong here. There are moms who get it.`,
     "postpartum-recovery": `${first}, healing is not linear. Be kind to you.`,
     "co-parenting": `${first}, steady wins. One conversation at a time.`,
+    burnout: `${first}, running on empty is a signal, not a failure. Let's refill.`,
+    "self-care": `${first}, small rituals add up. Let's start with one.`,
+    "planning-ahead": `${first}, there's no rush. Let's make space for what's next.`,
   };
+  if (isNotMom(p.lifeStage) && c === "loneliness") return `${first}, you belong here. There are people who get it.`;
   return openings[c];
 }

@@ -1,13 +1,18 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Switch } from "react-native";
+import { showAlert } from "../../lib/dialog";
+import { openLink } from "../../lib/links";
+import { pageUrl, feedbackMailto, playStoreUrl } from "../../lib/links-core";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import Constants from "expo-constants";
 import {
   User,
   Bell,
   Moon,
   Shield,
   HelpCircle,
+  FileText,
   LogOut,
   ChevronRight,
   Crown,
@@ -33,7 +38,7 @@ export default function ProfileScreen() {
   const checkinCount = checkinEntries.length;
 
   const handleSignOut = () => {
-    Alert.alert("Sign out", "Are you sure you want to sign out?", [
+    showAlert("Sign out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Sign out",
@@ -46,9 +51,10 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const info = (title: string, message: string) => {
+  const appVersion = Constants.expoConfig?.version;
+  const go = async (url: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Alert.alert(title, message);
+    if (!(await openLink(url))) showAlert("Couldn't open the link", `Please visit ${url} in your browser.`);
   };
 
   type MenuItem = {
@@ -92,7 +98,7 @@ export default function ProfileScreen() {
             Haptics.selectionAsync();
             const result = await setNotificationsEnabled(v);
             if (v && !result) {
-              Alert.alert(
+              showAlert(
                 "Notifications blocked",
                 "Enable notifications for MomEase in your device settings to get daily check-in reminders."
               );
@@ -129,10 +135,11 @@ export default function ProfileScreen() {
     {
       title: "Support",
       items: [
-        { icon: HelpCircle, label: "Help Center", color: "#10B981", onPress: () => info("Help Center", "Browse FAQs and guides for getting the most out of MomEase.") },
-        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => info("Send Feedback", "We'd love to hear from you at hello@momease.app") },
-        { icon: Star, label: "Rate MomEase", color: "#F59E0B", onPress: () => info("Rate MomEase", "Enjoying the app? A 5-star review helps other moms find us!") },
-        { icon: Shield, label: "Privacy Policy", color: "#6B7280", onPress: () => info("Privacy", "Your data stays yours. We never sell personal information.") },
+        { icon: HelpCircle, label: "Help Center", color: "#10B981", onPress: () => go(pageUrl("help")) },
+        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => go(feedbackMailto(appVersion)) },
+        { icon: Star, label: "Rate MomEase", color: "#F59E0B", onPress: () => go(playStoreUrl) },
+        { icon: Shield, label: "Privacy Policy", color: "#6B7280", onPress: () => go(pageUrl("privacy")) },
+        { icon: FileText, label: "Terms of Service", color: "#6B7280", onPress: () => go(pageUrl("terms")) },
       ],
     },
   ];

@@ -378,6 +378,146 @@ test('a stale cloud copy of subscription state never overwrites what the server 
   assert.deepEqual(errors, []);
 });
 
+// ─────────────────────────── onboarding for different people ───────────────────────────
+
+const visibleText = (page) => page.evaluate(() => document.body.innerText);
+const MOM_ONLY = /mom guilt|co-parenting|present parent|other moms/i;
+
+async function startOnboarding(t, tag) {
+  const u = await makeUser(tag, { onboarded: false, name: 'Ada Test' });
+  const { page, errors } = await newPage(t);
+  await signInViaUI(page, u.email);
+  await page.waitForURL(/onboarding/, { timeout: 15000 });
+  await page.getByText("Let's personalize your space").click();
+  await page.getByText('Where are you in your journey?').waitFor();
+  return { u, page, errors };
+}
+
+test('onboarding: a woman who is not a mom (yet) gets no parenting questions, a neutral plan and dashboard, and it is saved', async (t) => {
+  const { u, page, errors } = await startOnboarding(t, 'notmom');
+  await page.getByText('Not a mom (yet)').click();
+  await page.getByText('Continue', { exact: true }).click();
+
+  // Challenges: general ones are offered, the parenting-only ones are not.
+  await page.getByText("What's the heaviest thing on your plate right now?").waitFor();
+  const challenges = await visibleText(page);
+  for (const wanted of ["burned out", 'self-care routine', 'planning ahead for motherhood', 'Work + life feels impossible']) {
+    assert.ok(challenges.toLowerCase().includes(wanted.toLowerCase()), `missing challenge: ${wanted}`);
+  }
+  assert.doesNotMatch(challenges, MOM_ONLY);
+  assert.doesNotMatch(challenges, /recovering physically/i);
+  await page.getByText(/burned out/i).click();
+  await page.getByText('Continue', { exact: true }).click();
+
+  // Goals
+  await page.getByText('What would feel like a win?').waitFor();
+  const goals = await visibleText(page);
+  assert.match(goals, /Prepare for motherhood/);
+  assert.match(goals, /Connect with others/);
+  assert.doesNotMatch(goals, MOM_ONLY);
+  await page.getByText('Reduce daily stress').click();
+  await page.getByText(/Continue with 1 goal/).click();
+
+  await page.getByText('Want a daily check-in reminder?').waitFor();
+  await page.getByText('Not right now').click();
+  await page.getByText('Almost there').click();
+
+  await page.getByText(/Your plan is ready/).waitFor({ timeout: 15000 });
+  const ready = await visibleText(page);
+  assert.match(ready, /Refill the tank/);
+  assert.doesNotMatch(ready, MOM_ONLY);
+
+  await page.getByText('Show me my dashboard').click();
+  await page.waitForURL(/home/, { timeout: 15000 });
+  await page.waitForTimeout(1500);
+  const home = await visibleText(page);
+  assert.doesNotMatch(home, /Baby Milestones|2,400\+ moms/);
+  assert.match(home, /Connect with others who get it/);
+  assert.doesNotMatch(home, MOM_ONLY);
+
+  // Saved on the account, so it follows her to other devices.
+  await page.waitForTimeout(1000);
+  const me = await j('/session', { token: u.token });
+  assert.equal(me.json.user.personalization?.lifeStage, 'not-a-mom');
+  assert.equal(me.json.user.personalization?.primaryChallenge, 'burnout');
+  assert.deepEqual(me.json.user.personalization?.goals, ['reduce-stress']);
+
+  // The companion greets her without assuming she is a working mom.
+  await page.goto(`${APP}/chat`);
+  await page.waitForTimeout(1500);
+  const chat = await visibleText(page);
+  assert.doesNotMatch(chat, /working mom/i);
+  assert.deepEqual(errors, []);
+});
+
+test('onboarding: a mom still sees the parenting questions and her dashboard keeps the baby milestones', async (t) => {
+  const { u, page, errors } = await startOnboarding(t, 'mom');
+  await page.getByText('Mom to a toddler (1–3yr)').click();
+  await page.getByText('Continue', { exact: true }).click();
+  const challenges = await visibleText(page);
+  assert.match(challenges, /Mom guilt eats at me/);
+  assert.match(challenges, /Co-parenting is stressful/);
+  assert.doesNotMatch(challenges, /burned out|planning ahead for motherhood/i);
+  await page.getByText(/Mom guilt eats at me/).click();
+  await page.getByText('Continue', { exact: true }).click();
+  const goals = await visibleText(page);
+  assert.match(goals, /Be a more present parent/);
+  assert.match(goals, /Connect with other moms/);
+  assert.doesNotMatch(goals, /Prepare for motherhood/);
+  await page.getByText(/Be a more present parent/).click();
+  await page.getByText(/Continue with 1 goal/).click();
+  await page.getByText('Not right now').click();
+  await page.getByText('Almost there').click();
+  await page.getByText(/Your plan is ready/).waitFor({ timeout: 15000 });
+  await page.getByText('Show me my dashboard').click();
+  await page.waitForURL(/home/, { timeout: 15000 });
+  await page.waitForTimeout(1500);
+  assert.match(await visibleText(page), /Baby Milestones/);
+  const me = await j('/session', { token: u.token });
+  assert.equal(me.json.user.personalization?.lifeStage, 'toddler');
+  assert.deepEqual(errors, []);
+});
+
+// ─────────────────────────── support links & confirmations ───────────────────────────
+
+test('profile → Support: every link opens the right page, and Sign Out asks first (react-native-web has no Alert)', async (t) => {
+  const u = await makeUser('support');
+  const { page, errors } = await newPage(t);
+  await page.addInitScript(() => { window.__opened = []; window.open = (url, target) => { window.__opened.push([String(url), target]); return null; }; });
+  await signInViaUI(page, u.email);
+  await page.waitForURL(/home/, { timeout: 15000 });
+  await page.goto(`${APP}/profile`);
+  await page.getByText('Help Center').waitFor({ timeout: 15000 });
+
+  const expected = [
+    ['Help Center', /^https:\/\/mease\.mom\/help\.html$/],
+    ['Send Feedback', /^mailto:support@momease\.app\?subject=MomEase%20feedback/],
+    ['Rate MomEase', /^https:\/\/play\.google\.com\/store\/apps\/details\?id=com\.momease\.app$/],
+    ['Privacy Policy', /^https:\/\/mease\.mom\/privacy\.html$/],
+    ['Terms of Service', /^https:\/\/mease\.mom\/terms\.html$/],
+  ];
+  for (const [label, want] of expected) {
+    const before = await page.evaluate(() => window.__opened.length);
+    await page.getByText(label, { exact: true }).click();
+    await page.waitForFunction((n) => window.__opened.length > n, before, { timeout: 5000 });
+    const [url] = await page.evaluate(() => window.__opened.at(-1));
+    assert.match(url, want, `${label} opened ${url}`);
+  }
+
+  // Declining keeps her signed in; accepting signs her out.
+  const dialogs = [];
+  page.once('dialog', (d) => { dialogs.push(d.message()); d.dismiss(); });
+  await page.getByText('Sign Out', { exact: true }).click();
+  await page.waitForTimeout(800);
+  assert.match(dialogs[0] ?? '', /Are you sure you want to sign out/);
+  assert.ok(await token(page), 'still signed in after declining');
+  page.once('dialog', (d) => d.accept());
+  await page.getByText('Sign Out', { exact: true }).click();
+  await page.waitForURL(/sign-in/, { timeout: 10000 });
+  assert.equal(await token(page), null, 'token cleared on sign out');
+  assert.deepEqual(errors, []);
+});
+
 // ─────────────────────────── every screen renders ───────────────────────────
 
 const ROUTES = ['/home', '/chat', '/sounds', '/tasks', '/profile', '/breathe', '/checkin', '/community', '/friends', '/messages',

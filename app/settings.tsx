@@ -4,8 +4,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Alert,
-} from "react-native";
+  } from "react-native";
+import { showAlert } from "../lib/dialog";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -56,7 +56,7 @@ export default function SettingsScreen() {
       // Confirm the biometric works before turning it on.
       const ok = await authenticateBiometric("Confirm to enable biometric unlock");
       if (!ok) {
-        Alert.alert("Couldn't verify", "We couldn't confirm your biometrics. Please try again.");
+        showAlert("Couldn't verify", "We couldn't confirm your biometrics. Please try again.");
         return;
       }
       await setBiometricEnabled(true);
@@ -104,7 +104,7 @@ export default function SettingsScreen() {
   const { user, signOut } = useAuthStore();
 
   const handleDeleteAccount = () => {
-    Alert.alert(
+    showAlert(
       "Delete account",
       "This permanently deletes your account and all your data — journal, mood history, tasks, messages, and profile. This can't be undone.",
       [
@@ -157,7 +157,7 @@ export default function SettingsScreen() {
   };
 
   const handleClearLocal = () => {
-    Alert.alert(
+    showAlert(
       "Clear cached data",
       "This clears all locally cached data — sign-in, mood check-ins, tasks, journal entries, notifications, community drafts. You'll be signed out. Continue?",
       [
@@ -208,7 +208,7 @@ export default function SettingsScreen() {
                 Haptics.selectionAsync();
                 const ok = await setNotificationsEnabled(v);
                 if (v && !ok) {
-                  Alert.alert(
+                  showAlert(
                     "Notifications blocked",
                     "Enable notifications for MomEase in your device settings to receive reminders."
                   );

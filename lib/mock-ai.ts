@@ -69,7 +69,11 @@ Validate the strain working parents face. Suggest communication tips and seeking
 ## Your Warmth Signature
 Your care comes through in how you listen. When a mom says "I'm failing," you respond with: "You're not failing — you're fighting. And that fight? It means everything."`;
 
-export async function sendAIMessage(userMessage: string, context?: string): Promise<AIResponse> {
+/** Appended for someone who is not (yet) a mom, so the companion never assumes kids or "mom guilt". */
+export const NOT_A_MOM_NOTE =
+  "The person you are talking with is NOT a mother (yet). Do not assume she has children, a partner or a family, and do not mention mom guilt, co-parenting or being a working mom. Support her as a woman looking after her own wellbeing (stress, burnout, sleep, work-life balance, loneliness, self-care, and planning ahead if she brings up motherhood).";
+
+export async function sendAIMessage(userMessage: string, context?: string, opts?: { notMom?: boolean }): Promise<AIResponse> {
   try {
     const response = await fetch(A0_API_URL, {
       method: "POST",
@@ -77,6 +81,7 @@ export async function sendAIMessage(userMessage: string, context?: string): Prom
       body: JSON.stringify({
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
+          ...(opts?.notMom ? [{ role: "system", content: NOT_A_MOM_NOTE }] : []),
           ...(context ? [{ role: "system", content: `Context: ${context}` }] : []),
           { role: "user", content: userMessage },
         ],
