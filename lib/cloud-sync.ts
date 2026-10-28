@@ -21,7 +21,9 @@ const targets = new Map<string, SyncTarget>();
 let currentUserId: string | null = null;
 
 // The auth blob holds the signed-in user record itself — syncing it is circular.
-const SKIP_KEYS = new Set(["momease-auth"]);
+// The subscription blob is a cache of what GET /session says (Stripe is the source
+// of truth): a stale cloud copy pulled after a fresh status would flip Premium back to Free.
+const SKIP_KEYS = new Set(["momease-auth", "momease-subscription"]);
 
 export function registerSyncTarget(target: SyncTarget) {
   if (SKIP_KEYS.has(target.key)) return;
@@ -35,7 +37,7 @@ export function isCloudSyncActive(): boolean {
 
 /** Push one store's snapshot to the cloud. Safe to call when inactive. */
 export async function pushState(key: string, data: Record<string, unknown>): Promise<void> {
-  if (!getToken() || !currentUserId) return;
+  if (!getToken() || !currentUserId || SKIP_KEYS.has(key)) return;
   try {
     await api.put(`/state/${encodeURIComponent(key)}`, data ?? {});
   } catch (e) {
