@@ -12,11 +12,21 @@ let currentToken: string | null = null;
 let hydrated = false;
 let unauthorizedHandler: (() => void) | null = null;
 
-export async function loadToken(): Promise<string | null> {
-  if (hydrated) return currentToken;
-  hydrated = true;
-  currentToken = await AsyncStorage.getItem(TOKEN_KEY);
-  return currentToken;
+let loading: Promise<string | null> | null = null;
+
+export function loadToken(): Promise<string | null> {
+  if (hydrated) return Promise.resolve(currentToken);
+  // One shared read: a second caller arriving mid-read must wait for it, not see null.
+  loading ??= AsyncStorage.getItem(TOKEN_KEY)
+    .then((t) => {
+      if (!hydrated) currentToken = t; // setToken() may have run meanwhile; it wins
+      hydrated = true;
+      return currentToken;
+    })
+    .finally(() => {
+      loading = null;
+    });
+  return loading;
 }
 
 export function getToken(): string | null {

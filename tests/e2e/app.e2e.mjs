@@ -104,7 +104,10 @@ async function newPage(t) {
   const page = await ctx.newPage();
   const errors = [];
   page.net = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
+  page.on('pageerror', (e) => { errors.push(String(e)); page.net.push(`${((Date.now() - T0) / 1000).toFixed(1)}s PAGEERROR ${String(e).slice(0, 160)}`); });
+  page.on('console', (m) => { if (['error', 'warning'].includes(m.type()) && !/notifications|useNativeDriver|form/.test(m.text())) page.net.push(`${((Date.now() - T0) / 1000).toFixed(1)}s console.${m.type()} ${m.text().slice(0, 160)}`); });
+  page.on('framenavigated', (f) => { if (f === page.mainFrame()) page.net.push(`${((Date.now() - T0) / 1000).toFixed(1)}s NAVIGATED ${f.url().replace(APP, '')}`); });
+  page.on('load', () => page.net.push(`${((Date.now() - T0) / 1000).toFixed(1)}s LOAD`));
   page.on('response', (r) => { if (r.url().startsWith(API)) page.net.push(`${((Date.now() - T0) / 1000).toFixed(1)}s ${r.status()} ${r.request().method()} ${r.url().replace(API, '')}`); });
   page.on('requestfailed', (r) => { if (r.url().startsWith(API)) page.net.push(`${((Date.now() - T0) / 1000).toFixed(1)}s FAILED ${r.request?.().method?.() ?? r.method()} ${r.url().replace(API, '')} ${r.failure()?.errorText}`); });
   if (process.env.E2E_CPU_THROTTLE) { // mimic slow CI runners to surface timing races
