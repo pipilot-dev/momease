@@ -4,7 +4,7 @@
 //
 //   1. EXPO_PUBLIC_API_BASE=http://localhost:8787 npx expo export --platform web --output-dir dist-e2e
 //   2. node --test tests/e2e/
-import { test, before, after } from 'node:test';
+import { test as nodeTest, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -25,6 +25,7 @@ const ART = join(ROOT, 'tests/e2e/.artifacts');
 let worker, server, browser, fakeStripe;
 const subs = new Map(); // fake Stripe: subscription id -> user id
 let seq = 0;
+const T0 = Date.now();
 const email = (tag) => `${tag}-${Date.now()}-${seq++}@e2e.test`;
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.css': 'text/css', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.mp3': 'audio/mpeg', '.wav': 'audio/wav' };
@@ -78,18 +79,40 @@ async function stripeSubscribes(userId, status = 'trialing') {
   assert.equal(r.status, 200, `webhook rejected: ${await r.text()}`);
 }
 
+function test(name, fn) {
+  return nodeTest(name, async (t) => {
+    live.length = 0;
+    try { await fn(t); } catch (e) {
+      for (const p of live) {
+        try {
+          const text = (await p.evaluate(() => document.body.innerText)).replace(/\n+/g, ' | ').slice(0, 700);
+          const ls = await p.evaluate(() => Object.keys(localStorage));
+          console.log(`--- DIAGNOSTICS for "${name}"\n url: ${p.url()}\n localStorage: ${ls.join(', ')}\n visible: ${text}\n api:\n  ${p.net.join('\n  ')}`);
+          mkdirSync(ART, { recursive: true });
+          await p.screenshot({ path: join(ART, `${name.replace(/\W+/g, '_').slice(0, 60)}.png`) });
+        } catch { /* page already closed */ }
+      }
+      throw e;
+    }
+  });
+}
+
+const live = []; // pages of the scenario currently running (for failure diagnostics)
+
 async function newPage(t) {
   const ctx = await browser.newContext({ viewport: { width: 420, height: 860 } });
   const page = await ctx.newPage();
   const errors = [];
+  page.net = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  t?.after?.(async () => {
-    if (t.passed === false) {
-      mkdirSync(ART, { recursive: true });
-      await page.screenshot({ path: join(ART, `${t.name.replace(/\W+/g, '_')}.png`) }).catch(() => {});
-    }
-    await ctx.close();
-  });
+  page.on('response', (r) => { if (r.url().startsWith(API)) page.net.push(`${((Date.now() - T0) / 1000).toFixed(1)}s ${r.status()} ${r.request().method()} ${r.url().replace(API, '')}`); });
+  page.on('requestfailed', (r) => { if (r.url().startsWith(API)) page.net.push(`${((Date.now() - T0) / 1000).toFixed(1)}s FAILED ${r.request?.().method?.() ?? r.method()} ${r.url().replace(API, '')} ${r.failure()?.errorText}`); });
+  if (process.env.E2E_CPU_THROTTLE) { // mimic slow CI runners to surface timing races
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.E2E_CPU_THROTTLE) });
+  }
+  live.push(page);
+  t?.after?.(async () => { await ctx.close(); });
   return { page, ctx, errors };
 }
 
@@ -328,6 +351,27 @@ test('upgrade: checkout request carries the session and NO price or user id; pre
   await stripeSubscribes(u.id);
   await page.reload();
   await page.getByText(/7-day free trial/).waitFor({ timeout: 20000 });
+  assert.deepEqual(errors, []);
+});
+
+test('a stale cloud copy of subscription state never overwrites what the server says (slow /state race)', async (t) => {
+  const u = await makeUser('stale');
+  const { page, errors } = await newPage(t);
+  await signInViaUI(page, u.email);
+  await page.waitForURL(/home/, { timeout: 15000 });
+  // Visit Upgrade while free, so a "free" snapshot of the subscription gets synced to the cloud.
+  await Promise.all([page.waitForResponse((r) => r.url().endsWith('/session') && r.ok()), page.goto(`${APP}/upgrade`)]);
+  await page.waitForTimeout(2000);
+  await stripeSubscribes(u.id);
+  // On the next start, make the cloud-state pull arrive AFTER the session check.
+  await page.route('**/state', async (route) => {
+    if (route.request().method() === 'GET') await new Promise((r) => setTimeout(r, 2500));
+    await route.continue();
+  });
+  await page.reload();
+  await page.getByText(/7-day free trial/).waitFor({ timeout: 20000 });
+  await page.waitForTimeout(5000); // the late, stale cloud pull has landed by now
+  assert.ok(await page.getByText(/7-day free trial/).isVisible(), 'premium must survive the late cloud pull');
   assert.deepEqual(errors, []);
 });
 
