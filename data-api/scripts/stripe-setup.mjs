@@ -13,7 +13,7 @@
 // Safe to re-run: products/prices/portal configs are reused; a webhook that already exists
 // can't have its secret re-read from Stripe, so pass --rotate-webhook to recreate it.
 //
-// Options: --api <worker base url>  --amount 799  --currency usd  --interval month
+// Options: --api <worker base url>  --amount 500  --currency usd  --interval month
 //          --name "MomEase Premium"  --trial-days is fixed in the Worker (7)  --print (don't set secrets)
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -24,7 +24,7 @@ const KEY = process.env.STRIPE_SECRET_KEY;
 if (!KEY?.startsWith('sk_') && !KEY?.startsWith('rk_')) { console.error('Set STRIPE_SECRET_KEY (sk_live_… or sk_test_…)'); process.exit(1); }
 
 const API = arg('api', 'https://momease-data-api.pipilot-rpc.workers.dev');
-const amount = arg('amount', '799'), currency = arg('currency', 'usd'), interval = arg('interval', 'month');
+const amount = arg('amount', '500'), currency = arg('currency', 'usd'), interval = arg('interval', 'month');
 const name = arg('name', 'MomEase Premium');
 const dry = flag('dry-run');
 
@@ -43,7 +43,7 @@ const acct = await stripe('account');
 const tag = createHash('sha256').update(acct.id + KEY.slice(0, 12)).digest('hex').slice(0, 10); // idempotency scope per account
 console.log(`Stripe account: ${acct.id} (${acct.business_profile?.name ?? 'unnamed'}) — ${KEY.startsWith('sk_live') ? 'LIVE' : 'test'} mode`);
 
-const lookup = `momease_premium_${interval}ly_${amount}`; // month -> momease_premium_monthly_799
+const lookup = `momease_premium_${interval}ly_${amount}`; // month -> momease_premium_monthly_500
 let price = (await stripe(`prices?lookup_keys[]=${lookup}&active=true`)).data[0];
 let product = price ? { id: price.product } : (await stripe('products?active=true&limit=100')).data.find((p) => p.metadata?.app === 'momease');
 const hook = (await stripe('webhook_endpoints?limit=100')).data.find((w) => w.url === `${API}/billing/webhook`);
@@ -52,7 +52,7 @@ console.log({ product: product?.id ?? '(will create)', price: price?.id ?? '(wil
 if (dry) process.exit(0);
 
 product ??= await stripe('products', { name, 'metadata[app]': 'momease' }, `momease-product-${tag}`);
-price ??= await stripe('prices', { product: product.id, currency, unit_amount: amount, 'recurring[interval]': interval, lookup_key: lookup, nickname: `${name} ${interval}ly`, 'metadata[app]': 'momease' }, `momease-price-${tag}`);
+price ??= await stripe('prices', { product: product.id, currency, unit_amount: amount, 'recurring[interval]': interval, lookup_key: lookup, nickname: `${name} ${interval}ly`, 'metadata[app]': 'momease' }, `momease-price-${tag}-${amount}-${currency}-${interval}`);
 
 const events = ['checkout.session.completed', 'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted', 'invoice.payment_failed', 'invoice.paid'];
 let whsec;
