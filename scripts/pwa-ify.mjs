@@ -12,7 +12,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 
-const DIST = 'dist';
+const DIST = process.env.PWA_DIST || 'dist'; // PWA_DIST lets tests run this against a scratch folder
 const SRC_ICON = 'assets/icon.png';
 
 async function main() {
@@ -63,6 +63,12 @@ async function main() {
   await writeFile(path.join(DIST, 'sw.js'), sw);
   console.log('  ✓ sw.js');
 
+  // Cloudflare Pages headers: the files that decide what a browser caches must always be revalidated,
+  // otherwise a release can sit behind a stale copy until the user clears site data.
+  const headers = ['/sw.js', '/index.html', '/manifest.webmanifest'].map((p) => `${p}\n  Cache-Control: no-cache`).join('\n\n');
+  await writeFile(path.join(DIST, '_headers'), `${headers}\n`);
+  console.log('  ✓ _headers');
+
   // Inject PWA tags + SW registration into index.html
   const indexPath = path.join(DIST, 'index.html');
   let html = await readFile(indexPath, 'utf8');
@@ -89,8 +95,20 @@ async function main() {
     <meta name="twitter:card" content="summary_large_image" />
     <script>
       if ('serviceWorker' in navigator) {
+        // A new release swaps the service worker (skipWaiting + claim); reload once so the page
+        // runs the new code without the user clearing anything. Not on first install.
+        var hadController = !!navigator.serviceWorker.controller;
+        var reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (!hadController || reloaded) return;
+          reloaded = true;
+          window.location.reload();
+        });
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('SW registration failed', e));
+          navigator.serviceWorker
+            .register('/sw.js', { updateViaCache: 'none' })
+            .then((reg) => reg.update())
+            .catch((e) => console.warn('SW registration failed', e));
         });
       }
     </script>

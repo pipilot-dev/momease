@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { webAlert } from "../../lib/dialog-core";
+import { normalizeDialog } from "../../lib/dialog-core";
+import { useDialogStore } from "../../lib/dialog-store";
 import { ANDROID_PACKAGE, SITE, SITE_PAGES, SUPPORT_EMAIL, FEEDBACK_FORM_URL, feedbackFormUrl, pageUrl, playStoreUrl } from "../../lib/links-core";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -57,52 +58,62 @@ describe("support links", () => {
   });
 });
 
-describe("browser alerts (react-native-web's Alert.alert does nothing)", () => {
-  const dialogs = (confirmAnswer = true) => ({ alert: vi.fn(), confirm: vi.fn(() => confirmAnswer) });
+describe("in-app dialogs (react-native-web has no Alert and the browser's confirm() can be blocked)", () => {
+  const reset = () => useDialogStore.setState({ current: null });
 
-  it("a confirmation runs the destructive action when accepted", () => {
-    const win = dialogs(true);
+  it("always offers a button, and puts cancel first", () => {
+    expect(normalizeDialog("Hi").buttons).toEqual([{ text: "OK" }]);
+    expect(normalizeDialog("Hi", "x", []).buttons).toEqual([{ text: "OK" }]);
+    const d = normalizeDialog("Sign out", "Sure?", [
+      { text: "Sign out", style: "destructive" },
+      { text: "Cancel", style: "cancel" },
+    ]);
+    expect(d.buttons.map((b) => b.text)).toEqual(["Cancel", "Sign out"]);
+    expect(d.title).toBe("Sign out");
+    expect(d.message).toBe("Sure?");
+  });
+
+  it("choosing a button closes the dialog and runs only that button's action", () => {
+    reset();
     const out = vi.fn();
     const cancel = vi.fn();
-    webAlert(win, "Sign out", "Are you sure?", [
+    useDialogStore.getState().open("Sign out", "Are you sure?", [
       { text: "Cancel", style: "cancel", onPress: cancel },
       { text: "Sign out", style: "destructive", onPress: out },
     ]);
-    expect(win.confirm).toHaveBeenCalledWith("Sign out\n\nAre you sure?");
+    const shown = useDialogStore.getState().current!;
+    expect(shown.title).toBe("Sign out");
+    useDialogStore.getState().choose(shown.buttons[1]);
+    expect(useDialogStore.getState().current).toBeNull();
     expect(out).toHaveBeenCalledOnce();
     expect(cancel).not.toHaveBeenCalled();
   });
 
-  it("a confirmation runs only cancel when declined", () => {
-    const win = dialogs(false);
+  it("dismissing (tap outside / back) acts like Cancel", () => {
+    reset();
     const out = vi.fn();
     const cancel = vi.fn();
-    webAlert(win, "Delete", undefined, [{ text: "Cancel", style: "cancel", onPress: cancel }, { text: "Delete", style: "destructive", onPress: out }]);
-    expect(out).not.toHaveBeenCalled();
+    useDialogStore.getState().open("Delete", undefined, [{ text: "Delete", style: "destructive", onPress: out }, { text: "Cancel", style: "cancel", onPress: cancel }]);
+    useDialogStore.getState().dismiss();
+    expect(useDialogStore.getState().current).toBeNull();
     expect(cancel).toHaveBeenCalledOnce();
+    expect(out).not.toHaveBeenCalled();
   });
 
-  it("a plain message is shown and its single button still runs", () => {
-    const win = dialogs();
-    const ok = vi.fn();
-    webAlert(win, "Saved", "All good", [{ text: "OK", onPress: ok }]);
-    expect(win.alert).toHaveBeenCalledWith("Saved\n\nAll good");
-    expect(win.confirm).not.toHaveBeenCalled();
-    expect(ok).toHaveBeenCalledOnce();
+  it("dismissing a plain message just closes it", () => {
+    reset();
+    useDialogStore.getState().open("Saved");
+    useDialogStore.getState().dismiss();
+    expect(useDialogStore.getState().current).toBeNull();
   });
 
-  it("works with no buttons and no message", () => {
-    const win = dialogs();
-    webAlert(win, "Heads up");
-    expect(win.alert).toHaveBeenCalledWith("Heads up");
-  });
-
-  it("with several non-cancel buttons, accepting runs the last (primary) one", () => {
-    const win = dialogs(true);
-    const a = vi.fn();
-    const b = vi.fn();
-    webAlert(win, "Pick", "x", [{ text: "A", onPress: a }, { text: "B", onPress: b }, { text: "Cancel", style: "cancel" }]);
-    expect(b).toHaveBeenCalledOnce();
-    expect(a).not.toHaveBeenCalled();
+  it("choosing twice (double tap) runs the action once", () => {
+    reset();
+    const out = vi.fn();
+    useDialogStore.getState().open("Sign out", undefined, [{ text: "Sign out", onPress: out }]);
+    const b = useDialogStore.getState().current!.buttons[0];
+    useDialogStore.getState().choose(b);
+    useDialogStore.getState().choose(b);
+    expect(out).toHaveBeenCalledOnce();
   });
 });

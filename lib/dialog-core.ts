@@ -1,5 +1,6 @@
-// Browser version of Alert.alert. react-native-web ships Alert.alert as an empty function, so on
-// app.mease.mom every confirmation (sign out, delete account, journal) silently did nothing.
+// Shared types and rules for in-app dialogs. react-native-web ships Alert.alert as an empty function and
+// the browser's own confirm() can be blocked (in-app browsers, installed web apps, "prevent more dialogs"),
+// which made Sign out and other confirmations do nothing, so the web build shows its own dialog.
 
 export interface AlertButton {
   text?: string;
@@ -7,32 +8,16 @@ export interface AlertButton {
   onPress?: () => void | Promise<void>;
 }
 
-export interface BrowserDialogs {
-  alert: (message: string) => void;
-  confirm: (message: string) => boolean;
+export interface DialogSpec {
+  title: string;
+  message?: string;
+  buttons: AlertButton[];
 }
 
-export function webAlert(win: BrowserDialogs, title: string, message?: string, buttons?: AlertButton[]): void {
-  const text = message ? `${title}\n\n${message}` : title;
-  const list = buttons ?? [];
-  const cancel = list.find((b) => b.style === "cancel");
-  const actions = list.filter((b) => b !== cancel);
-
-  if (actions.length === 0 && !cancel) {
-    win.alert(text);
-    return;
-  }
-  if (actions.length === 0) {
-    win.alert(text);
-    void cancel?.onPress?.();
-    return;
-  }
-  if (!cancel && actions.length === 1) {
-    win.alert(text);
-    void actions[0].onPress?.();
-    return;
-  }
-  // confirm() has exactly two outcomes: run the (last) action, or the cancel button.
-  if (win.confirm(text)) void actions[actions.length - 1].onPress?.();
-  else void cancel?.onPress?.();
+/** Always offer at least an OK button, and put the cancel button first (same order as the native alert). */
+export function normalizeDialog(title: string, message?: string, buttons?: AlertButton[]): DialogSpec {
+  const list = buttons && buttons.length ? buttons : [{ text: "OK" }];
+  const cancel = list.filter((b) => b.style === "cancel");
+  const rest = list.filter((b) => b.style !== "cancel");
+  return { title, message, buttons: [...cancel, ...rest] };
 }
