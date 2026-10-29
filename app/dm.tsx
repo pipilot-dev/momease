@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput, Image,
-  KeyboardAvoidingView, Platform, Modal, Alert,
-} from "react-native";
+  KeyboardAvoidingView, Platform, Modal, } from "react-native";
+import { showAlert } from "../lib/dialog";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -39,7 +39,7 @@ export default function DMScreen() {
 
   const confirmBlock = () => {
     setShowActions(false);
-    Alert.alert(
+    showAlert(
       `Block ${partnerName}?`,
       "They won't be able to message you, and you won't see each other in search or messages.",
       [

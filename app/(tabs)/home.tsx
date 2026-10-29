@@ -40,7 +40,7 @@ import { getRandomMantra, getTimeOfDay, mockMeditations } from "../../lib/mock-d
 import { getAIGreeting } from "../../lib/mock-ai";
 import { animation } from "../../lib/theme";
 import { useTheme } from "../../lib/theme-context";
-import { buildWeeklyPlan, personalizedGreeting } from "../../lib/personalization";
+import { buildWeeklyPlan, personalizedGreeting, isNotMom, fallbackName } from "../../lib/personalization";
 import type { ActionItem } from "../../lib/personalization";
 
 const { width } = Dimensions.get("window");
@@ -71,7 +71,8 @@ export default function HomeScreen() {
 
   // Some auth flows drop the display name (email-only signup gives "sarah");
   // capitalize so headings read as a proper first name.
-  const rawFirst = user?.name?.split(" ")[0] || "Mama";
+  const notMom = isNotMom(user?.personalization?.lifeStage);
+  const rawFirst = user?.name?.split(" ")[0] || fallbackName(user?.personalization?.lifeStage);
   const firstName = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1);
   const timeOfDay = getTimeOfDay();
   const TimeIcon = timeOfDay === "morning" ? Sunrise : timeOfDay === "afternoon" ? Sun : Moon;
@@ -459,7 +460,9 @@ export default function HomeScreen() {
           <Animated.View style={{ opacity: actionsAnim, marginBottom: 24 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               {[
-                { icon: Baby, label: "Milestones", color: colors.primary[400], route: "/milestones" },
+                notMom
+                  ? { icon: BookOpen, label: "Journal", color: colors.primary[400], route: "/journal" }
+                  : { icon: Baby, label: "Milestones", color: colors.primary[400], route: "/milestones" },
                 { icon: Moon, label: "Sleep", color: colors.accent[400], route: "/sleep" },
                 { icon: UtensilsCrossed, label: "Meals", color: "#FBBF24", route: "/meals" },
                 { icon: Users, label: "Community", color: colors.secondary[500], route: "/community" },
@@ -649,7 +652,8 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
 
-          {/* Baby Milestones Card */}
+          {/* Baby Milestones Card — only for moms */}
+          {!notMom && (
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => {
@@ -687,6 +691,7 @@ export default function HomeScreen() {
               </View>
             </LinearGradient>
           </TouchableOpacity>
+          )}
 
           {/* Community Peek */}
           <TouchableOpacity
@@ -719,7 +724,7 @@ export default function HomeScreen() {
                     Join the Community
                   </Text>
                   <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, color: colors.text.secondary }}>
-                    Connect with 2,400+ moms who get it
+                    {notMom ? "Connect with others who get it" : "Connect with 2,400+ moms who get it"}
                   </Text>
                 </View>
                 <ChevronRight size={20} color={colors.secondary[500]} />

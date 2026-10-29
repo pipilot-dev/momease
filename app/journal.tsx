@@ -10,9 +10,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  Alert,
   Image,
 } from "react-native";
+import { showAlert } from "../lib/dialog";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -162,7 +162,7 @@ export default function JournalScreen() {
 
   const handleSaveEntry = async () => {
     if (!newTitle.trim() || !newContent.trim()) {
-      Alert.alert("Missing Information", "Please provide both a title and content for your entry.");
+      showAlert("Missing Information", "Please provide both a title and content for your entry.");
       return;
     }
 
@@ -207,13 +207,13 @@ export default function JournalScreen() {
       setSelectedTags([]);
       setCurrentPrompt(null);
     } catch (error) {
-      Alert.alert("Error", "Failed to save your journal entry. Please try again.");
+      showAlert("Error", "Failed to save your journal entry. Please try again.");
     }
   };
 
   const handleDiscardEntry = () => {
     if (newTitle.trim() || newContent.trim()) {
-      Alert.alert(
+      showAlert(
         "Discard Entry?",
         "Are you sure you want to discard this entry? Your changes will be lost.",
         [
@@ -258,7 +258,7 @@ export default function JournalScreen() {
 
   const handleDeleteEntry = () => {
     if (!selectedEntry) return;
-    Alert.alert(
+    showAlert(
       "Delete Entry?",
       "Are you sure you want to delete this journal entry? This cannot be undone.",
       [
@@ -273,7 +273,7 @@ export default function JournalScreen() {
               setShowDetailModal(false);
               setSelectedEntry(null);
             } catch (error) {
-              Alert.alert("Error", "Failed to delete entry. Please try again.");
+              showAlert("Error", "Failed to delete entry. Please try again.");
             }
           },
         },
@@ -286,7 +286,7 @@ export default function JournalScreen() {
     try {
       await toggleFavorite(entryId);
     } catch (error) {
-      Alert.alert("Error", "Failed to toggle favorite. Please try again.");
+      showAlert("Error", "Failed to toggle favorite. Please try again.");
     }
   };
 

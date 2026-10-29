@@ -36,12 +36,17 @@ import {
   Check,
 } from "lucide-react-native";
 import { useAuthStore } from "../lib/stores/auth-store";
+import { useChatStore } from "../lib/stores/chat-store";
 import { useTheme } from "../lib/theme-context";
 import {
   LIFE_STAGE_META,
-  CHALLENGE_META,
-  GOAL_META,
   buildWeeklyPlan,
+  challengesFor,
+  goalsFor,
+  challengeLabel,
+  goalLabel,
+  isNotMom,
+  sanitizeForStage,
 } from "../lib/personalization";
 import type {
   LifeStage,
@@ -60,6 +65,9 @@ const CHALLENGE_ICON: Record<PrimaryChallenge, any> = {
   loneliness: Users,
   "postpartum-recovery": Sparkles,
   "co-parenting": MessageCircle,
+  burnout: Waves,
+  "self-care": Sparkles,
+  "planning-ahead": Heart,
 };
 
 const GOAL_ICON: Record<WellnessGoal, any> = {
@@ -70,28 +78,10 @@ const GOAL_ICON: Record<WellnessGoal, any> = {
   "healthier-habits": Sun,
   "stronger-boundaries": Shield,
   "mindful-parenting": Sparkles,
+  "prepare-motherhood": Heart,
 };
 
-const STAGES: LifeStage[] = ["trying", "pregnant", "postpartum", "baby", "toddler", "school-age", "teen"];
-const CHALLENGES: PrimaryChallenge[] = [
-  "overwhelm",
-  "sleep",
-  "mental-load",
-  "guilt",
-  "career-balance",
-  "loneliness",
-  "postpartum-recovery",
-  "co-parenting",
-];
-const GOALS: WellnessGoal[] = [
-  "reduce-stress",
-  "better-sleep",
-  "more-me-time",
-  "connect-community",
-  "healthier-habits",
-  "stronger-boundaries",
-  "mindful-parenting",
-];
+const STAGES: LifeStage[] = ["trying", "pregnant", "postpartum", "baby", "toddler", "school-age", "teen", "not-a-mom"];
 
 type Answers = {
   lifeStage?: LifeStage;
@@ -157,6 +147,7 @@ export default function Onboarding() {
       updatedAt: new Date().toISOString(),
     };
     updateUser({ personalization });
+    useChatStore.getState().adaptWelcome(isNotMom(answers.lifeStage));
     setStep(6);
   };
 
@@ -250,7 +241,7 @@ export default function Onboarding() {
               value={answers.lifeStage}
               onChange={(v) => {
                 Haptics.selectionAsync().catch(() => {});
-                setAnswers((a) => ({ ...a, lifeStage: v }));
+                setAnswers((a) => sanitizeForStage({ ...a, lifeStage: v }));
               }}
               theme={theme}
               isDark={isDark}
@@ -258,6 +249,7 @@ export default function Onboarding() {
           )}
           {step === 2 && (
             <ChallengeStep
+              stage={answers.lifeStage}
               value={answers.primaryChallenge}
               onChange={(v) => {
                 Haptics.selectionAsync().catch(() => {});
@@ -268,7 +260,7 @@ export default function Onboarding() {
             />
           )}
           {step === 3 && (
-            <GoalsStep goals={answers.goals} onToggle={toggleGoal} theme={theme} isDark={isDark} />
+            <GoalsStep stage={answers.lifeStage} goals={answers.goals} onToggle={toggleGoal} theme={theme} isDark={isDark} />
           )}
           {step === 4 && (
             <NotificationsStep
@@ -281,7 +273,7 @@ export default function Onboarding() {
               isDark={isDark}
             />
           )}
-          {step === 5 && <GeneratingStep genAnim={genAnim} theme={theme} />}
+          {step === 5 && <GeneratingStep genAnim={genAnim} theme={theme} notMom={isNotMom(answers.lifeStage)} />}
           {step === 6 && <ReadyStep answers={answers} theme={theme} isDark={isDark} name={user?.name ?? "Mama"} />}
         </Animated.View>
       </ScrollView>
@@ -441,11 +433,11 @@ function LifeStageStep({ value, onChange, theme, isDark }: { value?: LifeStage; 
   );
 }
 
-function ChallengeStep({ value, onChange, theme, isDark }: { value?: PrimaryChallenge; onChange: (v: PrimaryChallenge) => void; theme: any; isDark: boolean }) {
+function ChallengeStep({ stage, value, onChange, theme, isDark }: { stage?: LifeStage; value?: PrimaryChallenge; onChange: (v: PrimaryChallenge) => void; theme: any; isDark: boolean }) {
   return (
     <View>
       <StepHeader eyebrow="STEP 2 OF 4" title="What's the heaviest thing on your plate right now?" subtitle="Just pick the one that hits hardest today. You can change it any time." theme={theme} />
-      {CHALLENGES.map((c) => {
+      {challengesFor(stage).map((c) => {
         const selected = value === c;
         const Icon = CHALLENGE_ICON[c];
         return (
@@ -453,7 +445,7 @@ function ChallengeStep({ value, onChange, theme, isDark }: { value?: PrimaryChal
             <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: selected ? "#F472B620" : isDark ? theme.surfaceAlt : "#FDF2F8", alignItems: "center", justifyContent: "center" }}>
               <Icon size={20} color={selected ? "#EC4899" : "#F472B6"} />
             </View>
-            <Text style={{ flex: 1, fontFamily: "Quicksand-SemiBold", fontSize: 15, color: theme.text.primary }}>{CHALLENGE_META[c].label}</Text>
+            <Text style={{ flex: 1, fontFamily: "Quicksand-SemiBold", fontSize: 15, color: theme.text.primary }}>{challengeLabel(c, stage)}</Text>
             {selected && (
               <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "#F472B6", alignItems: "center", justifyContent: "center" }}>
                 <Check size={14} color="#FFFFFF" />
@@ -466,12 +458,12 @@ function ChallengeStep({ value, onChange, theme, isDark }: { value?: PrimaryChal
   );
 }
 
-function GoalsStep({ goals, onToggle, theme, isDark }: { goals: WellnessGoal[]; onToggle: (g: WellnessGoal) => void; theme: any; isDark: boolean }) {
+function GoalsStep({ stage, goals, onToggle, theme, isDark }: { stage?: LifeStage; goals: WellnessGoal[]; onToggle: (g: WellnessGoal) => void; theme: any; isDark: boolean }) {
   return (
     <View>
       <StepHeader eyebrow="STEP 3 OF 4" title="What would feel like a win?" subtitle="Pick as many as you like — these become the focus of your action plan." theme={theme} />
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-        {GOALS.map((g) => {
+        {goalsFor(stage).map((g) => {
           const selected = goals.includes(g);
           const Icon = GOAL_ICON[g];
           return (
@@ -491,7 +483,7 @@ function GoalsStep({ goals, onToggle, theme, isDark }: { goals: WellnessGoal[]; 
               >
                 <Icon size={16} color={selected ? "#FFFFFF" : "#EC4899"} />
                 <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: selected ? "#FFFFFF" : theme.text.primary }}>
-                  {GOAL_META[g].label}
+                  {goalLabel(g, stage)}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -544,7 +536,7 @@ function NotificationsStep({ value, onChange, theme, isDark }: { value?: boolean
   );
 }
 
-function GeneratingStep({ genAnim, theme }: { genAnim: Animated.Value; theme: any }) {
+function GeneratingStep({ genAnim, theme, notMom }: { genAnim: Animated.Value; theme: any; notMom: boolean }) {
   const rotate = genAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
   return (
     <View style={{ alignItems: "center", paddingTop: 60 }}>
@@ -557,7 +549,7 @@ function GeneratingStep({ genAnim, theme }: { genAnim: Animated.Value; theme: an
         Building your action plan…
       </Text>
       <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 15, color: theme.text.secondary, textAlign: "center", lineHeight: 22, maxWidth: 320 }}>
-        Matching your answers to the rituals that other moms found most helpful.
+        {notMom ? "Matching your answers to rituals that help people feel calmer and more like themselves." : "Matching your answers to the rituals that other moms found most helpful."}
       </Text>
       <ActivityIndicator color="#F472B6" style={{ marginTop: 24 }} />
     </View>

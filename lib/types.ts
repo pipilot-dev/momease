@@ -3,7 +3,7 @@
 // ImageSource supports both require() (number) and { uri: string }
 export type ImageSource = number | { uri: string };
 
-/** Where the mom is in her journey — drives content, tone, and dashboard. */
+/** Where she is in her journey — drives content, tone, and dashboard. */
 export type LifeStage =
   | "trying"
   | "pregnant"
@@ -11,7 +11,8 @@ export type LifeStage =
   | "baby"         // 0–12mo
   | "toddler"      // 1–3y
   | "school-age"   // 4–12y
-  | "teen";        // 13+
+  | "teen"         // 13+
+  | "not-a-mom";   // not (yet) a mom: general wellbeing, no parenting content
 
 /** The biggest challenge right now — anchors the weekly action plan. */
 export type PrimaryChallenge =
@@ -22,7 +23,10 @@ export type PrimaryChallenge =
   | "career-balance"
   | "loneliness"
   | "postpartum-recovery"
-  | "co-parenting";
+  | "co-parenting"
+  | "burnout"
+  | "self-care"
+  | "planning-ahead";
 
 /** Longer-term wellness goals — the mom can pick multiple. */
 export type WellnessGoal =
@@ -32,7 +36,8 @@ export type WellnessGoal =
   | "connect-community"
   | "healthier-habits"
   | "stronger-boundaries"
-  | "mindful-parenting";
+  | "mindful-parenting"
+  | "prepare-motherhood";
 
 export interface Personalization {
   lifeStage?: LifeStage;
