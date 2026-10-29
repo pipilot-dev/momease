@@ -22,6 +22,9 @@ import { useSubscriptionStore } from "../lib/stores/subscription-store";
 import { checkoutSession, portalSession, openBillingUrl } from "../lib/billing";
 import { friendlyError } from "../lib/api";
 import { useTheme } from "../lib/theme-context";
+import Constants from "expo-constants";
+import { openLink } from "../lib/links";
+import { pageUrl, feedbackFormUrl } from "../lib/links-core";
 
 const FEATURES = [
   { icon: MessageCircle, label: "Unlimited chat with your companion" },
@@ -415,10 +418,21 @@ export default function UpgradeScreen() {
             }}
           >
             Secured by Stripe. Cancel any time from Manage subscription. See our{" "}
-            <Text style={{ color: theme.accent[500] }}>privacy policy</Text> and{" "}
-            <Text style={{ color: theme.accent[500] }}>terms</Text>.
+            <Text accessibilityRole="link" onPress={() => openLink(pageUrl("privacy"))} style={{ color: theme.accent[500] }}>privacy policy</Text> and{" "}
+            <Text accessibilityRole="link" onPress={() => openLink(pageUrl("terms"))} style={{ color: theme.accent[500] }}>terms</Text>.
           </Text>
         </View>
+
+        <TouchableOpacity
+          accessibilityRole="link"
+          activeOpacity={0.7}
+          onPress={() => openLink(feedbackFormUrl(Platform.OS, Constants.expoConfig?.version))}
+          style={{ alignItems: "center", paddingVertical: 18 }}
+        >
+          <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: theme.accent[500] }}>
+            Questions about Premium? Send us feedback
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );

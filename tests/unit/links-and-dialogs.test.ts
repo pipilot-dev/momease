@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { webAlert } from "../../lib/dialog-core";
-import { ANDROID_PACKAGE, SITE, SITE_PAGES, SUPPORT_EMAIL, feedbackMailto, pageUrl, playStoreUrl } from "../../lib/links-core";
+import { ANDROID_PACKAGE, SITE, SITE_PAGES, SUPPORT_EMAIL, FEEDBACK_FORM_URL, feedbackFormUrl, pageUrl, playStoreUrl } from "../../lib/links-core";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const file = (rel: string) => join(here, "..", "..", rel);
@@ -22,11 +22,20 @@ describe("support links", () => {
     for (const k of Object.keys(SITE_PAGES) as (keyof typeof SITE_PAGES)[]) expect(pageUrl(k)).toMatch(/^https:\/\/mease\.mom\/[a-z-]+\.html$/);
   });
 
-  it("feedback opens a pre-addressed email with the app version", () => {
-    const m = feedbackMailto("1.2.3");
-    expect(m.startsWith(`mailto:${SUPPORT_EMAIL}?subject=`)).toBe(true);
-    expect(decodeURIComponent(m)).toContain("App version: 1.2.3");
-    expect(feedbackMailto()).toContain("unknown");
+  it("feedback opens the beta form with platform and app version pre-filled", () => {
+    const u = new URL(feedbackFormUrl("android", "1.2.3"));
+    expect(`${u.origin}${u.pathname}`).toBe(FEEDBACK_FORM_URL);
+    expect(u.searchParams.get("usp")).toBe("pp_url");
+    expect(u.searchParams.get("entry.1792733158")).toBe("Android");
+    expect(u.searchParams.get("entry.232678679")).toBe("1.2.3");
+    expect(new URL(feedbackFormUrl("web", "1.0.0")).searchParams.get("entry.1792733158")).toBe("Web");
+    expect(new URL(feedbackFormUrl("ios")).searchParams.has("entry.232678679")).toBe(false);
+    expect(new URL(feedbackFormUrl()).searchParams.has("entry.1792733158")).toBe(false);
+  });
+
+  it("the form link is the one shared with testers", () => {
+    expect(FEEDBACK_FORM_URL).toBe("https://docs.google.com/forms/d/e/1FAIpQLSeuHAmAGfXrxjVNi9KFeKs8cTdWtIRkCfeq0Xuf163AjGbCWQ/viewform");
+    expect(read("landing/help.html")).toContain("https://tinyurl.com/2226ps48");
   });
 
   it("the Play Store link uses the package the app is built with", () => {

@@ -491,7 +491,7 @@ test('profile → Support: every link opens the right page, and Sign Out asks fi
 
   const expected = [
     ['Help Center', /^https:\/\/mease\.mom\/help\.html$/],
-    ['Send Feedback', /^mailto:support@momease\.app\?subject=MomEase%20feedback/],
+    ['Send Feedback', /^https:\/\/docs\.google\.com\/forms\/d\/e\/1FAIpQLSeuHAmAGfXrxjVNi9KFeKs8cTdWtIRkCfeq0Xuf163AjGbCWQ\/viewform\?usp=pp_url&entry\.1792733158=Web&entry\.232678679=[\d.]+$/],
     ['Rate MomEase', /^https:\/\/play\.google\.com\/store\/apps\/details\?id=com\.momease\.app$/],
     ['Privacy Policy', /^https:\/\/mease\.mom\/privacy\.html$/],
     ['Terms of Service', /^https:\/\/mease\.mom\/terms\.html$/],
@@ -503,6 +503,18 @@ test('profile → Support: every link opens the right page, and Sign Out asks fi
     const [url] = await page.evaluate(() => window.__opened.at(-1));
     assert.match(url, want, `${label} opened ${url}`);
   }
+
+  // Upgrade screen: Premium questions go to the same form; legal links are real links.
+  await page.goto(`${APP}/upgrade`);
+  await page.getByText('Questions about Premium? Send us feedback').waitFor({ timeout: 15000 });
+  for (const [label, want] of [['Questions about Premium? Send us feedback', /docs\.google\.com\/forms.*entry\.1792733158=Web/], ['privacy policy', /mease\.mom\/privacy\.html$/], ['terms', /mease\.mom\/terms\.html$/]]) {
+    const before = await page.evaluate(() => window.__opened.length);
+    await page.getByText(label, { exact: true }).click();
+    await page.waitForFunction((n) => window.__opened.length > n, before, { timeout: 5000 });
+    assert.match((await page.evaluate(() => window.__opened.at(-1)))[0], want, label);
+  }
+  await page.goto(`${APP}/profile`);
+  await page.getByText('Sign Out', { exact: true }).waitFor({ timeout: 15000 });
 
   // Declining keeps her signed in; accepting signs her out.
   const dialogs = [];
