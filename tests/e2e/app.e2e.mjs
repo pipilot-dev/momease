@@ -344,6 +344,8 @@ test('upgrade: checkout request carries the session and NO price or user id; pre
   // user is loaded would, correctly, send them to sign-in).
   await Promise.all([page.waitForResponse((r) => r.url().endsWith('/session') && r.ok()), page.goto(`${APP}/upgrade`)]);
   await page.waitForTimeout(500);
+  await page.getByText('$5', { exact: true }).waitFor({ timeout: 10000 });
+  assert.doesNotMatch(await page.evaluate(() => document.body.innerText), /\$7\.99/, 'old price must be gone');
   await page.getByText('Start free trial').click();
   await page.waitForURL(/checkout=success/, { timeout: 15000 });
   const body = JSON.parse(checkoutReq.postData() ?? '{}');

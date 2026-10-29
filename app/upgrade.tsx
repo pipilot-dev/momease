@@ -22,6 +22,7 @@ import { useSubscriptionStore } from "../lib/stores/subscription-store";
 import { checkoutSession, portalSession, openBillingUrl } from "../lib/billing";
 import { friendlyError } from "../lib/api";
 import { useTheme } from "../lib/theme-context";
+import { PREMIUM_PRICE_LABEL } from "../lib/pricing";
 import Constants from "expo-constants";
 import { openLink } from "../lib/links";
 import { pageUrl, feedbackFormUrl } from "../lib/links-core";
@@ -242,7 +243,7 @@ export default function UpgradeScreen() {
             <View style={{ alignItems: "center", marginBottom: 20 }}>
               <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
                 <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 46, color: theme.text.primary }}>
-                  $7.99
+                  {PREMIUM_PRICE_LABEL}
                 </Text>
                 <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 16, color: theme.text.secondary }}>
                   /month
