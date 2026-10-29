@@ -8,6 +8,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ThemeProvider, useTheme } from "../lib/theme-context";
 import { LockGate } from "../components/LockGate";
+import { DialogHost } from "../components/DialogHost";
 import { AuthGate } from "../components/AuthGate";
 import { useSettingsStore } from "../lib/stores/settings-store";
 import { maybeFireDailyReminder } from "../lib/web-push";
@@ -69,6 +70,7 @@ function RootNavigator() {
       </Stack>
       </AuthGate>
       </LockGate>
+      <DialogHost />
     </>
   );
 }

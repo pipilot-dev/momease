@@ -518,17 +518,40 @@ test('profile → Support: every link opens the right page, and Sign Out asks fi
   await page.goto(`${APP}/profile`);
   await page.getByText('Sign Out', { exact: true }).waitFor({ timeout: 15000 });
 
-  // Declining keeps her signed in; accepting signs her out.
-  const dialogs = [];
-  page.once('dialog', (d) => { dialogs.push(d.message()); d.dismiss(); });
+  // Sign Out asks in an in-app dialog (the browser's confirm() can be blocked, so it is not used).
+  // Cancelling keeps her signed in; confirming signs her out.
+  const nativeDialogs = [];
+  page.on('dialog', (d) => { nativeDialogs.push(d.message()); d.dismiss(); });
   await page.getByText('Sign Out', { exact: true }).click();
-  await page.waitForTimeout(800);
-  assert.match(dialogs[0] ?? '', /Are you sure you want to sign out/);
-  assert.ok(await token(page), 'still signed in after declining');
-  page.once('dialog', (d) => d.accept());
+  await page.getByText('Are you sure you want to sign out?').waitFor({ timeout: 5000 });
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByText('Are you sure you want to sign out?').waitFor({ state: 'hidden', timeout: 5000 });
+  assert.ok(await token(page), 'still signed in after cancelling');
   await page.getByText('Sign Out', { exact: true }).click();
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await page.waitForURL(/sign-in/, { timeout: 10000 });
   assert.equal(await token(page), null, 'token cleared on sign out');
+  assert.deepEqual(nativeDialogs, [], 'no browser dialogs are used');
+  assert.deepEqual(errors, []);
+});
+
+test('sign out still works when the browser blocks its own dialogs (in-app browsers, "prevent more dialogs")', async (t) => {
+  const u = await makeUser('blocked');
+  const { page, errors } = await newPage(t);
+  await page.addInitScript(() => { window.confirm = () => false; window.alert = () => {}; window.prompt = () => null; });
+  await signInViaUI(page, u.email);
+  await page.waitForURL(/home/, { timeout: 15000 });
+  await page.goto(`${APP}/profile`);
+  await page.getByText('Sign Out', { exact: true }).waitFor({ timeout: 15000 });
+  const browserToken = await token(page);
+  assert.ok(browserToken, 'signed in');
+  assert.equal((await j('/session', { token: browserToken })).status, 200);
+  await page.getByText('Sign Out', { exact: true }).click();
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await page.waitForURL(/sign-in/, { timeout: 10000 });
+  assert.equal(await token(page), null);
+  const me = await j('/session', { token: browserToken });
+  assert.equal(me.status, 401, 'the session is revoked on the server too');
   assert.deepEqual(errors, []);
 });
 

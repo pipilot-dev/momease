@@ -1,10 +1,11 @@
 import { Alert, Platform } from "react-native";
-import { webAlert, type AlertButton } from "./dialog-core";
+import type { AlertButton } from "./dialog-core";
+import { useDialogStore } from "./dialog-store";
 
-/** Drop-in for Alert.alert that also works in the browser build. */
+/** Drop-in for Alert.alert: the native alert on devices, an in-app dialog (<DialogHost/>) on the web. */
 export function showAlert(title: string, message?: string, buttons?: AlertButton[]): void {
-  if (Platform.OS === "web" && typeof window !== "undefined") {
-    webAlert(window, title, message, buttons);
+  if (Platform.OS === "web") {
+    useDialogStore.getState().open(title, message, buttons);
     return;
   }
   Alert.alert(title, message, buttons);
