@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   Image,
   Animated,
-  Dimensions,
   RefreshControl,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -43,9 +43,9 @@ import { useTheme } from "../../lib/theme-context";
 import { buildWeeklyPlan, personalizedGreeting, isNotMom, fallbackName } from "../../lib/personalization";
 import type { ActionItem } from "../../lib/personalization";
 
-const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
+  const { width } = useWindowDimensions();
   const router = useRouter();
   const { theme, isDark } = useTheme();
   // The theme palette mirrors the static token shape, so aliasing it lets the

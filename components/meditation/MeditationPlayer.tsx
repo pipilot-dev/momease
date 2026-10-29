@@ -6,7 +6,7 @@ import {
   Modal,
   Animated,
   Easing,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Audio } from "expo-av";
@@ -15,8 +15,6 @@ import { Play, Pause, X, Check } from "lucide-react-native";
 import type { MeditationSession, MeditationStep } from "../../lib/types";
 import { colors } from "../../lib/theme";
 
-const { width } = Dimensions.get("window");
-const ORB = Math.min(width * 0.6, 260);
 
 const breathLabel: Record<NonNullable<MeditationStep["breath"]>, string> = {
   in: "Breathe in",
@@ -46,6 +44,8 @@ export function MeditationPlayer({
   session: MeditationSession | null;
   onClose: () => void;
 }) {
+  const { width } = useWindowDimensions();
+  const ORB = Math.min(width * 0.6, 260);
   const script = session?.script ?? [];
   const total = script.reduce((sum, s) => sum + s.seconds, 0);
 

@@ -5,8 +5,8 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
-  Dimensions,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,8 +14,6 @@ import * as Haptics from "expo-haptics";
 import { ChevronLeft, Play, Pause, RotateCcw, Wind } from "lucide-react-native";
 import { useTheme } from "../lib/theme-context";
 
-const { width } = Dimensions.get("window");
-const ORB = Math.min(width * 0.62, 260);
 
 type Phase = { label: string; seconds: number; scaleTo: number };
 
@@ -69,6 +67,8 @@ const PATTERNS: Pattern[] = [
 ];
 
 export default function BreatheScreen() {
+  const { width } = useWindowDimensions();
+  const ORB = Math.min(width * 0.62, 260);
   const { theme, isDark } = useTheme();
   const colors = theme;
   const router = useRouter();
