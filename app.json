@@ -3,7 +3,7 @@
     "name": "MomEase",
     "slug": "momease-care-hub",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -48,7 +48,17 @@
           "faceIDPermission": "Allow MomEase to use Face ID to unlock the app."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
+      "./plugins/with-edge-to-edge-theme.js"
     ],
     "extra": {
       "router": {},

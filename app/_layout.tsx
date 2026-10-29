@@ -1,4 +1,7 @@
 import { useEffect } from "react";
+import { Platform, useWindowDimensions } from "react-native";
+import * as ScreenOrientation from "expo-screen-orientation";
+import { isLargeScreen } from "../lib/orientation-core";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
@@ -26,6 +29,15 @@ SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
   const { theme, isDark } = useTheme();
+  const { width, height } = useWindowDimensions();
+
+  // Phones stay portrait; tablets, foldables and resizable windows rotate freely.
+  const large = isLargeScreen(width, height);
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    (large ? ScreenOrientation.unlockAsync() : ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)).catch(() => {});
+  }, [large]);
+
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />

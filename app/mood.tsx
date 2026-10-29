@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   TextInput,
   Animated,
-  Dimensions,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -36,9 +36,9 @@ import {
 import { shadows, radius, spacing } from "../lib/theme";
 import { useTheme } from "../lib/theme-context";
 
-const { width } = Dimensions.get("window");
 
 export default function MoodScreen() {
+  const { width } = useWindowDimensions();
   const { theme, isDark } = useTheme();
   const colors = theme;
   const router = useRouter();
