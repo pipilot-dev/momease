@@ -1,7 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, Switch } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Platform } from "react-native";
 import { showAlert } from "../../lib/dialog";
 import { openLink } from "../../lib/links";
-import { pageUrl, feedbackMailto, playStoreUrl } from "../../lib/links-core";
+import { pageUrl, feedbackFormUrl, playStoreUrl } from "../../lib/links-core";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -136,7 +136,7 @@ export default function ProfileScreen() {
       title: "Support",
       items: [
         { icon: HelpCircle, label: "Help Center", color: "#10B981", onPress: () => go(pageUrl("help")) },
-        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => go(feedbackMailto(appVersion)) },
+        { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => go(feedbackFormUrl(Platform.OS, appVersion)) },
         { icon: Star, label: "Rate MomEase", color: "#F59E0B", onPress: () => go(playStoreUrl) },
         { icon: Shield, label: "Privacy Policy", color: "#6B7280", onPress: () => go(pageUrl("privacy")) },
         { icon: FileText, label: "Terms of Service", color: "#6B7280", onPress: () => go(pageUrl("terms")) },
