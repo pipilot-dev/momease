@@ -18,9 +18,11 @@ afterAll(() => rmSync(dist, { recursive: true, force: true }));
 
 describe("web build caching (so a release reaches users without clearing the browser)", () => {
   it("always revalidates the service worker, the page and the manifest", () => {
-    const headers = readFileSync(join(dist, "_headers"), "utf8");
+    const lines = readFileSync(join(dist, "_headers"), "utf8").split("\n");
     for (const path of ["/sw.js", "/index.html", "/manifest.webmanifest"]) {
-      expect(headers).toMatch(new RegExp(`^${path.replace(/[./]/g, "\\$&")}\\n  Cache-Control: no-cache$`, "m"));
+      const at = lines.indexOf(path);
+      expect(at, `${path} has a rule`).toBeGreaterThanOrEqual(0);
+      expect(lines[at + 1]).toBe("  Cache-Control: no-cache");
     }
   });
 
