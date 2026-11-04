@@ -18,11 +18,12 @@ import { useAuthStore } from "../../lib/stores/auth-store";
 import { authService } from "../../lib/auth-service";
 import { useTheme } from "../../lib/theme-context";
 import { BRAND } from "../../lib/brand";
+import { AppleSignInButton } from "../../components/AppleSignInButton";
 
 export default function SignIn() {
   const { theme, isDark } = useTheme();
   const router = useRouter();
-  const { signIn, signInWithGoogle, isLoading, error, clearError } = useAuthStore();
+  const { signIn, signInWithGoogle, signInWithApple, isLoading, error, clearError } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -55,6 +56,12 @@ export default function SignIn() {
     } else {
       setResetError(result.error || "Couldn't send reset email. Try again.");
     }
+  };
+
+  const handleApple = async () => {
+    clearError();
+    const ok = await signInWithApple();
+    if (ok) router.replace("/(tabs)/home");
   };
 
   const handleGoogle = async () => {
@@ -335,6 +342,9 @@ export default function SignIn() {
                 Continue with Google
               </Text>
             </TouchableOpacity>
+
+            {/* Apple sign-in: iPhone only (renders nothing elsewhere), as prominent as Google's button */}
+            <AppleSignInButton onPress={handleApple} dark={isDark} />
 
             {/* Sign Up link */}
             <View

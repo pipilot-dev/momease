@@ -174,6 +174,16 @@ test('anonymous visit to a protected route lands on sign-in', async (t) => {
   await page.getByText('Welcome Back').waitFor();
 });
 
+test('sign-in on the web offers Google but no Apple button (Apple sign-in is iPhone-only)', async (t) => {
+  const { page, errors } = await newPage(t);
+  await page.goto(`${APP}/sign-in`);
+  await page.getByText('Continue with Google').waitFor({ timeout: 15000 });
+  await page.waitForTimeout(800); // the Apple button decides asynchronously: give it time to (wrongly) appear
+  const text = await page.evaluate(() => document.body.innerText);
+  assert.doesNotMatch(text, /Apple/i);
+  assert.deepEqual(errors, []);
+});
+
 test('sign-up: a too-short password is rejected locally with a clear message (no API call)', async (t) => {
   const { page } = await newPage(t);
   let signupCalls = 0;

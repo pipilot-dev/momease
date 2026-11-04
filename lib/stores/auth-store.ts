@@ -15,6 +15,7 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (email: string, password: string, name: string) => Promise<boolean>;
   signInWithGoogle: () => Promise<boolean>;
+  signInWithApple: () => Promise<boolean>;
   signOut: () => Promise<void>;
   clearError: () => void;
   setUser: (user: User) => void;
@@ -66,6 +67,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           return true;
         }
         set({ error: result.error || "Google sign-in failed", isLoading: false });
+        return false;
+      },
+
+      signInWithApple: async () => {
+        set({ isLoading: true, error: null });
+        const result = await authService.signInWithApple();
+        if (result.success && result.user) {
+          set({ user: result.user, isAuthenticated: true, isLoading: false });
+          onSignedIn(result.user.id).catch(() => {});
+          return true;
+        }
+        // An empty error means she just closed Apple's sheet.
+        set({ error: result.error || null, isLoading: false });
         return false;
       },
 

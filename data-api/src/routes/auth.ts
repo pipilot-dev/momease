@@ -1,4 +1,4 @@
-// /auth/* — email/password + Google OAuth (Web client, code flow) + password reset.
+// /auth/* — email/password + Google OAuth (Web client, code flow) + Sign in with Apple (iPhone) + password reset.
 
 import type { Env } from '../worker'
 import { hashPassword, verifyPassword } from '../lib/password'
@@ -7,6 +7,7 @@ import { signJwt, verifyJwt } from '../lib/jwt'
 import { isAllowedAppRedirect, withSessionFragment } from '../lib/redirect'
 import { clearFailures, isThrottled, recordFailure, throttleBuckets } from '../lib/throttle'
 import { sendResetEmail, sha256Hex } from '../lib/email'
+import { verifyAppleIdentityToken } from '../lib/apple'
 
 const GOOGLE_AUTHORIZE = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
@@ -29,6 +30,7 @@ export async function handleAuth(req: Request, env: Env, _ctx: ExecutionContext,
   if (path === '/auth/reset/confirm' && req.method === 'POST') return resetConfirm(req, env)
   if (path === '/auth/google/start' && req.method === 'GET') return googleStart(env, url)
   if (path === '/auth/google/callback' && req.method === 'GET') return googleCallback(env, url)
+  if (path === '/auth/apple' && req.method === 'POST') return appleSignin(req, env)
   return Response.json({ error: 'not_found' }, { status: 404 })
 }
 
@@ -256,6 +258,75 @@ async function googleCallback(env: Env, url: URL): Promise<Response> {
 
   const token = await issueSession(env, userId)
   return Response.redirect(withSessionFragment(appRedirect, { token, user_id: userId, email }), 302)
+}
+
+interface AppleBody {
+  identityToken?: string
+  nonce?: string
+  fullName?: { givenName?: string | null; familyName?: string | null }
+}
+
+/**
+ * iPhone "Sign in with Apple": the app sends the identity token Apple signed for it plus the raw nonce it
+ * hashed into the request. We verify signature, issuer, audience (our bundle id), expiry and nonce, then
+ * find the account by Apple's stable id, or link / create one from the verified email.
+ */
+async function appleSignin(req: Request, env: Env): Promise<Response> {
+  const b = await body<AppleBody>(req)
+  if (typeof b.identityToken !== 'string' || !b.identityToken || typeof b.nonce !== 'string' || !b.nonce) {
+    return Response.json({ error: 'invalid_request' }, { status: 400 })
+  }
+  const buckets = throttleBuckets(req, undefined)
+  if (await isThrottled(env, buckets)) return Response.json({ error: 'too_many_attempts' }, { status: 429 })
+
+  const audiences = (env.APPLE_BUNDLE_ID ?? 'com.momease.app').split(',').map((s) => s.trim()).filter(Boolean)
+  const claims = await verifyAppleIdentityToken(b.identityToken, audiences)
+  // The nonce Apple signed is the SHA-256 (hex) of the random value the app kept: proves this token was minted for this request.
+  if (!claims || claims.nonce !== (await sha256Hex(b.nonce))) {
+    await recordFailure(env, buckets)
+    return Response.json({ error: 'invalid_apple_token' }, { status: 401 })
+  }
+
+  let row = await env.DB.prepare('SELECT id, email, meta, role FROM users WHERE apple_sub = ?')
+    .bind(claims.sub).first<{ id: string; email: string; meta: string; role: string }>()
+
+  if (!row) {
+    const email = claims.email?.trim().toLowerCase()
+    if (!email || !EMAIL_RE.test(email)) return Response.json({ error: 'no_email' }, { status: 400 })
+    // Same rule as Google: never link or create from an email Apple has not verified.
+    if (!claims.emailVerified) return Response.json({ error: 'email_not_verified' }, { status: 403 })
+
+    const byEmail = await env.DB.prepare('SELECT id, email, meta, role, apple_sub FROM users WHERE email = ?')
+      .bind(email).first<{ id: string; email: string; meta: string; role: string; apple_sub: string | null }>()
+    if (byEmail) {
+      if (byEmail.apple_sub && byEmail.apple_sub !== claims.sub) {
+        return Response.json({ error: 'account_linked_elsewhere' }, { status: 409 })
+      }
+      await env.DB.prepare('UPDATE users SET apple_sub = ? WHERE id = ?').bind(claims.sub, byEmail.id).run()
+      row = byEmail
+    } else {
+      const given = (b.fullName?.givenName ?? '').toString().trim()
+      const family = (b.fullName?.familyName ?? '').toString().trim()
+      const fullName = `${given} ${family}`.trim().slice(0, 80)
+      // A hidden (relay) address is random text, so it makes a poor display name: leave it empty and let the app fall back.
+      const name = fullName || (claims.isPrivateEmail ? '' : email.split('@')[0])
+      const id = crypto.randomUUID()
+      const meta = JSON.stringify({ name, childrenAges: [], interests: [], onboardingCompleted: false })
+      try {
+        await env.DB.prepare('INSERT INTO users (id, email, apple_sub, meta) VALUES (?, ?, ?, ?)').bind(id, email, claims.sub, meta).run()
+        row = { id, email, meta, role: 'free' }
+      } catch {
+        // Two first sign-ins at once: the unique index let one win; use that account.
+        row = await env.DB.prepare('SELECT id, email, meta, role FROM users WHERE apple_sub = ?')
+          .bind(claims.sub).first<{ id: string; email: string; meta: string; role: string }>()
+        if (!row) return Response.json({ error: 'signin_failed' }, { status: 500 })
+      }
+    }
+  }
+
+  await clearFailures(env, buckets)
+  const token = await issueSession(env, row.id)
+  return Response.json({ user: publicUser(row), token })
 }
 
 export function safeJson(s: string | null | undefined): Record<string, unknown> {

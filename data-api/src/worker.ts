@@ -12,6 +12,7 @@ import { corsPreflight, withCors } from './lib/cors'
 export interface Env {
   DB: D1Database
   GOOGLE_CLIENT_ID: string
+  APPLE_BUNDLE_ID?: string // comma-separated list of accepted Apple token audiences (the iPhone bundle id)
   GOOGLE_CLIENT_SECRET: string
   JWT_SIGNING_KEY: string
   APP_SCHEME: string

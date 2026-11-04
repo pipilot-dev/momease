@@ -109,6 +109,9 @@ export function friendlyError(e: unknown, fallback = "Something went wrong. Plea
     case "checkout_failed":
     case "portal_failed":
     case "billing_not_configured": return "We couldn't open billing just now. Please try again in a moment.";
+    case "invalid_apple_token": return "Apple sign-in didn't go through. Please try again.";
+    case "no_email": return "Apple didn't share an email address, so we can't create your account. Please try again and allow sharing your email, or use another sign-in method.";
+    case "account_linked_elsewhere": return "That email is already connected to a different Apple account. Please sign in another way.";
     case "email_not_verified": return "Your Google email isn't verified, so we can't sign you in with it.";
     default: return fallback;
   }
