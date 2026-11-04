@@ -7,6 +7,7 @@ import { ActivityIndicator, Platform, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import { parseCallbackUrl } from "../lib/auth-callback";
+import { parseLinkResult } from "../lib/link-core";
 import { authService } from "../lib/auth-service";
 import { setToken } from "../lib/api";
 import { useAuthStore } from "../lib/stores/auth-store";
@@ -21,10 +22,17 @@ export default function AuthCallback() {
       const url =
         Platform.OS === "web" && typeof window !== "undefined" ? window.location.href : await Linking.getInitialURL();
       const { token } = parseCallbackUrl(url ?? "");
+      const link = parseLinkResult(url ?? "");
 
       if (Platform.OS === "web" && typeof window !== "undefined") {
         // Never leave the token sitting in the address bar / history.
         window.history.replaceState(null, "", window.location.pathname);
+      }
+
+      if (link.linked || link.error) {
+        // Returning from "Connect Google": she is already signed in, so go back to Settings with the result.
+        router.replace({ pathname: "/settings", params: link.linked ? { linked: link.linked } : { link_error: link.error! } });
+        return;
       }
 
       if (!token) {

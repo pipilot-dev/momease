@@ -8,6 +8,7 @@ import { isAllowedAppRedirect, withSessionFragment } from '../lib/redirect'
 import { clearFailures, isThrottled, recordFailure, throttleBuckets } from '../lib/throttle'
 import { sendResetEmail, sha256Hex } from '../lib/email'
 import { verifyAppleIdentityToken } from '../lib/apple'
+import { attachIdentity, handleLink } from './link'
 
 const GOOGLE_AUTHORIZE = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
@@ -31,6 +32,7 @@ export async function handleAuth(req: Request, env: Env, _ctx: ExecutionContext,
   if (path === '/auth/google/start' && req.method === 'GET') return googleStart(env, url)
   if (path === '/auth/google/callback' && req.method === 'GET') return googleCallback(env, url)
   if (path === '/auth/apple' && req.method === 'POST') return appleSignin(req, env)
+  if (path.startsWith('/auth/link/')) return (await handleLink(req, env, url)) ?? Response.json({ error: 'not_found' }, { status: 404 })
   return Response.json({ error: 'not_found' }, { status: 404 })
 }
 
@@ -182,8 +184,16 @@ async function googleStart(env: Env, url: URL): Promise<Response> {
     return Response.json({ error: 'redirect_not_allowed' }, { status: 400 })
   }
   const iat = Math.floor(Date.now() / 1000)
+  // "Connect Google" while signed in: the app first asks /auth/link/google/init for a short-lived ticket.
+  let linkClaims: { lnk?: string; rep?: boolean } = {}
+  const ticket = url.searchParams.get('link')
+  if (ticket) {
+    const t = await verifyJwt(ticket, env.JWT_SIGNING_KEY)
+    if (!t || t.sub !== 'google-link') return Response.json({ error: 'bad_link_token' }, { status: 400 })
+    linkClaims = { lnk: t.jti, rep: t.rep === true }
+  }
   const state = await signJwt(
-    { sub: 'oauth-state', jti: appRedirect, iat, exp: iat + 600 },
+    { sub: 'oauth-state', jti: appRedirect, iat, exp: iat + 600, ...linkClaims },
     env.JWT_SIGNING_KEY,
   )
   const callback = `${url.origin}/auth/google/callback`
@@ -228,6 +238,12 @@ async function googleCallback(env: Env, url: URL): Promise<Response> {
   const userRes = await fetch(GOOGLE_USERINFO, { headers: { Authorization: `Bearer ${tokens.access_token}` } })
   if (!userRes.ok) return Response.json({ error: 'userinfo_failed' }, { status: 502 })
   const info = (await userRes.json()) as { sub: string; email?: string; email_verified?: boolean; name?: string; picture?: string }
+  if (state.lnk) {
+    // Connecting Google to the profile that is already signed in: no new session, just attach and go back to the app.
+    if (!info.sub) return Response.json({ error: 'no_email' }, { status: 400 })
+    const err = await attachIdentity(env, 'google', state.lnk, info.sub, state.rep === true)
+    return Response.redirect(withSessionFragment(appRedirect, err ? { link_error: err } : { linked: 'google' }), 302)
+  }
   if (!info.sub || !info.email) return Response.json({ error: 'no_email' }, { status: 400 })
   // Never link/sign in by an email Google hasn't verified: that is an account-takeover path.
   if (info.email_verified !== true) return Response.json({ error: 'email_not_verified' }, { status: 403 })

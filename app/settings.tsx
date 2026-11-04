@@ -4,20 +4,31 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  Platform,
   } from "react-native";
 import { showAlert } from "../lib/dialog";
 import { useState, useEffect } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight, ScanFace, UserX } from "lucide-react-native";
+import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight, ScanFace, UserX, Link2, Check } from "lucide-react-native";
 import { useSettingsStore } from "../lib/stores/settings-store";
 import { useAuthStore } from "../lib/stores/auth-store";
 import { useTheme } from "../lib/theme-context";
 import { isBiometricAvailable, biometricLabel, authenticateBiometric } from "../lib/biometrics";
 import { deleteAccount } from "../lib/social";
 import { BRAND } from "../lib/brand";
+import { authService } from "../lib/auth-service";
+import { offersAppleSignIn } from "../lib/apple-auth-core";
+import {
+  PROVIDER_LABEL,
+  needsReplaceConfirmation,
+  replaceConfirmation,
+  linkFailureMessage,
+  type Identities,
+  type Provider,
+} from "../lib/link-core";
 
 // Preset reminder times shown as selectable chips.
 const TIME_OPTIONS: { label: string; hour: number; minute: number }[] = [
@@ -103,6 +114,60 @@ export default function SettingsScreen() {
   );
 
   const { user, signOut } = useAuthStore();
+
+  // ---- Connected sign-ins: attach Apple / Google to the profile she is already in ----
+  const params = useLocalSearchParams<{ linked?: string; link_error?: string }>();
+  const [identities, setIdentities] = useState<Identities | null>(null);
+  const [connecting, setConnecting] = useState<Provider | null>(null);
+  const refreshIdentities = async () => setIdentities(await authService.getIdentities());
+
+  const handleLinkFailure = (provider: Provider, code: string | undefined) => {
+    if (needsReplaceConfirmation(code)) {
+      const c = replaceConfirmation(provider);
+      showAlert(c.title, c.message, [
+        { text: "Cancel", style: "cancel" },
+        { text: c.confirm, style: "destructive", onPress: () => void connect(provider, true) },
+      ]);
+      return;
+    }
+    const msg = linkFailureMessage(code, provider);
+    if (msg) showAlert("Couldn't connect", msg);
+  };
+
+  const connect = async (provider: Provider, replaceOther = false) => {
+    Haptics.selectionAsync();
+    setConnecting(provider);
+    const r = provider === "apple" ? await authService.connectApple(replaceOther) : await authService.connectGoogle(replaceOther);
+    setConnecting(null);
+    if (r.ok) {
+      if (!r.pending) {
+        await refreshIdentities();
+        showAlert("Connected", `${PROVIDER_LABEL[provider]} is now connected to this profile. Signing in with it will open this profile.`);
+      }
+      return;
+    }
+    handleLinkFailure(provider, r.code);
+  };
+
+  useEffect(() => {
+    void refreshIdentities();
+  }, []);
+
+  // Returning from "Connect Google" on the web: the server redirected back with the result in the address.
+  useEffect(() => {
+    if (params.linked) {
+      void refreshIdentities();
+      showAlert("Connected", `${PROVIDER_LABEL[params.linked as Provider] ?? "Your sign-in"} is now connected to this profile. Signing in with it will open this profile.`);
+    } else if (params.link_error) {
+      handleLinkFailure("google", params.link_error);
+    } else {
+      return;
+    }
+    // The result was shown once: take it out of the address so a reload doesn't show it again.
+    router.replace("/settings");
+  }, [params.linked, params.link_error]);
+
+  const providers: Provider[] = offersAppleSignIn(Platform.OS) ? ["google", "apple"] : ["google"];
 
   const handleDeleteAccount = () => {
     showAlert(
@@ -324,6 +389,37 @@ export default function SettingsScreen() {
               <ChevronRight size={18} color={theme.text.muted} />
             </TouchableOpacity>
           )}
+        </Card>
+
+        {/* Connected sign-ins */}
+        <Card>
+          {rowHeader(Link2, "Connected sign-ins", "Use more than one way to sign in to this same profile")}
+          <View style={{ marginTop: 12, gap: 10 }}>
+            {providers.map((p) => {
+              const connected = !!identities?.[p];
+              return (
+                <View key={p} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 15, color: theme.text.primary }}>{PROVIDER_LABEL[p]}</Text>
+                  {connected ? (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Check size={16} color="#10B981" />
+                      <Text style={{ fontFamily: "Quicksand-SemiBold", fontSize: 14, color: "#10B981" }}>Connected</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`Connect ${PROVIDER_LABEL[p]}`}
+                      disabled={connecting !== null || identities === null}
+                      onPress={() => connect(p)}
+                      style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, backgroundColor: theme.primary[500], opacity: connecting !== null || identities === null ? 0.5 : 1 }}
+                    >
+                      <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 14, color: "#FFFFFF" }}>{connecting === p ? "Connecting…" : "Connect"}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
+          </View>
         </Card>
 
         {/* Data */}

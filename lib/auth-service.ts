@@ -11,6 +11,7 @@ import { authService as mockAuth } from "./mock-auth";
 import { API_BASE, api, ApiError, friendlyError, getToken, isNetworkError, loadToken, setToken } from "./api";
 import { parseCallbackUrl } from "./auth-callback";
 import { isAppleCancel, nameFromCredential, offersAppleSignIn, toHex } from "./apple-auth-core";
+import { parseLinkResult, type Identities } from "./link-core";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -30,6 +31,9 @@ interface ApiUser {
   createdAt?: string;
 }
 interface AuthPayload { user: ApiUser; token: string }
+
+/** Outcome of connecting another sign-in method. code "" means she cancelled. */
+export type ConnectResult = { ok: true; pending?: boolean } | { ok: false; code: string };
 
 function toUser(u: ApiUser): User {
   return {
@@ -117,6 +121,58 @@ export const authService = {
     } catch (e) {
       if (isAppleCancel(e)) return { success: false, error: "" }; // she closed the sheet: not an error to show
       return { success: false, error: friendlyError(e, "Apple sign-in failed. Please try again.") };
+    }
+  },
+
+  /** Which sign-in methods are attached to the profile she is in. */
+  async getIdentities(): Promise<Identities> {
+    try {
+      const me = await api.get<{ identities?: Identities }>("/session");
+      return me.identities ?? { google: false, apple: false };
+    } catch {
+      return { google: false, apple: false };
+    }
+  },
+
+  /** iPhone: attach an Apple account to the current profile (Apple's sheet, then our server checks the token). */
+  async connectApple(replaceOther = false): Promise<ConnectResult> {
+    try {
+      if (!offersAppleSignIn(Platform.OS)) return { ok: false, code: "unsupported" };
+      const AppleAuthentication = await import("expo-apple-authentication");
+      const Crypto = await import("expo-crypto");
+      const rawNonce = toHex(await Crypto.getRandomBytesAsync(16));
+      const hashedNonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, rawNonce);
+      const cred = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
+        nonce: hashedNonce,
+      });
+      if (!cred.identityToken) return { ok: false, code: "invalid_apple_token" };
+      await api.post("/auth/link/apple", { identityToken: cred.identityToken, nonce: rawNonce, replaceOther });
+      return { ok: true };
+    } catch (e) {
+      if (isAppleCancel(e)) return { ok: false, code: "" };
+      return { ok: false, code: e instanceof ApiError ? e.code : "network" };
+    }
+  },
+
+  /** Attach a Google account to the current profile. On the web the page leaves and returns to /auth-callback. */
+  async connectGoogle(replaceOther = false): Promise<ConnectResult> {
+    try {
+      const { linkToken } = await api.post<{ linkToken: string }>("/auth/link/google/init", { replaceOther });
+      const web = Platform.OS === "web" && typeof window !== "undefined";
+      const redirectTo = web ? window.location.origin + "/auth-callback" : "momease://auth-callback";
+      const startUrl = `${API_BASE}/auth/google/start?redirect=${encodeURIComponent(redirectTo)}&link=${encodeURIComponent(linkToken)}`;
+      if (web) {
+        window.location.href = startUrl;
+        return { ok: true, pending: true };
+      }
+      const result = await WebBrowser.openAuthSessionAsync(startUrl, redirectTo);
+      if (result.type !== "success") return { ok: false, code: "" };
+      const r = parseLinkResult(result.url);
+      if (r.linked) return { ok: true };
+      return { ok: false, code: r.error ?? "unknown" };
+    } catch (e) {
+      return { ok: false, code: e instanceof ApiError ? e.code : "network" };
     }
   },
 
