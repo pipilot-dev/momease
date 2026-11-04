@@ -54,6 +54,7 @@ import type {
   WellnessGoal,
   Personalization,
 } from "../lib/types";
+import { BRAND } from "../lib/brand";
 
 /** Icon lookup — kept in this file to avoid a runtime map in personalization.ts. */
 const CHALLENGE_ICON: Record<PrimaryChallenge, any> = {
@@ -344,7 +345,7 @@ function WelcomeStep({ name, theme }: { name: string; theme: any }) {
         Welcome, {name.split(" ")[0]}
       </Text>
       <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 16, color: theme.text.secondary, textAlign: "center", lineHeight: 24, maxWidth: 340 }}>
-        Let's take 60 seconds to make MomEase feel like it was built just for you.
+        Let's take 60 seconds to make {BRAND} feel like it was built just for you.
       </Text>
       <View
         style={{

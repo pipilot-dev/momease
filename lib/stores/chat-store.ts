@@ -1,18 +1,19 @@
 import { create } from "zustand";
 import type { ChatMessage } from "../types";
+import { BRAND } from "../brand";
 import { sendAIMessage } from "../mock-ai";
 import { attachPersistence } from "../persist";
 import { useAuthStore } from "./auth-store";
 import { isNotMom } from "../personalization";
 
 const NOT_MOM_WELCOME_TEXT =
-  "Hi there! I'm your MomEase wellness companion. I'm here to listen, support, and help you feel calmer and more like yourself. What's on your mind today?";
+  `Hi there! I'm your ${BRAND} wellness companion. I'm here to listen, support, and help you feel calmer and more like yourself. What's on your mind today?`;
 
 const WELCOME: ChatMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi there! I'm your MomEase wellness companion. I'm here to listen, support, and help you navigate the beautiful chaos of being a working mom. What's on your mind today?",
+    `Hi there! I'm your ${BRAND} wellness companion. I'm here to listen, support, and help you navigate the beautiful chaos of being a working mom. What's on your mind today?`,
   timestamp: new Date().toISOString(),
 };
 

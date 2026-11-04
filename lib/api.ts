@@ -2,6 +2,7 @@
 // The bearer token lives in AsyncStorage; every authed call attaches it.
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BRAND } from "./brand";
 
 // Overridable at build time (EXPO_PUBLIC_API_BASE) so end-to-end tests can run
 // against a local Worker instead of production.
@@ -95,7 +96,7 @@ export const api = {
 
 /** Human-friendly message for an API error code. */
 export function friendlyError(e: unknown, fallback = "Something went wrong. Please try again."): string {
-  if (!(e instanceof ApiError)) return "Can't reach MomEase right now. Check your connection and try again.";
+  if (!(e instanceof ApiError)) return `Can't reach ${BRAND} right now. Check your connection and try again.`;
   switch (e.code) {
     case "invalid_credentials": return "That email and password don't match.";
     case "email_in_use": return "An account with that email already exists. Try signing in.";
@@ -103,7 +104,7 @@ export function friendlyError(e: unknown, fallback = "Something went wrong. Plea
     case "invalid_email": return "Please enter a valid email address.";
     case "too_many_attempts": return "Too many attempts. Please wait a few minutes and try again.";
     case "email_and_password_required": return "Please enter your email and password.";
-    case "already_subscribed": return "You already have an active MomEase Premium subscription.";
+    case "already_subscribed": return `You already have an active ${BRAND} Premium subscription.`;
     case "no_subscription": return "We couldn't find a subscription on this account.";
     case "checkout_failed":
     case "portal_failed":

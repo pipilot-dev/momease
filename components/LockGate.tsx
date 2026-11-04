@@ -6,6 +6,7 @@ import { useSettingsStore } from "../lib/stores/settings-store";
 import { useTheme } from "../lib/theme-context";
 import { isBiometricAvailable, biometricLabel, authenticateBiometric } from "../lib/biometrics";
 import { PinPad } from "./PinPad";
+import { BRAND } from "../lib/brand";
 
 /**
  * Wraps the app and, when an app-lock PIN is set, gates everything behind an
@@ -40,7 +41,7 @@ export function LockGate({ children }: { children: React.ReactNode }) {
   }, [lock]);
 
   const promptBiometric = async () => {
-    const ok = await authenticateBiometric("Unlock MomEase");
+    const ok = await authenticateBiometric(`Unlock ${BRAND}`);
     if (ok) {
       setError(null);
       unlock();
@@ -81,7 +82,7 @@ export function LockGate({ children }: { children: React.ReactNode }) {
         <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "#F9A8D4", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
           <Lock size={30} color="#fff" />
         </View>
-        <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: theme.text.primary }}>MomEase</Text>
+        <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 22, color: theme.text.primary }}>{BRAND}</Text>
       </View>
 
       <PinPad

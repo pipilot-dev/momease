@@ -17,6 +17,7 @@ import { Heart, Mail, Lock, Eye, EyeOff, CheckCircle2, X } from "lucide-react-na
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { authService } from "../../lib/auth-service";
 import { useTheme } from "../../lib/theme-context";
+import { BRAND } from "../../lib/brand";
 
 export default function SignIn() {
   const { theme, isDark } = useTheme();
@@ -351,7 +352,7 @@ export default function SignIn() {
                   color: theme.text.secondary,
                 }}
               >
-                New to MomEase?
+                New to {BRAND}?
               </Text>
               <Link href="/(auth)/sign-up" asChild>
                 <TouchableOpacity>
