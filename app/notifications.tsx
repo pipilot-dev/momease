@@ -30,6 +30,7 @@ import {
   showNotification,
   type PushPermission,
 } from "../lib/web-push";
+import { BRAND } from "../lib/brand";
 
 const iconFor: Record<NotificationType, any> = {
   reminder: BookOpen,
@@ -78,7 +79,7 @@ export default function NotificationsScreen() {
         type: "motivation",
       });
       await showNotification("You're all set 💛", {
-        body: "MomEase will nudge you gently when it matters.",
+        body: `${BRAND} will nudge you gently when it matters.`,
         tag: "momease-welcome",
       });
     }
@@ -87,7 +88,7 @@ export default function NotificationsScreen() {
   const handleTestPush = async () => {
     Haptics.selectionAsync().catch(() => {});
     await showNotification("Test notification", {
-      body: "This is what a real MomEase notification looks like.",
+      body: `This is what a real ${BRAND} notification looks like.`,
       tag: "momease-test",
       url: "/notifications",
     });

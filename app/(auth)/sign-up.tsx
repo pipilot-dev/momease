@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Heart, Mail, Lock, User, Eye, EyeOff } from "lucide-react-native";
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTheme } from "../../lib/theme-context";
+import { BRAND } from "../../lib/brand";
 
 export default function SignUp() {
   const { theme, isDark } = useTheme();
@@ -116,7 +117,7 @@ export default function SignUp() {
                   color: theme.text.primary,
                 }}
               >
-                Join MomEase
+                Join {BRAND}
               </Text>
               <Text
                 style={{

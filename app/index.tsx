@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Heart } from "lucide-react-native";
 import { useAuthStore } from "../lib/stores/auth-store";
 import { authService } from "../lib/auth-service";
+import { BRAND } from "../lib/brand";
 
 const { width } = Dimensions.get("window");
 
@@ -103,7 +104,7 @@ export default function SplashEntry() {
             letterSpacing: -0.5,
           }}
         >
-          MomEase
+          {BRAND}
         </Text>
         <Text
           style={{

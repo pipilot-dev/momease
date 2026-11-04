@@ -25,6 +25,7 @@ import { useTaskStore } from "../../lib/stores/task-store";
 import { useCheckinStore } from "../../lib/stores/checkin-store";
 import { useSettingsStore } from "../../lib/stores/settings-store";
 import { useTheme } from "../../lib/theme-context";
+import { BRAND } from "../../lib/brand";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -100,7 +101,7 @@ export default function ProfileScreen() {
             if (v && !result) {
               showAlert(
                 "Notifications blocked",
-                "Enable notifications for MomEase in your device settings to get daily check-in reminders."
+                `Enable notifications for ${BRAND} in your device settings to get daily check-in reminders.`
               );
             }
           },
@@ -137,7 +138,7 @@ export default function ProfileScreen() {
       items: [
         { icon: HelpCircle, label: "Help Center", color: "#10B981", onPress: () => go(pageUrl("help")) },
         { icon: MessageSquare, label: "Send Feedback", color: "#3B82F6", onPress: () => go(feedbackFormUrl(Platform.OS, appVersion)) },
-        { icon: Star, label: "Rate MomEase", color: "#F59E0B", onPress: () => go(playStoreUrl) },
+        { icon: Star, label: `Rate ${BRAND}`, color: "#F59E0B", onPress: () => go(playStoreUrl) },
         { icon: Shield, label: "Privacy Policy", color: "#6B7280", onPress: () => go(pageUrl("privacy")) },
         { icon: FileText, label: "Terms of Service", color: "#6B7280", onPress: () => go(pageUrl("terms")) },
       ],

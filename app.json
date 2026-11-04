@@ -20,7 +20,8 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "MumEase"
       }
     },
     "android": {
@@ -51,7 +52,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Allow MomEase to use Face ID to unlock the app."
+          "faceIDPermission": "Allow MumEase to use Face ID to unlock the app."
         }
       ],
       "expo-web-browser",

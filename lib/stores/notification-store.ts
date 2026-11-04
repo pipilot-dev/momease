@@ -8,6 +8,7 @@
 
 import { create } from "zustand";
 import { attachPersistence } from "../persist";
+import { BRAND } from "../brand";
 
 export type NotificationType =
   | "reminder"
@@ -46,7 +47,7 @@ const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString
 const seedNotifications: AppNotification[] = [
   {
     id: "seed_welcome",
-    title: "Welcome to MomEase",
+    title: `Welcome to ${BRAND}`,
     body: "You're in a calm space now. Explore your personalized dashboard whenever you need a moment.",
     type: "motivation",
     read: false,

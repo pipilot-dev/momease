@@ -26,6 +26,7 @@ import { PREMIUM_PRICE_LABEL } from "../lib/pricing";
 import Constants from "expo-constants";
 import { openLink } from "../lib/links";
 import { pageUrl, feedbackFormUrl } from "../lib/links-core";
+import { BRAND } from "../lib/brand";
 
 const FEATURES = [
   { icon: MessageCircle, label: "Unlimited chat with your companion" },
@@ -167,7 +168,7 @@ export default function UpgradeScreen() {
             <Crown size={22} color="#FFFFFF" fill="#FFFFFF" />
           </View>
           <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 26, color: theme.text.primary }}>
-            MomEase Premium
+            {BRAND} Premium
           </Text>
         </View>
         <Text
@@ -181,7 +182,7 @@ export default function UpgradeScreen() {
           {isPremium
             ? isTrialing
               ? "You're on the 7-day free trial. Cancel anytime — no surprise charges."
-              : "Thank you for supporting MomEase 💛"
+              : `Thank you for supporting ${BRAND} 💛`
             : "Everything you need to feel calm, cared for, and in control — for less than a coffee a month."}
         </Text>
       </LinearGradient>

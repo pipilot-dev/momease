@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { View, Text } from "react-native";
 import { Heart } from "lucide-react-native";
 import { colors, spacing } from "../../lib/theme";
+import { BRAND } from "../../lib/brand";
 
 interface ChatMessageProps {
   content: string;
@@ -26,7 +27,7 @@ export const ChatMessage = memo(function ChatMessage({
       {!isUser && (
         <View style={styles.avatarRow}>
           <Heart size={12} color={colors.accent[400]} fill={colors.accent[400]} />
-          <Text style={styles.avatarText}>MomEase</Text>
+          <Text style={styles.avatarText}>{BRAND}</Text>
         </View>
       )}
       <View

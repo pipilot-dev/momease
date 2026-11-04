@@ -17,6 +17,7 @@ import { useAuthStore } from "../lib/stores/auth-store";
 import { useTheme } from "../lib/theme-context";
 import { isBiometricAvailable, biometricLabel, authenticateBiometric } from "../lib/biometrics";
 import { deleteAccount } from "../lib/social";
+import { BRAND } from "../lib/brand";
 
 // Preset reminder times shown as selectable chips.
 const TIME_OPTIONS: { label: string; hour: number; minute: number }[] = [
@@ -210,7 +211,7 @@ export default function SettingsScreen() {
                 if (v && !ok) {
                   showAlert(
                     "Notifications blocked",
-                    "Enable notifications for MomEase in your device settings to receive reminders."
+                    `Enable notifications for ${BRAND} in your device settings to receive reminders.`
                   );
                 }
               }}
@@ -346,7 +347,7 @@ export default function SettingsScreen() {
         </Card>
 
         <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.muted, textAlign: "center", marginTop: 8 }}>
-          MomEase v1.0.0
+          {BRAND} v1.0.0
         </Text>
       </ScrollView>
     </View>

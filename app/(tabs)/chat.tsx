@@ -25,6 +25,7 @@ import { useChatStore } from "../../lib/stores/chat-store";
 import { animation } from "../../lib/theme";
 import { useTheme } from "../../lib/theme-context";
 import { speak, stopSpeaking, isVoiceSupported, type SpeechHandle } from "../../lib/kokoro-tts";
+import { BRAND } from "../../lib/brand";
 
 const aiAvatar = require("../../assets/ai-assistant.png");
 
@@ -285,7 +286,7 @@ export default function ChatScreen() {
                         color: colors.text.muted,
                       }}
                     >
-                      MomEase
+                      {BRAND}
                     </Text>
                     {isSpeaking && (
                       <View
