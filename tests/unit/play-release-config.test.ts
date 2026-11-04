@@ -55,4 +55,12 @@ describe("Play Console release warnings", () => {
     expect(out.resources.style[0].item.map((i: any) => i.$.name)).toEqual(["colorPrimary", "android:enforceNavigationBarContrast"]);
     expect(out.resources.style[1].item).toEqual([]);
   });
+
+  it("iPhone build: answers Apple's encryption question once and asks for no microphone (the app only plays sound)", () => {
+    expect(app.ios.bundleIdentifier).toBe("com.momease.app");
+    expect(app.ios.config.usesNonExemptEncryption).toBe(false);
+    expect(app.ios.infoPlist.ITSAppUsesNonExemptEncryption).toBe(false); // EAS checks this exact key
+    const av = app.plugins.find((p: any) => Array.isArray(p) && p[0] === "expo-av");
+    expect(av?.[1].microphonePermission).toBe(false);
+  });
 });

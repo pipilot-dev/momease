@@ -15,7 +15,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.momease.app"
+      "bundleIdentifier": "com.momease.app",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -58,7 +64,13 @@
           }
         }
       ],
-      "./plugins/with-edge-to-edge-theme.js"
+      "./plugins/with-edge-to-edge-theme.js",
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ]
     ],
     "extra": {
       "router": {},

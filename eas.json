@@ -7,18 +7,26 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "android": { "gradleCommand": ":app:assembleDebug" }
+      "android": {
+        "gradleCommand": ":app:assembleDebug"
+      }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
-      "android": { "buildType": "app-bundle" },
-      "ios": { "resourceClass": "m-medium" }
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      }
     }
   },
   "submit": {
@@ -43,6 +51,15 @@
         "serviceAccountKeyPath": "./credentials/play-service-account.json",
         "track": "production",
         "releaseStatus": "draft"
+      }
+    },
+    "testflight": {
+      "ios": {
+        "ascAppId": "6830874302",
+        "appleTeamId": "8CCKD6K98H",
+        "ascApiKeyPath": "./credentials/AuthKey_SNDB546YXB.p8",
+        "ascApiKeyIssuerId": "d98ddf22-d838-4966-b72f-1d512259d99b",
+        "ascApiKeyId": "SNDB546YXB"
       }
     }
   }
