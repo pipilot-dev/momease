@@ -8,12 +8,16 @@ import { handleSocial } from './routes/social'
 import { handleBilling } from './routes/billing'
 import { identitiesOf } from './routes/link'
 import { requireSession } from './lib/session'
+import { revokeAppleForUser } from './lib/apple'
 import { corsPreflight, withCors } from './lib/cors'
 
 export interface Env {
   DB: D1Database
   GOOGLE_CLIENT_ID: string
   APPLE_BUNDLE_ID?: string // comma-separated list of accepted Apple token audiences (the iPhone bundle id)
+  APPLE_TEAM_ID?: string // Sign in with Apple key (secrets): lets us revoke a person's Apple token when they delete their account
+  APPLE_KEY_ID?: string
+  APPLE_PRIVATE_KEY?: string
   GOOGLE_CLIENT_SECRET: string
   JWT_SIGNING_KEY: string
   APP_SCHEME: string
@@ -53,6 +57,7 @@ export default {
         return withCors(req, env, await handleState(req, env, url, session.userId))
       }
       if (url.pathname === '/account' && req.method === 'DELETE') {
+        await revokeAppleForUser(env, session.userId) // best effort; Apple requires it for Sign in with Apple accounts
         await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(session.userId).run()
         return withCors(req, env, Response.json({ ok: true }))
       }

@@ -7,7 +7,7 @@ import { signJwt, verifyJwt } from '../lib/jwt'
 import { isAllowedAppRedirect, withSessionFragment } from '../lib/redirect'
 import { clearFailures, isThrottled, recordFailure, throttleBuckets } from '../lib/throttle'
 import { sendResetEmail, sha256Hex } from '../lib/email'
-import { verifyAppleIdentityToken } from '../lib/apple'
+import { rememberAppleRefreshToken, verifyAppleIdentityToken } from '../lib/apple'
 import { attachIdentity, handleLink } from './link'
 
 const GOOGLE_AUTHORIZE = 'https://accounts.google.com/o/oauth2/v2/auth'
@@ -279,6 +279,7 @@ async function googleCallback(env: Env, url: URL): Promise<Response> {
 interface AppleBody {
   identityToken?: string
   nonce?: string
+  authorizationCode?: string
   fullName?: { givenName?: string | null; familyName?: string | null }
 }
 
@@ -341,6 +342,7 @@ async function appleSignin(req: Request, env: Env): Promise<Response> {
   }
 
   await clearFailures(env, buckets)
+  await rememberAppleRefreshToken(env, row.id, b.authorizationCode)
   const token = await issueSession(env, row.id)
   return Response.json({ user: publicUser(row), token })
 }

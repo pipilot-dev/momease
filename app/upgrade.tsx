@@ -27,6 +27,7 @@ import Constants from "expo-constants";
 import { openLink } from "../lib/links";
 import { pageUrl, feedbackFormUrl } from "../lib/links-core";
 import { BRAND } from "../lib/brand";
+import { sellsInApp, WEB_ACCOUNT_URL, MANAGE_ON_WEB_LABEL } from "../lib/billing-surface-core";
 
 const FEATURES = [
   { icon: MessageCircle, label: "Unlimited chat with your companion" },
@@ -124,6 +125,61 @@ export default function UpgradeScreen() {
   const isPremium = status.premium;
   const isTrialing = status.status === "trialing";
   const headerPadTop = Platform.OS === "ios" ? 52 : 36;
+
+  // iPhone: nothing is sold in the app. A free account gets one plain link to the website.
+  if (!sellsInApp(Platform.OS) && !isPremium) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.bg, paddingTop: headerPadTop, paddingHorizontal: 20 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          accessibilityLabel="Back"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: theme.surface,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+          }}
+        >
+          <ChevronLeft size={22} color={theme.text.primary} />
+        </TouchableOpacity>
+        <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: theme.text.primary, marginBottom: 8 }}>
+          Subscription
+        </Text>
+        <Text
+          style={{ fontFamily: "Quicksand-Medium", fontSize: 15, color: theme.text.secondary, lineHeight: 22, marginBottom: 20 }}
+        >
+          Your {BRAND} plan is managed on the website. Sign in there with the same account.
+        </Text>
+        <TouchableOpacity
+          accessibilityRole="link"
+          activeOpacity={0.7}
+          onPress={() => openLink(WEB_ACCOUNT_URL)}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingVertical: 16,
+            borderRadius: 14,
+            backgroundColor: theme.surface,
+            borderWidth: 1,
+            borderColor: theme.border,
+          }}
+        >
+          <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 15, color: theme.accent[500] }}>{MANAGE_ON_WEB_LABEL}</Text>
+          <ExternalLink size={16} color={theme.accent[500]} />
+        </TouchableOpacity>
+        <Text style={{ marginTop: 18, fontFamily: "Quicksand-Medium", fontSize: 12, color: theme.text.muted, textAlign: "center" }}>
+          See our{" "}
+          <Text accessibilityRole="link" onPress={() => openLink(pageUrl("privacy"))} style={{ color: theme.accent[500] }}>privacy policy</Text> and{" "}
+          <Text accessibilityRole="link" onPress={() => openLink(pageUrl("terms"))} style={{ color: theme.accent[500] }}>terms</Text>.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
