@@ -565,6 +565,102 @@ test('sign out still works when the browser blocks its own dialogs (in-app brows
   assert.deepEqual(errors, []);
 });
 
+// ─────────────────────────── connected sign-ins (Settings) ───────────────────────────
+
+async function openSettings(t, tag) {
+  const u = await makeUser(tag);
+  const { page, errors } = await newPage(t);
+  await signInViaUI(page, u.email);
+  await page.waitForURL(/home/, { timeout: 15000 });
+  return { u, page, errors };
+}
+
+test('settings: Connected sign-ins offers Google (no Apple button on the web) and shows what the server says', async (t) => {
+  const { page, errors } = await openSettings(t, 'conn1');
+  await page.goto(`${APP}/settings`);
+  await page.getByText('Connected sign-ins').waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: 'Connect Google' }).waitFor({ timeout: 10000 });
+  assert.equal(await page.getByRole('button', { name: 'Connect Apple' }).count(), 0, 'Apple connect is iPhone-only');
+  assert.equal(await page.getByText('Connected', { exact: true }).count(), 0);
+
+  // A profile that already has Google connected shows it as connected, with no button.
+  await page.route('**/session', async (route) => {
+    const res = await route.fetch();
+    const body = await res.json();
+    await route.fulfill({ response: res, json: { ...body, identities: { google: true, apple: false } } });
+  });
+  await page.reload();
+  await page.getByText('Connected', { exact: true }).waitFor({ timeout: 15000 });
+  assert.equal(await page.getByRole('button', { name: 'Connect Google' }).count(), 0);
+  assert.deepEqual(errors, []);
+});
+
+test('settings: Connect Google asks the server for a link ticket, goes to Google with it, and shows the result on return', async (t) => {
+  const { page, errors } = await openSettings(t, 'conn2');
+  const seen = { init: null, start: null };
+  page.on('request', (r) => {
+    if (r.url().endsWith('/auth/link/google/init')) seen.init = { auth: r.headers().authorization, body: r.postData() };
+  });
+  // Stand in for Google: the server's start URL would redirect to accounts.google.com; send her straight back as a success.
+  await page.route('**/auth/google/start**', async (route) => {
+    seen.start = new URL(route.request().url());
+    await route.fulfill({ status: 302, headers: { location: `${APP}/auth-callback#linked=google` } });
+  });
+  await page.goto(`${APP}/settings`);
+  await page.getByRole('button', { name: 'Connect Google' }).click({ timeout: 15000 });
+  await page.getByText(/Google is now connected to this profile/).waitFor({ timeout: 15000 });
+  assert.match(seen.init.auth ?? '', /^Bearer /);
+  assert.ok(seen.start.searchParams.get('link'), 'the start URL carries the link ticket');
+  assert.equal(seen.start.searchParams.get('redirect'), `${APP}/auth-callback`);
+  await page.waitForTimeout(500);
+  assert.doesNotMatch(page.url(), /linked=/, `no stray result left in the address bar after the dialog is shown (url: ${page.url()})`);
+  assert.deepEqual(errors, []);
+});
+
+test('settings: an empty profile that owns the Google sign-in is replaced only after she confirms', async (t) => {
+  const { page, errors } = await openSettings(t, 'conn3');
+  const inits = [];
+  page.on('request', (r) => { if (r.url().endsWith('/auth/link/google/init')) inits.push(JSON.parse(r.postData() ?? '{}')); });
+  let startCalls = 0;
+  await page.route('**/auth/google/start**', async (route) => {
+    startCalls++;
+    // first attempt: the server says the other profile is empty; second (after she agreed): success
+    const result = startCalls === 1 ? 'link_error=identity_in_use_mergeable' : 'linked=google';
+    await route.fulfill({ status: 302, headers: { location: `${APP}/auth-callback#${result}` } });
+  });
+  await page.goto(`${APP}/settings`);
+  await page.getByRole('button', { name: 'Connect Google' }).click({ timeout: 15000 });
+  await page.getByText('Replace the other profile?').waitFor({ timeout: 15000 });
+  assert.deepEqual(inits, [{ replaceOther: false }], 'nothing is replaced before she agrees');
+  await page.getByRole('button', { name: 'Replace and connect' }).click();
+  await page.getByText(/Google is now connected to this profile/).waitFor({ timeout: 15000 });
+  assert.deepEqual(inits, [{ replaceOther: false }, { replaceOther: true }]);
+  assert.deepEqual(errors, []);
+});
+
+test('settings: a profile with real content is never replaced, and she is told why; cancelling the replace changes nothing', async (t) => {
+  const { page, errors } = await openSettings(t, 'conn4');
+  await page.route('**/auth/google/start**', (route) =>
+    route.fulfill({ status: 302, headers: { location: `${APP}/auth-callback#link_error=identity_in_use` } }));
+  await page.goto(`${APP}/settings`);
+  await page.getByRole('button', { name: 'Connect Google' }).click({ timeout: 15000 });
+  await page.getByText(/already used by another profile that has content/).waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: 'OK' }).click();
+
+  // And declining the replace offer leaves everything as it was.
+  await page.unroute('**/auth/google/start**');
+  await page.route('**/auth/google/start**', (route) =>
+    route.fulfill({ status: 302, headers: { location: `${APP}/auth-callback#link_error=identity_in_use_mergeable` } }));
+  const inits = [];
+  page.on('request', (r) => { if (r.url().endsWith('/auth/link/google/init')) inits.push(JSON.parse(r.postData() ?? '{}')); });
+  await page.getByRole('button', { name: 'Connect Google' }).click();
+  await page.getByText('Replace the other profile?').waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.waitForTimeout(800);
+  assert.deepEqual(inits, [{ replaceOther: false }], 'cancel does not trigger a replace');
+  assert.deepEqual(errors, []);
+});
+
 // ─────────────────────────── every screen renders ───────────────────────────
 
 const ROUTES = ['/home', '/chat', '/sounds', '/tasks', '/profile', '/breathe', '/checkin', '/community', '/friends', '/messages',

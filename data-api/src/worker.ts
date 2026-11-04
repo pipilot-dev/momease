@@ -6,6 +6,7 @@ import { handleAuth, publicUser, type UserRow } from './routes/auth'
 import { handleState } from './routes/state'
 import { handleSocial } from './routes/social'
 import { handleBilling } from './routes/billing'
+import { identitiesOf } from './routes/link'
 import { requireSession } from './lib/session'
 import { corsPreflight, withCors } from './lib/cors'
 
@@ -72,6 +73,7 @@ async function getSession(env: Env, uid: string): Promise<Response> {
   if (!u) return Response.json({ error: 'user_missing' }, { status: 404 })
   return Response.json({
     user: publicUser(u),
+    identities: await identitiesOf(env, uid),
     subscription: {
       status: u.sub_status,
       current_period_end: u.sub_current_period_end,

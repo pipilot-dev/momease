@@ -5,6 +5,8 @@ export interface JwtPayload {
   jti: string           // session id — persisted in sessions_auth for revocation
   iat: number
   exp: number
+  lnk?: string          // google link flow: id of the signed-in user who is connecting Google (state JWT only)
+  rep?: boolean         // google link flow: the user agreed to replace an empty profile that already owns this Google id
 }
 
 function b64urlEncode(buf: ArrayBuffer | Uint8Array): string {

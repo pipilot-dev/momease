@@ -112,6 +112,8 @@ export function friendlyError(e: unknown, fallback = "Something went wrong. Plea
     case "invalid_apple_token": return "Apple sign-in didn't go through. Please try again.";
     case "no_email": return "Apple didn't share an email address, so we can't create your account. Please try again and allow sharing your email, or use another sign-in method.";
     case "account_linked_elsewhere": return "That email is already connected to a different Apple account. Please sign in another way.";
+    case "identity_in_use": return "That sign-in is already used by another profile that has content in it.";
+    case "already_linked_other": return "This profile is already connected to a different account of that kind.";
     case "email_not_verified": return "Your Google email isn't verified, so we can't sign you in with it.";
     default: return fallback;
   }
