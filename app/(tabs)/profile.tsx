@@ -26,6 +26,7 @@ import { useCheckinStore } from "../../lib/stores/checkin-store";
 import { useSettingsStore } from "../../lib/stores/settings-store";
 import { useTheme } from "../../lib/theme-context";
 import { BRAND } from "../../lib/brand";
+import { sellsInApp } from "../../lib/billing-surface-core";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -84,9 +85,9 @@ export default function ProfileScreen() {
         },
         {
           icon: Crown,
-          label: "Upgrade to Premium",
+          label: sellsInApp(Platform.OS) ? "Upgrade to Premium" : "Subscription",
           color: "#F59E0B",
-          badge: "PRO",
+          ...(sellsInApp(Platform.OS) ? { badge: "PRO" } : {}),
           onPress: () => router.push("/upgrade"),
         },
         {

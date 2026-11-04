@@ -10,7 +10,7 @@
 import type { Env } from '../worker'
 import { requireSession } from '../lib/session'
 import { signJwt } from '../lib/jwt'
-import { verifyAppleIdentityToken } from '../lib/apple'
+import { rememberAppleRefreshToken, verifyAppleIdentityToken } from '../lib/apple'
 import { sha256Hex } from '../lib/email'
 import { clearFailures, isThrottled, recordFailure, throttleBuckets } from '../lib/throttle'
 
@@ -73,7 +73,7 @@ export async function handleLink(req: Request, env: Env, url: URL): Promise<Resp
 
   const session = await requireSession(req, env)
   if (session instanceof Response) return session
-  let b: { identityToken?: string; nonce?: string; replaceOther?: boolean } = {}
+  let b: { identityToken?: string; nonce?: string; authorizationCode?: string; replaceOther?: boolean } = {}
   try { b = await req.json() } catch { /* empty body */ }
 
   if (isGoogleInit) {
@@ -96,5 +96,6 @@ export async function handleLink(req: Request, env: Env, url: URL): Promise<Resp
   await clearFailures(env, buckets)
   const err = await attachIdentity(env, 'apple', session.userId, claims.sub, b.replaceOther === true)
   if (err) return Response.json({ error: err }, { status: STATUS[err] })
+  await rememberAppleRefreshToken(env, session.userId, b.authorizationCode)
   return Response.json({ ok: true, identities: await identitiesOf(env, session.userId) })
 }

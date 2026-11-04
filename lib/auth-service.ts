@@ -114,6 +114,7 @@ export const authService = {
       const data = await api.postNoAuth<AuthPayload>("/auth/apple", {
         identityToken: cred.identityToken,
         nonce: rawNonce,
+        authorizationCode: cred.authorizationCode ?? undefined, // lets the server revoke this sign-in if she deletes her account
         fullName: nameFromCredential(cred.fullName),
       });
       await setToken(data.token);
@@ -147,7 +148,7 @@ export const authService = {
         nonce: hashedNonce,
       });
       if (!cred.identityToken) return { ok: false, code: "invalid_apple_token" };
-      await api.post("/auth/link/apple", { identityToken: cred.identityToken, nonce: rawNonce, replaceOther });
+      await api.post("/auth/link/apple", { identityToken: cred.identityToken, nonce: rawNonce, authorizationCode: cred.authorizationCode ?? undefined, replaceOther });
       return { ok: true };
     } catch (e) {
       if (isAppleCancel(e)) return { ok: false, code: "" };
