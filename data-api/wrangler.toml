@@ -18,6 +18,7 @@ database_id = "b92ef035-81b6-49b4-8c21-8fe8ed0dd4ae"
 
 [vars]
 APP_SCHEME = "momease"
+APPLE_BUNDLE_ID = "com.momease.app"
 WEB_APP_URL = "https://mease.mom"
 BILLING_RETURN_BASE = "https://app.mease.mom"
 MAIL_FROM = "MomEase <noreply@mease.mom>"

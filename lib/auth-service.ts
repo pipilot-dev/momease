@@ -10,6 +10,7 @@ import type { AuthResult } from "./mock-auth";
 import { authService as mockAuth } from "./mock-auth";
 import { API_BASE, api, ApiError, friendlyError, getToken, isNetworkError, loadToken, setToken } from "./api";
 import { parseCallbackUrl } from "./auth-callback";
+import { isAppleCancel, nameFromCredential, offersAppleSignIn, toHex } from "./apple-auth-core";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -89,6 +90,33 @@ export const authService = {
       return { success: true, user: toUser(me.user) };
     } catch (e) {
       return { success: false, error: friendlyError(e, "Google sign-in failed. Please try again.") };
+    }
+  },
+
+  /** iPhone only: Apple's native sheet -> identity token -> our server verifies it and returns a session. */
+  async signInWithApple(): Promise<AuthResult> {
+    try {
+      if (!offersAppleSignIn(Platform.OS)) return { success: false, error: "Sign in with Apple is only available on iPhone." };
+      const AppleAuthentication = await import("expo-apple-authentication");
+      const Crypto = await import("expo-crypto");
+      // A fresh random value per attempt; Apple signs its SHA-256 into the token so a stolen token can't be replayed.
+      const rawNonce = toHex(await Crypto.getRandomBytesAsync(16));
+      const hashedNonce = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, rawNonce);
+      const cred = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+        nonce: hashedNonce,
+      });
+      if (!cred.identityToken) return { success: false, error: "Apple didn't return a sign-in token. Please try again." };
+      const data = await api.postNoAuth<AuthPayload>("/auth/apple", {
+        identityToken: cred.identityToken,
+        nonce: rawNonce,
+        fullName: nameFromCredential(cred.fullName),
+      });
+      await setToken(data.token);
+      return { success: true, user: toUser(data.user) };
+    } catch (e) {
+      if (isAppleCancel(e)) return { success: false, error: "" }; // she closed the sheet: not an error to show
+      return { success: false, error: friendlyError(e, "Apple sign-in failed. Please try again.") };
     }
   },
 
