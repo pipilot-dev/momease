@@ -4,6 +4,11 @@
 const A0_API_URL = "https://api.a0.dev/ai/llm";
 
 import { BRAND } from "./brand";
+import { canSendToAi } from "./ai-consent-core";
+import { useSettingsStore } from "./stores/settings-store";
+
+/** Nothing leaves the device for the AI service until she has tapped Allow. */
+const aiAllowed = () => canSendToAi(useSettingsStore.getState().aiConsent);
 
 interface AIResponse {
   success: boolean;
@@ -76,6 +81,7 @@ export const NOT_A_MOM_NOTE =
   "The person you are talking with is NOT a mother (yet). Do not assume she has children, a partner or a family, and do not mention mom guilt, co-parenting or being a working mom. Support her as a woman looking after her own wellbeing (stress, burnout, sleep, work-life balance, loneliness, self-care, and planning ahead if she brings up motherhood).";
 
 export async function sendAIMessage(userMessage: string, context?: string, opts?: { notMom?: boolean }): Promise<AIResponse> {
+  if (!aiAllowed()) return { success: true, message: getFallbackResponse(userMessage) };
   try {
     const response = await fetch(A0_API_URL, {
       method: "POST",
@@ -108,6 +114,7 @@ export async function sendAIMessage(userMessage: string, context?: string, opts?
 export async function getAIGreeting(userName: string): Promise<string> {
   const hour = new Date().getHours();
   const timeOfDay = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
+  if (!aiAllowed()) return getLocalGreeting(userName, timeOfDay);
 
   try {
     const response = await fetch(A0_API_URL, {
@@ -134,6 +141,7 @@ export async function getAIGreeting(userName: string): Promise<string> {
 }
 
 export async function getAITaskPrioritization(tasks: string[]): Promise<string> {
+  if (!aiAllowed()) return "Focus on the most time-sensitive tasks first, then tackle what energizes you!";
   try {
     const response = await fetch(A0_API_URL, {
       method: "POST",

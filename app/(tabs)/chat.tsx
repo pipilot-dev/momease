@@ -26,11 +26,15 @@ import { animation } from "../../lib/theme";
 import { useTheme } from "../../lib/theme-context";
 import { speak, stopSpeaking, isVoiceSupported, type SpeechHandle } from "../../lib/kokoro-tts";
 import { BRAND } from "../../lib/brand";
+import { AiConsentCard } from "../../components/AiConsentCard";
+import { useSettingsStore } from "../../lib/stores/settings-store";
+import { canSendToAi } from "../../lib/ai-consent-core";
 
 const aiAvatar = require("../../assets/ai-assistant.png");
 
 export default function ChatScreen() {
   const { messages, isTyping, sendMessage, clearChat, voiceMode, setVoiceMode } = useChatStore();
+  const aiOn = canSendToAi(useSettingsStore((s) => s.aiConsent));
   const { theme, isDark } = useTheme();
   const colors = theme;
   const [input, setInput] = useState("");
@@ -95,7 +99,7 @@ export default function ChatScreen() {
 
   const handleSend = () => {
     const t = input.trim();
-    if (!t) return;
+    if (!t || !aiOn) return;
     sendMessage(t);
     setInput("");
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -108,7 +112,7 @@ export default function ChatScreen() {
   };
 
   const handleToggleVoice = () => {
-    if (!isVoiceSupported) return;
+    if (!isVoiceSupported || !aiOn) return;
     setVoiceMode(!voiceMode);
     Haptics.selectionAsync().catch(() => {});
   };
@@ -402,6 +406,7 @@ export default function ChatScreen() {
                   <TouchableOpacity
                     key={prompt}
                     onPress={() => {
+                      if (!aiOn) return;
                       sendMessage(prompt);
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
                     }}
@@ -474,6 +479,9 @@ export default function ChatScreen() {
           </TouchableOpacity>
         )}
 
+        {!aiOn ? (
+          <AiConsentCard />
+        ) : (
         <View
           style={{
             flexDirection: "row",
@@ -535,6 +543,7 @@ export default function ChatScreen() {
             <Send size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
+        )}
       </KeyboardAvoidingView>
     </View>
   );

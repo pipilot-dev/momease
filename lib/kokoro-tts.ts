@@ -9,6 +9,8 @@
 // Trap #3: cap ~510 tokens (~1.5-2k chars), we clamp defensively.
 
 import { Platform } from "react-native";
+import { canSendToAi } from "./ai-consent-core";
+import { useSettingsStore } from "./stores/settings-store";
 
 const BASE = "https://tts.voice-generator.com";
 
@@ -34,6 +36,8 @@ export const isVoiceSupported = Platform.OS === "web" && typeof window !== "unde
  */
 export async function synthesize(text: string, opts: SpeakOptions = {}): Promise<Blob> {
   if (!isVoiceSupported) throw new Error("Voice not supported on this platform");
+  // The reply text goes to a third-party service, so only after she allowed it.
+  if (!canSendToAi(useSettingsStore.getState().aiConsent)) throw new Error("AI sharing not allowed");
   const voice = opts.voice ?? DEFAULT_VOICE;
   const qs = new URLSearchParams({
     text: text.trim().slice(0, 1500),

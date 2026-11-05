@@ -12,7 +12,9 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight, ScanFace, UserX, Link2, Check } from "lucide-react-native";
+import { ChevronLeft, Bell, Clock, Moon, Trash2, Lock, ChevronRight, ScanFace, UserX, Link2, Check, ShieldCheck } from "lucide-react-native";
+import { openLink } from "../lib/links";
+import { pageUrl } from "../lib/links-core";
 import { useSettingsStore } from "../lib/stores/settings-store";
 import { useAuthStore } from "../lib/stores/auth-store";
 import { useTheme } from "../lib/theme-context";
@@ -52,6 +54,8 @@ export default function SettingsScreen() {
     pin,
     biometricEnabled,
     setBiometricEnabled,
+    aiConsent,
+    setAiConsent,
   } = useSettingsStore();
   const pinEnabled = pin !== null;
 
@@ -264,6 +268,30 @@ export default function SettingsScreen() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
+        {/* AI companion: sharing chat text with the AI service */}
+        <Card>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ flex: 1 }}>{rowHeader(ShieldCheck, "AI replies & data sharing", "Send your chat messages to our AI service so the companion can reply")}</View>
+            <Switch
+              testID="ai-consent-switch"
+              value={aiConsent === "granted"}
+              onValueChange={(v) => {
+                Haptics.selectionAsync();
+                setAiConsent(v ? "granted" : "declined");
+              }}
+              trackColor={{ false: theme.border, true: "#F9A8D4" }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+          <Text
+            accessibilityRole="link"
+            onPress={() => openLink(pageUrl("privacy"))}
+            style={{ fontFamily: "Quicksand-SemiBold", fontSize: 13, color: theme.accent[500], marginTop: 10 }}
+          >
+            What is sent, and to whom
+          </Text>
+        </Card>
+
         {/* Notifications */}
         <Card>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
