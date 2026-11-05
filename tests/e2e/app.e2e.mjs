@@ -702,7 +702,7 @@ test('chat: she is asked before anything is sent; nothing goes out until she tap
   await page.getByText('A calm reply from the stub AI.').waitFor({ timeout: 10000 });
   assert.equal(sent.length, 1);
   assert.match(sent[0], /I feel overwhelmed today/);
-  assert.doesNotMatch(sent[0], new RegExp(u.email.replace(/[.+]/g, '\\$&')), 'the email address is never sent');
+  assert.ok(!sent[0].includes(u.email), 'the email address is never sent');
 
   await page.reload(); // her answer is remembered
   await page.getByPlaceholder('Type your message…').waitFor({ timeout: 15000 });
