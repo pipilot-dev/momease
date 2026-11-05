@@ -663,6 +663,83 @@ test('settings: a profile with real content is never replaced, and she is told w
 
 // ─────────────────────────── every screen renders ───────────────────────────
 
+// ───────────────── AI companion: nothing is sent to the AI service before she says yes ─────────────────
+
+/** Stand in for the third-party AI service and record what it was sent. */
+async function stubAi(page) {
+  const sent = [];
+  await page.route('https://api.a0.dev/**', async (route) => {
+    sent.push(route.request().postData() ?? '');
+    await route.fulfill({ json: { completion: 'A calm reply from the stub AI.' } });
+  });
+  page.on('request', (r) => { if (/tts\.voice-generator\.com/.test(r.url())) sent.push(`TTS ${r.url()}`); });
+  return sent;
+}
+
+test('chat: she is asked before anything is sent; nothing goes out until she taps Allow, then the message does', async (t) => {
+  const u = await makeUser('aiyes');
+  const { page, errors } = await newPage(t);
+  const sent = await stubAi(page);
+  await signInViaUI(page, u.email);
+  await page.waitForURL(/home/, { timeout: 15000 });
+  await page.goto(`${APP}/chat`);
+  await page.getByText('Before you chat').waitFor({ timeout: 15000 });
+  const text = await page.evaluate(() => document.body.innerText);
+  assert.match(text, /a0\.dev/);
+  assert.match(text, /We do not send your email address/);
+  assert.equal(await page.getByPlaceholder('Type your message…').count(), 0, 'no chat box before consent');
+  await page.waitForTimeout(1200);
+  assert.deepEqual(sent, [], 'nothing sent to the AI service before consent (not even the home greeting)');
+
+  // Wait until the answer has reached the server too: a reload right away would otherwise pull the older cloud copy.
+  const saved = page.waitForResponse((r) => r.url().endsWith('/state/momease-settings') && r.request().method() === 'PUT' && /granted/.test(r.request().postData() ?? ''));
+  await page.getByTestId('ai-consent-allow').click();
+  await saved;
+  const box = page.getByPlaceholder('Type your message…');
+  await box.waitFor({ timeout: 10000 });
+  await box.fill('I feel overwhelmed today');
+  await box.press('Enter');
+  await page.getByText('A calm reply from the stub AI.').waitFor({ timeout: 10000 });
+  assert.equal(sent.length, 1);
+  assert.match(sent[0], /I feel overwhelmed today/);
+  assert.doesNotMatch(sent[0], new RegExp(u.email.replace(/[.+]/g, '\\$&')), 'the email address is never sent');
+
+  await page.reload(); // her answer is remembered
+  await page.getByPlaceholder('Type your message…').waitFor({ timeout: 15000 });
+  assert.equal(await page.getByTestId('ai-consent').count(), 0);
+  assert.deepEqual(errors, []);
+});
+
+test('chat: "Not now" sends nothing and the chat box stays off; Settings can turn it on, and off again', async (t) => {
+  const u = await makeUser('aino');
+  const { page, errors } = await newPage(t);
+  const sent = await stubAi(page);
+  await signInViaUI(page, u.email);
+  await page.waitForURL(/home/, { timeout: 15000 });
+  await page.goto(`${APP}/chat`);
+  await page.getByTestId('ai-consent-decline').click();
+  await page.getByText('AI replies are off').waitFor({ timeout: 10000 });
+  assert.equal(await page.getByPlaceholder('Type your message…').count(), 0);
+
+  await page.goto(`${APP}/settings`);
+  await page.getByText('AI replies & data sharing').waitFor({ timeout: 15000 });
+  const sw = page.getByTestId('ai-consent-switch').locator('input');
+  assert.equal(await sw.isChecked(), false);
+  await page.getByTestId('ai-consent-switch').click();
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('momease-settings') || '{}').aiConsent === 'granted');
+  await page.goto(`${APP}/chat`);
+  await page.getByPlaceholder('Type your message…').waitFor({ timeout: 15000 });
+
+  await page.goto(`${APP}/settings`);
+  await page.getByText('AI replies & data sharing').waitFor({ timeout: 15000 });
+  await page.getByTestId('ai-consent-switch').click();
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('momease-settings') || '{}').aiConsent === 'declined');
+  await page.goto(`${APP}/chat`);
+  await page.getByText('AI replies are off').waitFor({ timeout: 15000 });
+  assert.deepEqual(sent, [], 'no request ever reached the AI service');
+  assert.deepEqual(errors, []);
+});
+
 const ROUTES = ['/home', '/chat', '/sounds', '/tasks', '/profile', '/breathe', '/checkin', '/community', '/friends', '/messages',
   '/milestones', '/mood', '/journal', '/sleep', '/meals', '/insights', '/notifications', '/settings', '/edit-profile', '/upgrade'];
 

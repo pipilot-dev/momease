@@ -91,7 +91,7 @@
       <a class="back" href="/">← Back to MomEase</a>
       <h1>Privacy Policy</h1>
       <p class="sub">How MomEase collects, uses, and protects the information you share with us.</p>
-      <span class="effective">Effective August 24, 2026</span>
+      <span class="effective">Updated November 5, 2026</span>
     </div>
   </header>
   <main>
@@ -105,15 +105,15 @@
 <ul>
   <li><strong>Account information</strong> — name, email address, and a password when you register (or an OAuth identifier if you sign in with Google or Apple).</li>
   <li><strong>Wellness content you create</strong> — journal entries, mood check-ins, saved meditations, meal favourites, sleep-sound preferences, and community posts.</li>
-  <li><strong>Messages</strong> — anything you send our AI assistant, and messages you send in the community.</li>
-  <li><strong>Payment information</strong> — processed by our payment provider (Stripe). We never see or store your full card details on our servers.</li>
+  <li><strong>Messages</strong> — what you send the AI companion, and messages you send in the community or privately to other people.</li>
+  <li><strong>About you and your family</strong> — if you choose to tell us in onboarding: your stage of motherhood (for example pregnant, postpartum, or a parent), your children’s ages, and your goals. This can include pregnancy and childbirth information.</li>
+  <li><strong>Payment information</strong> — if you subscribe on our website, payment is processed by our payment provider (Stripe). We never see or store your full card details on our servers. The iPhone app does not sell subscriptions.</li>
 </ul>
 
 <h3>Information we collect automatically</h3>
 <ul>
-  <li><strong>Usage data</strong> — screens visited, features used, session length. Used to diagnose issues and improve the app.</li>
-  <li><strong>Device and technical data</strong> — device model, operating system, app version, language.</li>
-  <li><strong>Notifications</strong> — a push token so we can send reminders and updates you have opted into.</li>
+  <li><strong>Technical data</strong> — like most online services, our servers receive your IP address and request details when the app connects. We do not use analytics or advertising tools in the app and we do not track you across other companies’ apps or websites.</li>
+  <li><strong>Reminders</strong> — the daily reminder you turn on is scheduled on your own device. We do not collect a push token.</li>
   <li><strong>Biometric authentication</strong> — Face ID / fingerprint is processed by your device only. We never receive biometric templates.</li>
 </ul>
 
@@ -128,13 +128,18 @@
 </ul>
 
 <h2>4. Sharing with third parties</h2>
-<p>We share only what's needed with the vendors that power the app. Each is bound by contract not to sell or repurpose your data.</p>
+<p>We share only what is needed with the companies that help run the app:</p>
 <ul>
-  <li><strong>Supabase</strong> — database and authentication.</li>
-  <li><strong>Stripe</strong> — subscription payments. Handles cards; we never see them.</li>
-  <li><strong>OpenAI (or equivalent AI provider)</strong> — receives the message you send to the AI assistant and the minimum context needed to reply. Not used to train someone else's model.</li>
-  <li><strong>Expo push notification service</strong> — delivers the reminders you opted into.</li>
+  <li><strong>Cloudflare</strong> — hosts our servers and the database that stores your account and synced data.</li>
+  <li><strong>Google and Apple</strong> — if you choose to sign in with them. They tell us who you are; we do not send them your wellness content.</li>
+  <li><strong>Stripe</strong> — subscription payments made on our website. Handles cards; we never see them.</li>
+  <li><strong>Resend</strong> — sends account emails such as password resets.</li>
+  <li><strong>a0.dev (AI service)</strong> — see “AI companion” below.</li>
+  <li><strong>tts.voice-generator.com (text-to-speech)</strong> — only if you turn on voice replies in the browser version; it receives the text of the companion’s reply to read it aloud.</li>
 </ul>
+
+<h3>AI companion</h3>
+<p>The companion’s replies are written by an AI service run by another company, <strong>a0.dev</strong>. <strong>Only after you tap “Allow” in the app</strong>, the text of each message you send to the companion is sent to that service so it can reply. On the home screen your first name may also be sent to write a greeting. We do not send your email address or other account details. Until you allow it, nothing is sent. You can turn this off at any time in Settings → “AI replies &amp; data sharing”. Please do not put information you want to keep private in messages to the companion if you are not comfortable with it being processed by that service.</p>
 <p>We do <strong>not</strong> sell your personal data, share it with advertisers, or hand it to data brokers.</p>
 
 <h2>5. Data retention</h2>
@@ -151,7 +156,7 @@
 <ul>
   <li>All network traffic uses TLS (HTTPS).</li>
   <li>Passwords are hashed and salted; never stored in plain text.</li>
-  <li>Database access is scoped per-user by row-level security policies.</li>
+  <li>Every request is checked so that each person can only read and change their own data.</li>
   <li>Optional Face ID / fingerprint lock inside the app for extra protection.</li>
 </ul>
 

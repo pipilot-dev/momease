@@ -7,12 +7,17 @@ import {
 } from "../notifications";
 import { makePinRecord, verifyPinRecord, type PinRecord } from "../pin";
 import { getBiometricFlag, setBiometricFlag } from "../biometrics";
+import type { AiConsent } from "../ai-consent-core";
 
 interface SettingsState {
   notificationsEnabled: boolean;
   reminderHour: number; // 0-23, local time of the daily check-in nudge
   reminderMinute: number;
   hydrated: boolean;
+
+  // Whether she allowed her chat text to be sent to the AI service. null = never asked.
+  aiConsent: AiConsent;
+  setAiConsent: (value: AiConsent) => void;
 
   // App-lock PIN. `pin` (a salted hash) is persisted + cloud-synced so the lock
   // follows the account across devices. `locked` is ephemeral UI state — never
@@ -40,6 +45,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   reminderHour: 9,
   reminderMinute: 0,
   hydrated: false,
+  aiConsent: null,
+  setAiConsent: (value) => set({ aiConsent: value }),
   pin: null,
   locked: false,
   biometricEnabled: false,
@@ -104,6 +111,7 @@ attachPersistence(
     reminderHour: s.reminderHour,
     reminderMinute: s.reminderMinute,
     pin: s.pin,
+    aiConsent: s.aiConsent,
   }),
   {
     onHydrated: (state) => {

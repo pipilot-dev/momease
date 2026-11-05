@@ -5,6 +5,8 @@ import { sendAIMessage } from "../mock-ai";
 import { attachPersistence } from "../persist";
 import { useAuthStore } from "./auth-store";
 import { isNotMom } from "../personalization";
+import { canSendToAi } from "../ai-consent-core";
+import { useSettingsStore } from "./settings-store";
 
 const NOT_MOM_WELCOME_TEXT =
   `Hi there! I'm your ${BRAND} wellness companion. I'm here to listen, support, and help you feel calmer and more like yourself. What's on your mind today?`;
@@ -36,6 +38,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   voiceMode: false,
 
   sendMessage: async (content) => {
+    // No consent, no message: nothing is sent and nothing is added to the chat.
+    if (!canSendToAi(useSettingsStore.getState().aiConsent)) return;
     const userMessage: ChatMessage = {
       id: `msg_${Date.now()}`,
       role: "user",
