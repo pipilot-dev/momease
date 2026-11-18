@@ -21,9 +21,10 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleDisplayName": "MumEase"
+        "CFBundleDisplayName": "Mease"
       },
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "icon": "./assets/icon-ios.png"
     },
     "android": {
       "adaptiveIcon": {
@@ -53,7 +54,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Allow MumEase to use Face ID to unlock the app."
+          "faceIDPermission": "Allow Mease to use Face ID to unlock the app."
         }
       ],
       "expo-web-browser",

@@ -25,6 +25,7 @@ import {
   Trash2,
   Edit2,
   RefreshCw,
+  BookOpen,
 } from "lucide-react-native";
 
 import { shadows, radius, spacing } from "../lib/theme";
@@ -727,16 +728,12 @@ export default function JournalScreen() {
                 paddingVertical: spacing["3xl"],
               }}
             >
-              <Image
-                source={{ uri: "https://api.a0.dev/illustrations/dreamy" }}
-                style={{
-                  width: 200,
-                  height: 200,
-                  marginBottom: spacing.lg,
-                  borderRadius: radius.lg,
-                }}
-                resizeMode="contain"
-              />
+              <LinearGradient
+                colors={["#EDE9FE", "#FDE5EC"]}
+                style={{ width: 160, height: 160, marginBottom: spacing.lg, borderRadius: 80, alignItems: "center", justifyContent: "center" }}
+              >
+                <BookOpen size={56} color="#8B5CF6" />
+              </LinearGradient>
               <Text
                 style={{
                   fontFamily: "Quicksand-Bold",

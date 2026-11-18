@@ -68,18 +68,6 @@ export const moodTags: string[] = [
   'content',
   'excited',
 ];
-
-export const wellnessPrompts: string[] = [
-  "What's one thing you're grateful for today?",
-  'How are you feeling in your body right now?',
-  'What would help you feel more energized?',
-  'What small win can you celebrate today?',
-  'What do you need to let go of today?',
-  'How can you show yourself kindness right now?',
-  'What brought you joy today, even if just for a moment?',
-  'What would make tomorrow easier for you?',
-];
-
 // Generate mock data for the past 14 days
 const generateMockMoodHistory = (): MoodEntry[] => {
   const entries: MoodEntry[] = [];
@@ -132,9 +120,6 @@ const generateMockMoodHistory = (): MoodEntry[] => {
 
   return entries;
 };
-
-export const mockMoodHistory: MoodEntry[] = generateMockMoodHistory();
-
 export const getMoodStats = (entries: MoodEntry[]): MoodStats => {
   if (entries.length === 0) {
     return {

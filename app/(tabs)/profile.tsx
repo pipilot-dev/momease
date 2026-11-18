@@ -26,6 +26,7 @@ import { useCheckinStore } from "../../lib/stores/checkin-store";
 import { useSettingsStore } from "../../lib/stores/settings-store";
 import { useTheme } from "../../lib/theme-context";
 import { BRAND } from "../../lib/brand";
+import { Avatar } from "../../components/Avatar";
 import { sellsInApp } from "../../lib/billing-surface-core";
 
 export default function ProfileScreen() {
@@ -172,12 +173,7 @@ export default function ProfileScreen() {
               elevation: 6,
             }}
           >
-            <Image
-              source={{
-                uri: user?.avatarUrl || "https://api.a0.dev/assets/image?text=warm%20portrait%20of%20a%20smiling%20professional%20mother%20soft%20lighting&aspect=1:1",
-              }}
-              style={{ width: 96, height: 96 }}
-            />
+            <Avatar uri={user?.avatarUrl} name={user?.name} size={96} />
           </View>
 
           <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 24, color: theme.text.primary }}>

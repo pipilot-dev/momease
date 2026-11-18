@@ -38,74 +38,6 @@ const audio = {
   bodyScan: require("../assets/audio/bodyscan.wav"),
   meditation: require("../assets/audio/meditation.wav"),
 };
-
-export const mockTasks: Task[] = [
-  {
-    id: "t1",
-    title: "Prepare school lunches",
-    description: "Pack healthy lunches for Emma and Jake",
-    category: "family",
-    priority: "high",
-    status: "pending",
-    dueDate: "2026-04-16T07:00:00Z",
-    createdAt: "2026-04-15T20:00:00Z",
-  },
-  
-
-  {
-    id: "t2",
-    title: "Team standup presentation",
-    description: "Prepare slides for Q2 review",
-    category: "work",
-    priority: "urgent",
-    status: "in_progress",
-    dueDate: "2026-04-16T10:00:00Z",
-    createdAt: "2026-04-15T18:00:00Z",
-  },
-  {
-    id: "t3",
-    title: "15-min meditation",
-    description: "Morning mindfulness session",
-    category: "self-care",
-    priority: "medium",
-    status: "pending",
-    aiSuggested: true,
-    createdAt: "2026-04-16T06:00:00Z",
-  },
-  {
-    id: "t4",
-    title: "Grocery shopping",
-    description: "Weekly grocery run — organic produce & snacks",
-    category: "household",
-    priority: "medium",
-    status: "pending",
-    dueDate: "2026-04-17T14:00:00Z",
-    createdAt: "2026-04-15T12:00:00Z",
-  },
-  {
-    id: "t5",
-    title: "Schedule pediatrician visit",
-    description: "Annual checkup for Jake",
-    category: "health",
-    priority: "high",
-    status: "pending",
-    dueDate: "2026-04-18T09:00:00Z",
-    createdAt: "2026-04-14T10:00:00Z",
-  },
-  {
-    id: "t6",
-    title: "Yoga class at 6pm",
-    description: "Restorative yoga — remember mat and water",
-    category: "self-care",
-    priority: "low",
-    status: "pending",
-    dueDate: "2026-04-16T18:00:00Z",
-    aiSuggested: true,
-    createdAt: "2026-04-16T06:00:00Z",
-  },
-  
-]
-
 export const mockMantras: Mantra[] = [
   { id: "m1", text: "I am enough, exactly as I am today.", category: "confidence" },
   { id: "m2", text: "My peace is more important than perfection.", category: "calm" },
@@ -170,54 +102,6 @@ export const mockMealPlans: MealPlan[] = [
   },
   
 ];
-
-export const mockForumPosts: ForumPost[] = [
-  {
-    id: "fp1",
-    authorName: "Jessica Rivera",
-    authorAvatar: images.jessica,
-    title: "How I finally stopped feeling guilty about screen time",
-    content: "After months of beating myself up, I realized that 30 minutes of educational content while I cook dinner is perfectly fine. Here's what helped me let go of the guilt...",
-    category: "tips",
-    likes: 47,
-    comments: 23,
-    createdAt: "2026-04-15T14:30:00Z",
-  },
-  {
-    id: "fp2",
-    authorName: "Aisha Patel",
-    authorAvatar: images.aisha,
-    title: "Got promoted while working 4-day weeks!",
-    content: "I negotiated a compressed work week 6 months ago and just got promoted. Proof that boundaries don't limit your career!",
-    category: "wins",
-    likes: 134,
-    comments: 56,
-    createdAt: "2026-04-14T09:15:00Z",
-  },
-  {
-    id: "fp3",
-    authorName: "Emily Chen",
-    authorAvatar: images.emily,
-    title: "Dealing with toddler tantrums at daycare pickup",
-    content: "Every day, picking up my 3-year-old turns into a meltdown. Any tips from moms who've been through this?",
-    category: "questions",
-    likes: 28,
-    comments: 41,
-    createdAt: "2026-04-16T08:00:00Z",
-  },
-  {
-    id: "fp4",
-    authorName: "Lauren Brooks",
-    authorAvatar: images.lauren,
-    title: "Sunday meal prep changed my life",
-    content: "I spend 2 hours every Sunday prepping lunches for the whole week. It saves me $200/month and at least 5 hours of weeknight stress. Here's my system...",
-    category: "tips",
-    likes: 89,
-    comments: 34,
-    createdAt: "2026-04-13T16:45:00Z",
-  },
-];
-
 export const mockSounds: Sound[] = [
   {
     id: "s1",
@@ -411,13 +295,6 @@ export function getTimeOfDay(): "morning" | "afternoon" | "evening" {
   if (hour < 17) return "afternoon";
   return "evening";
 }
-
-export function getRandomGreeting(): string {
-  const timeOfDay = getTimeOfDay();
-  const options = greetings[timeOfDay];
-  return options[Math.floor(Math.random() * options.length)];
-}
-
 export function getRandomMantra(): Mantra {
   return mockMantras[Math.floor(Math.random() * mockMantras.length)];
 }
