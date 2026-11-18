@@ -39,6 +39,11 @@ describe("support links", () => {
     expect(read("landing/help.html")).toContain("https://tinyurl.com/2226ps48");
   });
 
+  it("the landing page links to the Google Play listing (hero, closing banner and footer)", () => {
+    const html = read("landing/index.html");
+    expect(html.split(playStoreUrl).length - 1).toBe(3);
+  });
+
   it("the Play Store link uses the package the app is built with", () => {
     const app = JSON.parse(read("app.json"));
     expect(app.expo.android.package).toBe(ANDROID_PACKAGE);

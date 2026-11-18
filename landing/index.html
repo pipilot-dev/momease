@@ -107,7 +107,7 @@
     .btn {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 16px 26px; border-radius: 14px; font-weight: 700; font-size: 15px;
-      text-decoration: none; transition: transform 0.15s ease;
+      text-decoration: none; transition: transform 0.15s ease; white-space: nowrap;
     }
     .btn:hover { transform: translateY(-1px); }
     .btn-primary {
@@ -204,7 +204,8 @@
     }
     .final-cta h2 { font-family: 'Fraunces', serif; font-weight: 800; font-size: 44px; margin: 0 0 16px; line-height: 1.05; }
     .final-cta p { font-size: 18px; opacity: 0.95; margin: 0 0 32px; }
-    .final-cta .btn { background: #fff; color: var(--rose-500); }
+    .final-cta .btn { background: #fff; color: var(--rose-500); margin: 0 6px 8px; }
+    .final-cta .btn-play { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.85); }
 
     /* FOOTER */
     footer { padding: 40px 32px; text-align: center; color: var(--ink-3); font-size: 14px; border-top: 1px solid var(--line); margin-top: 60px; }
@@ -249,6 +250,10 @@
           <a href="https://app.mease.mom/" class="btn btn-primary" target="_blank" rel="noopener">
             Try MomEase live
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+          <a href="https://play.google.com/store/apps/details?id=com.momease.app" class="btn btn-ghost" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M5 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 5 3.5z"/></svg>
+            Get it on Google Play
           </a>
           <a href="#demo" class="btn btn-ghost">▶  Watch 90-sec demo</a>
         </div>
@@ -368,12 +373,16 @@
           Launch MomEase
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
+        <a href="https://play.google.com/store/apps/details?id=com.momease.app" class="btn btn-play" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M5 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 5 3.5z"/></svg>
+          Get it on Google Play
+        </a>
       </div>
     </div>
   </section>
 
   <footer>
-    <p>MomEase · Built with love for working mothers · <a href="https://app.mease.mom/" target="_blank" rel="noopener">Try the live app</a></p>
+    <p>MomEase · Built with love for working mothers · <a href="https://app.mease.mom/" target="_blank" rel="noopener">Try the live app</a> · <a href="https://play.google.com/store/apps/details?id=com.momease.app" target="_blank" rel="noopener">Google Play</a></p>
     <p style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
       <a href="/help.html">Help</a>
       <span style="color: var(--ink-3);">·</span>
