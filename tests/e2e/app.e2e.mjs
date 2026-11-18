@@ -732,6 +732,8 @@ test('chat: "Not now" sends nothing and the chat box stays off; Settings can tur
 
   await page.goto(`${APP}/settings`);
   await page.getByText('AI replies & data sharing').waitFor({ timeout: 15000 });
+  // wait for the saved "on" state to load before flipping it; clicking earlier toggles from the unset default
+  await page.waitForFunction(() => document.querySelector('[data-testid="ai-consent-switch"] input')?.checked === true, null, { timeout: 15000 });
   await page.getByTestId('ai-consent-switch').click();
   await page.waitForFunction(() => JSON.parse(localStorage.getItem('momease-settings') || '{}').aiConsent === 'declined');
   await page.goto(`${APP}/chat`);
