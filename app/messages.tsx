@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
+import { Avatar } from "../components/Avatar";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { ArrowLeft, Users, MessageCircle } from "lucide-react-native";
@@ -124,7 +125,7 @@ export default function MessagesScreen() {
               style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: theme.border }}
             >
               <View>
-                <Image source={c.partner.avatar_url ? { uri: c.partner.avatar_url } : { uri: "https://api.a0.dev/assets/image?text=friendly%20mom%20avatar&aspect=1:1" }} style={{ width: 52, height: 52, borderRadius: 26 }} />
+                <Avatar uri={c.partner.avatar_url} name={c.partner.display_name || c.partner.username} size={52} />
                 {online && <View style={{ position: "absolute", right: 0, bottom: 0, width: 14, height: 14, borderRadius: 7, backgroundColor: "#34D399", borderWidth: 2, borderColor: theme.bg }} />}
               </View>
               <View style={{ flex: 1 }}>

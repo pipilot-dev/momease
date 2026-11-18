@@ -6,6 +6,7 @@ import * as Haptics from "expo-haptics";
 import { ArrowLeft, Search, UserPlus, UserCheck, MessageCircle, AtSign } from "lucide-react-native";
 import { useAuthStore } from "../lib/stores/auth-store";
 import { useTheme } from "../lib/theme-context";
+import { Avatar } from "../components/Avatar";
 import {
   ensureProfile,
   updateLastSeen,
@@ -105,10 +106,7 @@ export default function FriendsScreen() {
         }}
       >
         <View>
-          <Image
-            source={p.avatar_url ? { uri: p.avatar_url } : { uri: "https://api.a0.dev/assets/image?text=friendly%20mom%20avatar&aspect=1:1" }}
-            style={{ width: 46, height: 46, borderRadius: 23 }}
-          />
+          <Avatar uri={p.avatar_url} name={p.display_name || p.username} size={46} />
           {online && (
             <View style={{ position: "absolute", right: 0, bottom: 0, width: 13, height: 13, borderRadius: 7, backgroundColor: "#34D399", borderWidth: 2, borderColor: theme.surface }} />
           )}

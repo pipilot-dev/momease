@@ -139,32 +139,6 @@ export async function getAIGreeting(userName: string): Promise<string> {
     return getLocalGreeting(userName, timeOfDay);
   }
 }
-
-export async function getAITaskPrioritization(tasks: string[]): Promise<string> {
-  if (!aiAllowed()) return "Focus on the most time-sensitive tasks first, then tackle what energizes you!";
-  try {
-    const response = await fetch(A0_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: "system",
-            content: `You're a productivity coach for working moms. Given these tasks, suggest a priority order with brief reasoning (1 sentence each). Be practical and empathetic.`,
-          },
-          { role: "user", content: `Help me prioritize: ${tasks.join(", ")}` },
-        ],
-      }),
-    });
-
-    if (!response.ok) throw new Error("API call failed");
-    const data = await response.json();
-    return data.completion || data.choices?.[0]?.message?.content || "Focus on the most time-sensitive tasks first, then tackle what energizes you!";
-  } catch {
-    return "Focus on the most time-sensitive tasks first, then tackle what energizes you!";
-  }
-}
-
 function getLocalGreeting(name: string, timeOfDay: string): string {
   const greetings: Record<string, string[]> = {
     morning: [

@@ -17,16 +17,16 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 describe("brand name", () => {
-  it("is MumEase on iPhone and MomEase on Android and the web", () => {
-    expect(brandFor("ios")).toBe("MumEase");
+  it("is Mease on iPhone and MomEase on Android and the web", () => {
+    expect(brandFor("ios")).toBe("Mease");
     expect(brandFor("android")).toBe("MomEase");
     expect(brandFor("web")).toBe("MomEase");
   });
 
-  it("the iPhone home-screen name and Face ID text say MumEase; Android keeps MomEase", () => {
-    expect(app.ios.infoPlist.CFBundleDisplayName).toBe("MumEase");
+  it("the iPhone home-screen name and Face ID text say Mease; Android keeps MomEase", () => {
+    expect(app.ios.infoPlist.CFBundleDisplayName).toBe("Mease");
     const faceId = app.plugins.find((p: any) => Array.isArray(p) && p[0] === "expo-local-authentication")[1].faceIDPermission;
-    expect(faceId).toContain("MumEase");
+    expect(faceId).toContain("Mease");
     expect(app.name).toBe("MomEase");
   });
 

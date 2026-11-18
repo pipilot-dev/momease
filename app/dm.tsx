@@ -10,6 +10,7 @@ import { ArrowLeft, Send, Plus, X, Heart, Music, Brain, Sparkles, Check, CheckCh
 import { useAuthStore } from "../lib/stores/auth-store";
 import { useTheme } from "../lib/theme-context";
 import { mockMantras, mockSounds, mockMeditations } from "../lib/mock-data";
+import { Avatar } from "../components/Avatar";
 import { ReportModal } from "../components/ReportModal";
 import {
   ensureProfile, updateLastSeen, getConversation, sendMessage, markRead,
@@ -162,7 +163,7 @@ export default function DMScreen() {
           <TouchableOpacity onPress={() => router.back()}>
             <ArrowLeft size={24} color={theme.text.primary} />
           </TouchableOpacity>
-          <Image source={partner?.avatar_url ? { uri: partner.avatar_url } : { uri: "https://api.a0.dev/assets/image?text=friendly%20mom%20avatar&aspect=1:1" }} style={{ width: 40, height: 40, borderRadius: 20 }} />
+          <Avatar uri={partner?.avatar_url} name={params.name || partner?.display_name || partner?.username} size={40} />
           <View style={{ flex: 1 }}>
             <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 17, color: theme.text.primary }}>{params.name || partner?.display_name || "Friend"}</Text>
             <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 12, color: online ? "#10B981" : theme.text.muted }}>

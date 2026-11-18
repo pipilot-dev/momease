@@ -27,7 +27,7 @@ describe("AI consent", () => {
   it("every call to the AI service in mock-ai checks consent first", () => {
     const src = read("lib/mock-ai.ts");
     const fetches = [...src.matchAll(/await fetch\(A0_API_URL/g)].map((m) => m.index!);
-    expect(fetches.length).toBeGreaterThanOrEqual(3);
+    expect(fetches.length).toBeGreaterThanOrEqual(2);
     for (const at of fetches) {
       const fnStart = src.lastIndexOf("export async function", at);
       const head = src.slice(fnStart, at);

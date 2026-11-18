@@ -35,6 +35,8 @@ import {
 import { useAuthStore } from "../../lib/stores/auth-store";
 import { useTaskStore } from "../../lib/stores/task-store";
 import { useCheckinStore } from "../../lib/stores/checkin-store";
+import { useSleepStore } from "../../lib/stores/sleep-store";
+import { rhythmFor } from "../../lib/rhythm-core";
 import { useNotificationStore } from "../../lib/stores/notification-store";
 import { getRandomMantra, getTimeOfDay, mockMeditations } from "../../lib/mock-data";
 import { getAIGreeting } from "../../lib/mock-ai";
@@ -58,6 +60,15 @@ export default function HomeScreen() {
   const unreadNotifs = useNotificationStore((s) =>
     s.notifications.reduce((n, cur) => n + (cur.read ? 0 : 1), 0)
   );
+  // "Right now for you": one next step from the time of day, today's mood, last night's sleep and the task list.
+  const todayMood = useCheckinStore((st) => st.entries.find((e) => e.date === st.todayKey())?.mood ?? null);
+  const lastSleep = useSleepStore((st) => st.entries[0]);
+  const rhythm = rhythmFor({
+    hour: new Date().getHours(),
+    mood: todayMood,
+    sleepHours: lastSleep && Date.now() - new Date(lastSleep.date + "T12:00:00").getTime() < 36 * 3600 * 1000 ? lastSleep.hours : null,
+    pendingTasks: getPendingCount(),
+  });
   const [greeting, setGreeting] = useState("");
   const [mantra, setMantra] = useState(getRandomMantra());
   const [refreshing, setRefreshing] = useState(false);
@@ -263,6 +274,38 @@ export default function HomeScreen() {
         </Animated.View>
 
         <View style={{ paddingHorizontal: 24 }}>
+          {/* Right now for you: one step picked from her day. */}
+          <Animated.View style={{ opacity: greetingAnim, marginBottom: 16 }}>
+            <TouchableOpacity
+              testID="rhythm-card"
+              activeOpacity={0.9}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push(rhythm.route as any);
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                backgroundColor: colors.surface,
+                borderRadius: 18,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent[500] + "22", alignItems: "center", justifyContent: "center" }}>
+                <Sparkles size={20} color={colors.accent[500]} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 11, letterSpacing: 1, color: colors.accent[500] }}>RIGHT NOW FOR YOU · {rhythm.minutes} MIN</Text>
+                <Text style={{ fontFamily: "Quicksand-Bold", fontSize: 16, color: colors.text.primary, marginTop: 2 }}>{rhythm.title}</Text>
+                <Text style={{ fontFamily: "Quicksand-Medium", fontSize: 13, lineHeight: 18, color: colors.text.secondary, marginTop: 2 }}>{rhythm.detail}</Text>
+              </View>
+              <ChevronRight size={18} color={colors.text.muted} />
+            </TouchableOpacity>
+          </Animated.View>
+
           {/* Personalized weekly action plan — the "WOW" hero. */}
           <Animated.View style={{ opacity: greetingAnim, marginBottom: 24 }}>
             <View
